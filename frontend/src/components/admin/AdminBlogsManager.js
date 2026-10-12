@@ -187,10 +187,12 @@ export default function AdminBlogsManager() {
                 <div className="mt-2 flex flex-wrap gap-2">
                   {item.status === "PUBLISHED" ? (
                     <Link href={`/journal/${item.slug}`} target="_blank" rel="noreferrer" className="text-xs font-medium text-accent hover:underline">View</Link>
-                  ) : (
-                    {canPublish ? <button type="button" className="text-xs font-medium text-accent" onClick={() => handlePublish(item.id)}>Publish</button> : null}
-                  )}
-                  {canDelete ? <button type="button" className="text-xs text-red-600" onClick={() => deleteAdminBlog(item.id).then(load)}>Delete</button> : null}
+                  ) : canPublish ? (
+                    <button type="button" className="text-xs font-medium text-accent" onClick={() => handlePublish(item.id)}>Publish</button>
+                  ) : null}
+                  {canDelete ? (
+                    <button type="button" className="text-xs text-red-600" onClick={() => deleteAdminBlog(item.id).then(load)}>Delete</button>
+                  ) : null}
                 </div>
               </li>
             ))}
