@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import Button from "@/components/ui/Button";
+import FormFeedback from "@/components/ui/FormFeedback";
 import Input from "@/components/ui/Input";
 import { buildQueryString } from "@/lib/utils";
 
@@ -128,7 +129,7 @@ export default function BookingSearchForm({
           </Button>
         </div>
       </div>
-      {error ? <p className="mt-3 text-sm text-danger">{error}</p> : null}
+      <FormFeedback status="error" message={error} className="mt-3" />
     </form>
   );
 }

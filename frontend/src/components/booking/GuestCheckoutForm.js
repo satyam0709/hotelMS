@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { motion } from "motion/react";
 import Button from "@/components/ui/Button";
+import FormFeedback from "@/components/ui/FormFeedback";
 import Input from "@/components/ui/Input";
 import { ApiError } from "@/lib/api/client";
 import {
@@ -222,7 +223,7 @@ export default function GuestCheckoutForm({
             name="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            placeholder="you@example.com"
+            placeholder="Email for confirmation"
           />
           <Input
             label="Phone"
@@ -323,11 +324,7 @@ export default function GuestCheckoutForm({
           )}
         </fieldset>
 
-        {error ? (
-          <p className="mt-4 rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger">
-            {error}
-          </p>
-        ) : null}
+        <FormFeedback status="error" message={error} />
 
         <div className="mt-6 flex flex-wrap gap-3">
           <Button type="button" variant="secondary" onClick={onBack} disabled={submitting}>

@@ -2,6 +2,7 @@
 
 import { useCallback, useState, useTransition } from "react";
 import Button from "@/components/ui/Button";
+import FormFeedback from "@/components/ui/FormFeedback";
 import Input from "@/components/ui/Input";
 import TurnstileWidget, { isTurnstileEnabled } from "@/components/site/TurnstileWidget";
 import { subscribeNewsletter } from "@/lib/api/content";
@@ -61,14 +62,7 @@ export default function NewsletterForm({ className, layout = "inline" }) {
       {turnstileOn ? (
         <TurnstileWidget onToken={onToken} className="mt-3" />
       ) : null}
-      {message ? (
-        <p
-          className={`mt-3 text-sm ${status === "error" ? "text-danger" : "text-success"}`}
-          role="status"
-        >
-          {message}
-        </p>
-      ) : null}
+      <FormFeedback status={status} message={message} className="mt-3" />
     </form>
   );
 }

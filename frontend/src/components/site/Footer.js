@@ -4,8 +4,8 @@ import { siteConfig } from "@/lib/config";
 const defaultQuickLinks = [
   { label: "Home", href: "/" },
   { label: "Rooms", href: "/rooms" },
+  { label: "Dining", href: "/restaurant" },
   { label: "Facilities", href: "/facilities" },
-  { label: "Restaurant", href: "/restaurant" },
   { label: "Gallery", href: "/gallery" },
   { label: "Contact", href: "/contact" },
 ];
@@ -13,15 +13,15 @@ const defaultQuickLinks = [
 const defaultPackageLinks = [
   { label: "All packages", href: "/packages" },
   { label: "Book a stay", href: "/booking" },
-  { label: "Journal", href: "/journal" },
+  { label: "Offers & journal", href: "/journal" },
   { label: "Events", href: "/events" },
-  { label: "Attractions", href: "/attractions" },
+  { label: "Nearby attractions", href: "/attractions" },
 ];
 
 const defaultSupportLinks = [
   { label: "About us", href: "/about" },
-  { label: "Contact", href: "/contact" },
   { label: "FAQs", href: "/faqs" },
+  { label: "Guest reviews", href: "/testimonials" },
   { label: "Privacy policy", href: "/policies/privacy" },
   { label: "Terms & conditions", href: "/policies/terms" },
   { label: "Cancellation", href: "/policies/cancellation" },
@@ -36,7 +36,11 @@ export default function Footer({ settings, navigation = [] }) {
     : settings?.socialLinksJson && typeof settings.socialLinksJson === "object"
       ? Object.entries(settings.socialLinksJson).map(([label, href]) => ({ label, href }))
       : [];
-  const copyright = settings?.copyrightText || `© ${new Date().getFullYear()} ${brand}. All rights reserved.`;
+  const year = new Date().getFullYear();
+  const rawCopyright = settings?.copyrightText?.trim();
+  const copyright = rawCopyright
+    ? rawCopyright.replace(/©\s*\d{4}/, `© ${year}`)
+    : `© ${year} ${brand}. All rights reserved.`;
 
   return (
     <FooterContent

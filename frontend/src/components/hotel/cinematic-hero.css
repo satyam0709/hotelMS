@@ -1,4 +1,6 @@
 .cinema-scroll {
+  overflow-x: clip;
+  max-width: 100vw;
   --mx: 0;
   --my: 0;
   --back-opacity: 1;

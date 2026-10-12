@@ -17,8 +17,9 @@ const publicApiBase = trimSlash(
 
 export const siteConfig = {
   name: "HotelLMS Resort",
-  defaultTitle: "HotelLMS Resort",
-  description: "A refined hotel and resort experience with rooms, dining, and curated stays.",
+  defaultTitle: "HotelLMS Resort — Rooms, Dining & Curated Stays",
+  description:
+    "Book refined rooms and suites, enjoy resort dining, and explore seasonal packages at HotelLMS Resort. Live availability, secure booking, and thoughtful hospitality.",
   apiBaseUrl: typeof window === "undefined" ? serverApiBase : publicApiBase,
   publicApiBaseUrl: publicApiBase,
   bookingPath: "/booking",

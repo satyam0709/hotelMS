@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Button from "@/components/ui/Button";
+import FormFeedback from "@/components/ui/FormFeedback";
 import { ApiError } from "@/lib/api/client";
 import {
   createPaymentOrder,
@@ -169,17 +170,8 @@ export default function BookingConfirmation({
           </ul>
         </div>
 
-        {message ? (
-          <p className="mt-6 rounded-xl border border-accent/20 bg-accent-soft/40 px-4 py-3 text-sm text-ink">
-            {message}
-          </p>
-        ) : null}
-
-        {error ? (
-          <p className="mt-6 rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger">
-            {error}
-          </p>
-        ) : null}
+        <FormFeedback status="success" message={message} className="mt-6" />
+        <FormFeedback status="error" message={error} className="mt-6" />
 
         {showCancelForm && canCancel ? (
           <div className="mt-6 space-y-3 rounded-2xl border border-line bg-canvas/60 p-4">

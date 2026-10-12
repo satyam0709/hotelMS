@@ -60,10 +60,10 @@ export default async function SiteLayout({ children }) {
   const { settings, headerNav, footerNav, announcement } = await loadShellData();
 
   return (
-    <div className="flex min-h-full flex-col surface-grid">
+    <div className="flex min-h-full max-w-[100vw] flex-col overflow-x-clip surface-grid">
       <AnnouncementBar banner={announcement} />
       <Navbar settings={settings} navigation={headerNav} />
-      <main className="flex-1 pt-0">{children}</main>
+      <main className="min-w-0 flex-1 pt-0">{children}</main>
       <Footer settings={settings} navigation={footerNav} />
       <BookingContactFab
         phone={settings?.phone}

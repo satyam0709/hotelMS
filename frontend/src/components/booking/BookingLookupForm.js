@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Button from "@/components/ui/Button";
+import FormFeedback from "@/components/ui/FormFeedback";
 import Input from "@/components/ui/Input";
 
 export default function BookingLookupForm({ className }) {
@@ -69,7 +70,7 @@ export default function BookingLookupForm({ className }) {
               name="email"
               type="email"
               autoComplete="email"
-              placeholder="you@example.com"
+              placeholder="Email used at booking"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               className="mt-2"
@@ -94,11 +95,7 @@ export default function BookingLookupForm({ className }) {
         <p className="text-xs leading-relaxed text-muted">
           Use the same email and phone you provided at checkout. We need the reference plus both contact details to load your booking.
         </p>
-        {error ? (
-          <p className="text-sm text-red-600" role="alert">
-            {error}
-          </p>
-        ) : null}
+        <FormFeedback status="error" message={error} />
         <Button type="submit" className="w-full sm:w-auto">
           Find booking
         </Button>

@@ -67,11 +67,15 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: clip;
+  max-width: 100%;
 }
 
 body {
   margin: 0;
   min-height: 100%;
+  max-width: 100%;
+  overflow-x: clip;
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
@@ -164,12 +168,20 @@ img {
 }
 
 .section-pad {
-  padding-block: 4.5rem;
+  padding-block: 3.25rem;
 }
 
 @media (min-width: 768px) {
   .section-pad {
     padding-block: 6rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .cinema-scroll .intro-copy--sanctuary,
+  .cinema-scroll .hero-booking {
+    width: min(100%, calc(100vw - 1.5rem)) !important;
+    max-width: calc(100vw - 1.5rem);
   }
 }
 

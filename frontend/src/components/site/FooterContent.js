@@ -29,7 +29,7 @@ const SOCIAL_NETWORKS = [
     key: "twitter",
     label: "Twitter",
     href: "https://twitter.com/",
-    icon: "/assets/twitter-icon.webp",
+    icon: "/assets/twitter-icon-sm.webp",
     match: /twitter|x\.com|\bx\b/i,
   },
 ];

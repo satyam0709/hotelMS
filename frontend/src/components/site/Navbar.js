@@ -12,12 +12,12 @@ import { mediaAlt, mediaUrl } from "@/lib/utils";
 
 const fallbackLinks = [
   { label: "Home", href: "/" },
-  { label: "Accommodations", href: "/rooms" },
-  { label: "Amenities & Spa", href: "/facilities" },
+  { label: "Rooms", href: "/rooms" },
   { label: "Dining", href: "/restaurant" },
-  { label: "Activities", href: "/events" },
+  { label: "Facilities", href: "/facilities" },
   { label: "Packages", href: "/packages" },
-  { label: "About", href: "/about" },
+  { label: "Gallery", href: "/gallery" },
+  { label: "Contact", href: "/contact" },
 ];
 
 export default function Navbar({ settings, navigation = [] }) {
@@ -84,7 +84,7 @@ export default function Navbar({ settings, navigation = [] }) {
                 href="/admin/login"
                 size="sm"
                 variant="secondary"
-                className="hidden rounded-xl sm:inline-flex"
+                className="hidden rounded-xl md:inline-flex"
               >
                 <LogIn className="size-4 shrink-0" aria-hidden />
                 Login
@@ -119,7 +119,7 @@ export default function Navbar({ settings, navigation = [] }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.22 }}
-            className="absolute inset-x-0 top-full z-40 border-b border-line bg-elevated shadow-soft lg:hidden"
+            className="absolute inset-x-0 top-full z-40 max-h-[min(80vh,640px)] overflow-y-auto border-b border-line bg-elevated shadow-soft lg:hidden"
           >
             <div className="mx-auto max-w-[1400px] overflow-hidden px-4 py-3">
               <nav className="flex flex-col p-3" aria-label="Mobile">
@@ -130,6 +130,25 @@ export default function Navbar({ settings, navigation = [] }) {
                   onItemClick={() => setOpen(false)}
                 />
                 <div className="mt-2 space-y-2 border-t border-line p-3">
+                  {settings?.phone ? (
+                    <a
+                      href={`tel:${settings.phone}`}
+                      className="flex items-center justify-center gap-2 rounded-md border border-line bg-white px-4 py-3 text-sm font-medium text-ink"
+                      onClick={() => setOpen(false)}
+                    >
+                      <Phone className="size-4 shrink-0" aria-hidden />
+                      Call {settings.phone}
+                    </a>
+                  ) : null}
+                  {settings?.email ? (
+                    <a
+                      href={`mailto:${settings.email}`}
+                      className="flex items-center justify-center gap-2 rounded-md border border-line bg-white px-4 py-3 text-sm font-medium text-ink"
+                      onClick={() => setOpen(false)}
+                    >
+                      Email us
+                    </a>
+                  ) : null}
                   <Button
                     href={siteConfig.bookingPath}
                     variant="navCta"

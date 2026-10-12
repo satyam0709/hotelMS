@@ -594,6 +594,6 @@ export function findDemoPolicy(slug) {
     id: `demo-policy-${slug}`,
     slug,
     ...policy,
-    updatedAt: "2025-01-15",
+    updatedAt: "2026-10-01",
   };
 }

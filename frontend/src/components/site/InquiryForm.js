@@ -2,6 +2,7 @@
 
 import { useCallback, useState, useTransition } from "react";
 import Button from "@/components/ui/Button";
+import FormFeedback from "@/components/ui/FormFeedback";
 import Input from "@/components/ui/Input";
 import TurnstileWidget, { isTurnstileEnabled } from "@/components/site/TurnstileWidget";
 import { createInquiry } from "@/lib/api/content";
@@ -95,7 +96,7 @@ export default function InquiryForm({
         We would love to hear from you
       </h2>
       <p className="mt-2 text-sm text-muted">
-        Inquiries are stored for the hotel team and trigger an admin notification.
+        Share your dates or question and our team will reply shortly.
       </p>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -131,7 +132,7 @@ export default function InquiryForm({
           name="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          placeholder="you@example.com"
+          placeholder="Email address"
         />
         <Input
           label="Mobile"
@@ -168,14 +169,7 @@ export default function InquiryForm({
         <TurnstileWidget onToken={onToken} className="mt-4" />
       ) : null}
 
-      {feedback ? (
-        <p
-          className={`mt-4 text-sm ${status === "error" ? "text-danger" : "text-success"}`}
-          role="status"
-        >
-          {feedback}
-        </p>
-      ) : null}
+      <FormFeedback status={status} message={feedback} />
 
       <Button type="submit" className="mt-5 w-full sm:w-auto" disabled={isPending}>
         {isPending ? "Sending…" : "Submit inquiry"}

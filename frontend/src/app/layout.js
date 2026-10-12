@@ -15,6 +15,16 @@ export const metadata = {
     template: `%s · ${siteConfig.name}`,
   },
   description: siteConfig.description,
+  applicationName: siteConfig.name,
+  metadataBase: process.env.NEXT_PUBLIC_SITE_URL
+    ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
+    : undefined,
+  openGraph: {
+    title: siteConfig.defaultTitle,
+    description: siteConfig.description,
+    type: "website",
+    siteName: siteConfig.name,
+  },
 };
 
 export default function RootLayout({ children }) {

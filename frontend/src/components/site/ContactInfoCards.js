@@ -104,8 +104,8 @@ export default function ContactInfoCards({ settings = {} }) {
       viewport={{ once: true, amount: 0.2 }}
       variants={containerVariants}
     >
-      {cards.map((card) => (
-        <ContactCard key={card.key} {...card} />
+      {cards.map(({ key, ...card }) => (
+        <ContactCard key={key} {...card} />
       ))}
     </motion.div>
   );
