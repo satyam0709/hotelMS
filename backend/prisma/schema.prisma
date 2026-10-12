@@ -1,0 +1,1161 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum PageStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum MenuLocation {
+  HEADER
+  FOOTER
+}
+
+enum MediaResourceType {
+  IMAGE
+  VIDEO
+  RAW
+}
+
+enum BookingStatus {
+  PENDING
+  PENDING_PAYMENT
+  CONFIRMED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+  NO_SHOW
+  REFUNDED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PaymentMethod {
+  PAY_AT_HOTEL
+  ONLINE
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+enum RateType {
+  SEASONAL
+  SPECIAL
+  HOLIDAY
+  CUSTOM
+}
+
+enum InquiryType {
+  CONTACT
+  BOOKING
+  PACKAGE
+  EVENT
+  RESTAURANT
+  GENERAL
+}
+
+enum InquiryStatus {
+  NEW
+  IN_PROGRESS
+  CONTACTED
+  CONVERTED
+  CLOSED
+}
+
+enum TestimonialApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum NewsletterStatus {
+  SUBSCRIBED
+  UNSUBSCRIBED
+}
+
+enum AdminStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum PaymentProvider {
+  RAZORPAY
+  PAY_AT_HOTEL
+}
+
+enum TransactionStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum RefundStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model WebsiteSetting {
+  id                String      @id @default(cuid())
+  websiteName       String      @db.VarChar(160)
+  logoMediaId       String?
+  faviconMediaId    String?
+  headerLogoMediaId String?
+  footerLogoMediaId String?
+  phone             String?     @db.VarChar(40)
+  whatsapp          String?     @db.VarChar(40)
+  email             String?     @db.VarChar(191)
+  address           String?     @db.Text
+  mapUrl            String?     @db.Text
+  currency              String      @default("INR") @db.VarChar(10)
+  timezone              String      @default("Asia/Kolkata") @db.VarChar(80)
+  defaultLanguage       String      @default("en") @db.VarChar(20)
+  copyrightText         String?     @db.VarChar(255)
+  socialLinksJson       Json?
+  onlinePaymentEnabled  Boolean     @default(true)
+  payAtHotelEnabled     Boolean     @default(true)
+  metaTitle             String?     @db.VarChar(191)
+  metaDescription       String?     @db.Text
+  metaKeywords          String?     @db.VarChar(255)
+  receptionHours        String?     @db.VarChar(255)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  logoMedia         MediaAsset? @relation("WebsiteLogo", fields: [logoMediaId], references: [id], onDelete: SetNull)
+  faviconMedia      MediaAsset? @relation("WebsiteFavicon", fields: [faviconMediaId], references: [id], onDelete: SetNull)
+  headerLogoMedia   MediaAsset? @relation("WebsiteHeaderLogo", fields: [headerLogoMediaId], references: [id], onDelete: SetNull)
+  footerLogoMedia   MediaAsset? @relation("WebsiteFooterLogo", fields: [footerLogoMediaId], references: [id], onDelete: SetNull)
+}
+
+model NavigationMenuItem {
+  id           String               @id @default(cuid())
+  label        String               @db.VarChar(120)
+  href         String               @db.VarChar(255)
+  parentId     String?
+  location     MenuLocation
+  displayOrder Int                  @default(0)
+  isActive     Boolean              @default(true)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  deletedAt    DateTime?
+  parent       NavigationMenuItem?  @relation("MenuChildren", fields: [parentId], references: [id], onDelete: SetNull)
+  children     NavigationMenuItem[] @relation("MenuChildren")
+
+  @@index([location, isActive, displayOrder])
+  @@index([parentId])
+}
+
+model Page {
+  id              String        @id @default(cuid())
+  title           String        @db.VarChar(191)
+  slug            String        @unique @db.VarChar(191)
+  bannerMediaId   String?
+  status          PageStatus    @default(DRAFT)
+  isVisible       Boolean       @default(true)
+  displayOrder    Int           @default(0)
+  publishedAt     DateTime?
+  metaTitle       String?       @db.VarChar(191)
+  metaDescription String?       @db.Text
+  metaKeywords    String?       @db.VarChar(255)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
+  bannerMedia     MediaAsset?   @relation("PageBanner", fields: [bannerMediaId], references: [id], onDelete: SetNull)
+  sections        PageSection[]
+
+  @@index([status, isVisible])
+  @@index([deletedAt])
+}
+
+model PageSection {
+  id           String      @id @default(cuid())
+  pageId       String
+  sectionKey   String      @db.VarChar(120)
+  title        String?     @db.VarChar(191)
+  subtitle     String?     @db.VarChar(255)
+  description  String?     @db.Text
+  buttonText   String?     @db.VarChar(120)
+  buttonLink   String?     @db.VarChar(255)
+  mediaId      String?
+  settingsJson Json?
+  displayOrder Int         @default(0)
+  isEnabled    Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  deletedAt    DateTime?
+  page         Page        @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  media        MediaAsset? @relation("PageSectionMedia", fields: [mediaId], references: [id], onDelete: SetNull)
+
+  @@index([pageId, isEnabled, displayOrder])
+  @@index([deletedAt])
+}
+
+model Banner {
+  id             String      @id @default(cuid())
+  title          String      @db.VarChar(191)
+  subtitle       String?     @db.VarChar(255)
+  ctaText        String?     @db.VarChar(120)
+  ctaLink        String?     @db.VarChar(255)
+  desktopMediaId String?
+  mobileMediaId  String?
+  videoMediaId   String?
+  startDate      DateTime?   @db.Date
+  endDate        DateTime?   @db.Date
+  displayOrder   Int         @default(0)
+  isActive       Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  deletedAt      DateTime?
+  desktopMedia   MediaAsset? @relation("BannerDesktopMedia", fields: [desktopMediaId], references: [id], onDelete: SetNull)
+  mobileMedia    MediaAsset? @relation("BannerMobileMedia", fields: [mobileMediaId], references: [id], onDelete: SetNull)
+  videoMedia     MediaAsset? @relation("BannerVideoMedia", fields: [videoMediaId], references: [id], onDelete: SetNull)
+
+  @@index([isActive, startDate, endDate, displayOrder])
+  @@index([deletedAt])
+}
+
+model Policy {
+  id          String     @id @default(cuid())
+  type        String     @unique @db.VarChar(80)
+  title       String     @db.VarChar(191)
+  slug        String     @unique @db.VarChar(191)
+  content     String     @db.LongText
+  isPublished Boolean    @default(false)
+  updatedById String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
+  updatedBy   AdminUser? @relation("PolicyUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@index([isPublished])
+  @@index([deletedAt])
+}
+
+model BlogPost {
+  id           String      @id @default(cuid())
+  title        String      @db.VarChar(191)
+  slug         String      @unique @db.VarChar(191)
+  category     String?     @db.VarChar(120)
+  excerpt      String?     @db.Text
+  content      String      @db.LongText
+  authorName   String?     @db.VarChar(160)
+  coverMediaId String?
+  status       PageStatus  @default(DRAFT)
+  isFeatured   Boolean     @default(false)
+  displayOrder Int         @default(0)
+  publishedAt  DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  deletedAt    DateTime?
+  coverMedia   MediaAsset? @relation("BlogPostCoverMedia", fields: [coverMediaId], references: [id], onDelete: SetNull)
+
+  @@index([status, publishedAt])
+  @@index([isFeatured, displayOrder])
+  @@index([deletedAt])
+}
+
+model RoomCategory {
+  id              String      @id @default(cuid())
+  name            String      @db.VarChar(160)
+  slug            String      @unique @db.VarChar(191)
+  description     String?     @db.Text
+  featuredMediaId String?
+  displayOrder    Int         @default(0)
+  isActive        Boolean     @default(true)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  deletedAt       DateTime?
+  featuredMedia   MediaAsset? @relation("RoomCategoryFeaturedMedia", fields: [featuredMediaId], references: [id], onDelete: SetNull)
+  rooms           Room[]
+
+  @@index([isActive, displayOrder])
+  @@index([deletedAt])
+}
+
+model Room {
+  id               String             @id @default(cuid())
+  roomCategoryId   String
+  name             String             @db.VarChar(191)
+  slug             String             @unique @db.VarChar(191)
+  roomCode         String             @unique @db.VarChar(80)
+  shortDescription String?            @db.VarChar(255)
+  description      String?            @db.LongText
+  basePrice        Decimal            @db.Decimal(10, 2)
+  weekendPrice     Decimal?           @db.Decimal(10, 2)
+  maxAdults        Int
+  maxChildren      Int                @default(0)
+  maxOccupancy     Int
+  roomSize         String?            @db.VarChar(80)
+  bedType          String?            @db.VarChar(120)
+  totalInventory   Int
+  extraBedAllowed  Boolean            @default(false)
+  extraBedCharge   Decimal?           @db.Decimal(10, 2)
+  taxRateId        String?
+  checkInTime      String?            @db.VarChar(20)
+  checkOutTime     String?            @db.VarChar(20)
+  policies         String?            @db.Text
+  isFeatured       Boolean            @default(false)
+  isActive         Boolean            @default(true)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  deletedAt        DateTime?
+  category         RoomCategory       @relation(fields: [roomCategoryId], references: [id])
+  taxRate          TaxRate?           @relation(fields: [taxRateId], references: [id], onDelete: SetNull)
+  media            RoomMedia[]
+  amenities        RoomAmenity[]
+  availability     RoomAvailability[]
+  rates            RoomRate[]
+  blocks           RoomBlock[]
+  bookingRooms     BookingRoom[]
+
+  @@index([roomCategoryId, isActive, isFeatured])
+  @@index([taxRateId])
+  @@index([deletedAt])
+}
+
+model Amenity {
+  id           String        @id @default(cuid())
+  name         String        @db.VarChar(160)
+  slug         String        @unique @db.VarChar(191)
+  icon         String?       @db.VarChar(120)
+  displayOrder Int           @default(0)
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+  rooms        RoomAmenity[]
+
+  @@index([isActive, displayOrder])
+  @@index([deletedAt])
+}
+
+model RoomAmenity {
+  roomId    String
+  amenityId String
+  room      Room    @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  amenity   Amenity @relation(fields: [amenityId], references: [id], onDelete: Cascade)
+
+  @@id([roomId, amenityId])
+  @@index([amenityId])
+}
+
+model RoomMedia {
+  id           String     @id @default(cuid())
+  roomId       String
+  mediaId      String
+  usage        String     @default("gallery") @db.VarChar(60)
+  displayOrder Int        @default(0)
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
+  room         Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  media        MediaAsset @relation("RoomMediaAsset", fields: [mediaId], references: [id])
+
+  @@unique([roomId, mediaId, usage])
+  @@index([roomId, displayOrder])
+  @@index([mediaId])
+  @@index([deletedAt])
+}
+
+model Facility {
+  id             String          @id @default(cuid())
+  name           String          @db.VarChar(160)
+  slug           String          @unique @db.VarChar(191)
+  category       String?         @db.VarChar(120)
+  description    String?         @db.Text
+  operatingHours String?         @db.VarChar(160)
+  additionalInfo String?         @db.Text
+  icon           String?         @db.VarChar(120)
+  displayOrder   Int             @default(0)
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+  media          FacilityMedia[]
+
+  @@index([category, isActive, displayOrder])
+  @@index([deletedAt])
+}
+
+model FacilityMedia {
+  id           String     @id @default(cuid())
+  facilityId   String
+  mediaId      String
+  displayOrder Int        @default(0)
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
+  facility     Facility   @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  media        MediaAsset @relation("FacilityMediaAsset", fields: [mediaId], references: [id])
+
+  @@index([facilityId, displayOrder])
+  @@index([mediaId])
+  @@index([deletedAt])
+}
+
+model Restaurant {
+  id                 String             @id @default(cuid())
+  name               String             @db.VarChar(160)
+  slug               String             @unique @db.VarChar(191)
+  description        String?            @db.Text
+  cuisineTypesJson   Json?
+  breakfastTime      String?            @db.VarChar(80)
+  lunchTime          String?            @db.VarChar(80)
+  dinnerTime         String?            @db.VarChar(80)
+  reservationEnabled Boolean            @default(false)
+  isActive           Boolean            @default(true)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  deletedAt          DateTime?
+  media              RestaurantMedia[]
+  menuCategories     FoodMenuCategory[]
+
+  @@index([isActive])
+  @@index([deletedAt])
+}
+
+model RestaurantMedia {
+  id           String     @id @default(cuid())
+  restaurantId String
+  mediaId      String
+  displayOrder Int        @default(0)
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  media        MediaAsset @relation("RestaurantMediaAsset", fields: [mediaId], references: [id])
+
+  @@index([restaurantId, displayOrder])
+  @@index([mediaId])
+  @@index([deletedAt])
+}
+
+model FoodMenuCategory {
+  id           String         @id @default(cuid())
+  restaurantId String
+  name         String         @db.VarChar(160)
+  displayOrder Int            @default(0)
+  isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  deletedAt    DateTime?
+  restaurant   Restaurant     @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  items        FoodMenuItem[]
+
+  @@index([restaurantId, isActive, displayOrder])
+  @@index([deletedAt])
+}
+
+model FoodMenuItem {
+  id           String           @id @default(cuid())
+  categoryId   String
+  name         String           @db.VarChar(160)
+  description  String?          @db.Text
+  price        Decimal?         @db.Decimal(10, 2)
+  mediaId      String?
+  isAvailable  Boolean          @default(true)
+  displayOrder Int              @default(0)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  deletedAt    DateTime?
+  category     FoodMenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  media        MediaAsset?      @relation("FoodMenuItemMedia", fields: [mediaId], references: [id], onDelete: SetNull)
+
+  @@index([categoryId, isAvailable])
+  @@index([mediaId])
+  @@index([deletedAt])
+}
+
+model EventVenue {
+  id             String            @id @default(cuid())
+  name           String            @db.VarChar(160)
+  slug           String            @unique @db.VarChar(191)
+  description    String?           @db.Text
+  capacity       Int?
+  seatingJson    Json?
+  facilitiesJson Json?
+  basePrice      Decimal?          @db.Decimal(10, 2)
+  isActive       Boolean           @default(true)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  deletedAt      DateTime?
+  media          EventVenueMedia[]
+
+  @@index([isActive])
+  @@index([deletedAt])
+}
+
+model EventVenueMedia {
+  id           String     @id @default(cuid())
+  venueId      String
+  mediaId      String
+  displayOrder Int        @default(0)
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
+  venue        EventVenue @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  media        MediaAsset @relation("EventVenueMediaAsset", fields: [mediaId], references: [id])
+
+  @@index([venueId, displayOrder])
+  @@index([mediaId])
+  @@index([deletedAt])
+}
+
+model Attraction {
+  id           String      @id @default(cuid())
+  name         String      @db.VarChar(160)
+  slug         String      @unique @db.VarChar(191)
+  description  String?     @db.Text
+  distance     String?     @db.VarChar(120)
+  mapUrl       String?     @db.Text
+  travelInfo   String?     @db.Text
+  mediaId      String?
+  displayOrder Int         @default(0)
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  deletedAt    DateTime?
+  media        MediaAsset? @relation("AttractionMedia", fields: [mediaId], references: [id], onDelete: SetNull)
+
+  @@index([isActive, displayOrder])
+  @@index([mediaId])
+  @@index([deletedAt])
+}
+
+model PackageOffer {
+  id             String        @id @default(cuid())
+  name           String        @db.VarChar(160)
+  slug           String        @unique @db.VarChar(191)
+  description    String?       @db.Text
+  bannerMediaId  String?
+  price          Decimal?      @db.Decimal(10, 2)
+  duration       String?       @db.VarChar(120)
+  discountType   DiscountType?
+  discountValue  Decimal?      @db.Decimal(10, 2)
+  inclusionsJson Json?
+  exclusionsJson Json?
+  terms          String?       @db.Text
+  validFrom      DateTime?     @db.Date
+  validTo        DateTime?     @db.Date
+  isFeatured     Boolean       @default(false)
+  isActive       Boolean       @default(true)
+  displayOrder   Int           @default(0)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+  bannerMedia    MediaAsset?   @relation("PackageBannerMedia", fields: [bannerMediaId], references: [id], onDelete: SetNull)
+
+  @@index([isActive, isFeatured, displayOrder])
+  @@index([validFrom, validTo])
+  @@index([deletedAt])
+}
+
+model GalleryCategory {
+  id           String        @id @default(cuid())
+  name         String        @db.VarChar(160)
+  slug         String        @unique @db.VarChar(191)
+  displayOrder Int           @default(0)
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+  items        GalleryItem[]
+
+  @@index([isActive, displayOrder])
+  @@index([deletedAt])
+}
+
+model GalleryItem {
+  id           String          @id @default(cuid())
+  categoryId   String
+  mediaId      String
+  title        String?         @db.VarChar(160)
+  caption      String?         @db.VarChar(255)
+  displayOrder Int             @default(0)
+  isFeatured   Boolean         @default(false)
+  isActive     Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  deletedAt    DateTime?
+  category     GalleryCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  media        MediaAsset      @relation("GalleryItemMedia", fields: [mediaId], references: [id])
+
+  @@index([categoryId, isActive, displayOrder])
+  @@index([mediaId])
+  @@index([deletedAt])
+}
+
+model Guest {
+  id          String    @id @default(cuid())
+  fullName    String    @db.VarChar(160)
+  email       String?   @db.VarChar(191)
+  phone       String?   @db.VarChar(40)
+  guestType   String?   @db.VarChar(80)
+  notes       String?   @db.Text
+  totalVisits Int       @default(0)
+  lastVisitAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  bookings    Booking[]
+
+  @@index([email])
+  @@index([phone])
+  @@index([deletedAt])
+}
+
+model Booking {
+  id                 String                 @id @default(cuid())
+  bookingRef         String                 @unique @db.VarChar(80)
+  guestId            String
+  checkInDate        DateTime               @db.Date
+  checkOutDate       DateTime               @db.Date
+  adults             Int
+  children           Int                    @default(0)
+  roomCount          Int
+  subtotal           Decimal                @db.Decimal(10, 2)
+  discountAmount     Decimal                @default(0) @db.Decimal(10, 2)
+  taxAmount          Decimal                @default(0) @db.Decimal(10, 2)
+  extraBedAmount     Decimal                @default(0) @db.Decimal(10, 2)
+  totalAmount        Decimal                @db.Decimal(10, 2)
+  currency           String                 @default("INR") @db.VarChar(10)
+  couponId           String?
+  status             BookingStatus          @default(PENDING)
+  paymentStatus      PaymentStatus          @default(UNPAID)
+  paymentMethod      PaymentMethod          @default(PAY_AT_HOTEL)
+  specialRequests    String?                @db.Text
+  expiresAt          DateTime?
+  confirmedAt        DateTime?
+  cancelledAt        DateTime?
+  cancellationReason String?                @db.Text
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  guest              Guest                  @relation(fields: [guestId], references: [id])
+  coupon             Coupon?                @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  rooms              BookingRoom[]
+  payments           Payment[]
+  refunds            Refund[]
+  statusHistory      BookingStatusHistory[]
+
+  @@index([guestId])
+  @@index([couponId])
+  @@index([status, paymentStatus, checkInDate, checkOutDate])
+  @@index([expiresAt, status])
+}
+
+model BookingRoom {
+  id                   String   @id @default(cuid())
+  bookingId            String
+  roomId               String
+  quantity             Int
+  adults               Int
+  children             Int      @default(0)
+  extraBeds            Int      @default(0)
+  nightlyBreakdownJson Json?
+  priceSubtotal        Decimal  @db.Decimal(10, 2)
+  discountAmount       Decimal  @default(0) @db.Decimal(10, 2)
+  taxAmount            Decimal  @default(0) @db.Decimal(10, 2)
+  totalAmount          Decimal  @db.Decimal(10, 2)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  booking              Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  room                 Room     @relation(fields: [roomId], references: [id])
+
+  @@index([bookingId])
+  @@index([roomId])
+}
+
+model BookingStatusHistory {
+  id          String         @id @default(cuid())
+  bookingId   String
+  oldStatus   BookingStatus?
+  newStatus   BookingStatus
+  changedById String?
+  note        String?        @db.Text
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  booking     Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  changedBy   AdminUser?     @relation("BookingStatusChangedBy", fields: [changedById], references: [id], onDelete: SetNull)
+
+  @@index([bookingId, createdAt])
+  @@index([changedById])
+}
+
+model RoomAvailability {
+  id             String   @id @default(cuid())
+  roomId         String
+  date           DateTime @db.Date
+  totalInventory Int
+  bookedCount    Int      @default(0)
+  blockedCount   Int      @default(0)
+  availableCount Int
+  minStay        Int?
+  maxStay        Int?
+  isClosed       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  room           Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, date])
+  @@index([date, availableCount, isClosed])
+}
+
+model RoomBlock {
+  id          String     @id @default(cuid())
+  roomId      String
+  startDate   DateTime   @db.Date
+  endDate     DateTime   @db.Date
+  quantity    Int
+  reason      String?    @db.Text
+  createdById String?
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
+  room        Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  createdBy   AdminUser? @relation("RoomBlockCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([roomId, startDate, endDate, isActive])
+  @@index([createdById])
+  @@index([deletedAt])
+}
+
+model RoomRate {
+  id           String    @id @default(cuid())
+  roomId       String
+  startDate    DateTime  @db.Date
+  endDate      DateTime  @db.Date
+  rateType     RateType
+  price        Decimal   @db.Decimal(10, 2)
+  weekendPrice Decimal?  @db.Decimal(10, 2)
+  priority     Int       @default(0)
+  minStay      Int?
+  maxStay      Int?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+  room         Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, startDate, endDate, isActive])
+  @@index([priority])
+  @@index([deletedAt])
+}
+
+model Coupon {
+  id                String       @id @default(cuid())
+  code              String       @unique @db.VarChar(80)
+  description       String?      @db.Text
+  discountType      DiscountType
+  discountValue     Decimal      @db.Decimal(10, 2)
+  minBookingAmount  Decimal?     @db.Decimal(10, 2)
+  maxDiscountAmount Decimal?     @db.Decimal(10, 2)
+  validFrom         DateTime?    @db.Date
+  validTo           DateTime?    @db.Date
+  usageLimit        Int?
+  usedCount         Int          @default(0)
+  isActive          Boolean      @default(true)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  deletedAt         DateTime?
+  bookings          Booking[]
+
+  @@index([isActive, validFrom, validTo])
+  @@index([deletedAt])
+}
+
+model TaxRate {
+  id         String    @id @default(cuid())
+  name       String    @db.VarChar(120)
+  percentage Decimal   @db.Decimal(5, 2)
+  isDefault  Boolean   @default(false)
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  rooms      Room[]
+
+  @@index([isDefault, isActive])
+  @@index([deletedAt])
+}
+
+model Payment {
+  id                String            @id @default(cuid())
+  bookingId         String
+  provider          PaymentProvider
+  method            PaymentMethod
+  amount            Decimal           @db.Decimal(10, 2)
+  currency          String            @default("INR") @db.VarChar(10)
+  status            TransactionStatus @default(PENDING)
+  transactionId     String?           @unique @db.VarChar(191)
+  providerOrderId   String?           @db.VarChar(191)
+  providerPaymentId String?           @db.VarChar(191)
+  paidAt            DateTime?
+  rawResponseJson   Json?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  booking           Booking           @relation(fields: [bookingId], references: [id])
+  refunds           Refund[]
+
+  @@index([bookingId, status])
+  @@index([providerOrderId])
+  @@index([providerPaymentId])
+}
+
+model Refund {
+  id               String       @id @default(cuid())
+  paymentId        String
+  bookingId        String
+  amount           Decimal      @db.Decimal(10, 2)
+  status           RefundStatus @default(PENDING)
+  providerRefundId String?      @db.VarChar(191)
+  reason           String?      @db.Text
+  processedAt      DateTime?
+  rawResponseJson  Json?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  payment          Payment      @relation(fields: [paymentId], references: [id])
+  booking          Booking      @relation(fields: [bookingId], references: [id])
+
+  @@index([status, bookingId])
+  @@index([paymentId])
+  @@index([providerRefundId])
+}
+
+model Inquiry {
+  id            String        @id @default(cuid())
+  type          InquiryType
+  name          String        @db.VarChar(160)
+  email         String?       @db.VarChar(191)
+  phone         String?       @db.VarChar(40)
+  subject       String?       @db.VarChar(191)
+  message       String        @db.Text
+  status        InquiryStatus @default(NEW)
+  assignedToId  String?
+  followUpDate  DateTime?
+  adminRemarks  String?       @db.Text
+  sourceRefType String?       @db.VarChar(80)
+  sourceRefId   String?       @db.VarChar(191)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
+  assignedTo    AdminUser?    @relation("InquiryAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  @@index([type, status, createdAt])
+  @@index([assignedToId])
+  @@index([deletedAt])
+}
+
+model NewsletterSubscriber {
+  id             String           @id @default(cuid())
+  email          String           @unique @db.VarChar(191)
+  status         NewsletterStatus @default(SUBSCRIBED)
+  subscribedAt   DateTime         @default(now())
+  unsubscribedAt DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  deletedAt      DateTime?
+
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model Testimonial {
+  id                String                    @id @default(cuid())
+  guestName         String                    @db.VarChar(160)
+  guestImageMediaId String?
+  rating            Int
+  review            String                    @db.Text
+  reviewDate        DateTime?                 @db.Date
+  source            String?                   @db.VarChar(120)
+  approvalStatus    TestimonialApprovalStatus @default(PENDING)
+  displayOrder      Int                       @default(0)
+  isActive          Boolean                   @default(true)
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  deletedAt         DateTime?
+  guestImageMedia   MediaAsset?               @relation("TestimonialGuestImage", fields: [guestImageMediaId], references: [id], onDelete: SetNull)
+
+  @@index([approvalStatus, isActive, displayOrder])
+  @@index([guestImageMediaId])
+  @@index([deletedAt])
+}
+
+model FaqCategory {
+  id           String    @id @default(cuid())
+  name         String    @db.VarChar(160)
+  slug         String    @unique @db.VarChar(191)
+  displayOrder Int       @default(0)
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+  faqs         Faq[]
+
+  @@index([isActive, displayOrder])
+  @@index([deletedAt])
+}
+
+model Faq {
+  id           String      @id @default(cuid())
+  categoryId   String
+  question     String      @db.VarChar(255)
+  answer       String      @db.Text
+  displayOrder Int         @default(0)
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  deletedAt    DateTime?
+  category     FaqCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([categoryId, isActive, displayOrder])
+  @@index([deletedAt])
+}
+
+model AdminUser {
+  id                   String                 @id @default(cuid())
+  name                 String                 @db.VarChar(160)
+  email                String                 @unique @db.VarChar(191)
+  username             String                 @unique @db.VarChar(120)
+  passwordHash         String                 @db.VarChar(255)
+  profileImageMediaId  String?
+  status               AdminStatus            @default(ACTIVE)
+  lastLoginAt          DateTime?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  deletedAt            DateTime?
+  profileImageMedia    MediaAsset?            @relation("AdminProfileImage", fields: [profileImageMediaId], references: [id], onDelete: SetNull)
+  mediaUploads         MediaAsset[]           @relation("MediaUploadedBy")
+  roles                UserRole[]
+  passwordResetTokens  PasswordResetToken[]
+  activityLogs         ActivityLog[]
+  policiesUpdated      Policy[]               @relation("PolicyUpdatedBy")
+  bookingStatusChanges BookingStatusHistory[] @relation("BookingStatusChangedBy")
+  roomBlocksCreated    RoomBlock[]            @relation("RoomBlockCreatedBy")
+  inquiriesAssigned    Inquiry[]              @relation("InquiryAssignedTo")
+
+  @@index([status])
+  @@index([profileImageMediaId])
+  @@index([deletedAt])
+}
+
+model Role {
+  id          String           @id @default(cuid())
+  name        String           @db.VarChar(120)
+  slug        String           @unique @db.VarChar(120)
+  description String?          @db.Text
+  isSystem    Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  deletedAt   DateTime?
+  permissions RolePermission[]
+  users       UserRole[]
+
+  @@index([deletedAt])
+}
+
+model Permission {
+  id          String           @id @default(cuid())
+  key         String           @unique @db.VarChar(160)
+  module      String           @db.VarChar(80)
+  action      String           @db.VarChar(80)
+  description String?          @db.Text
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  roles       RolePermission[]
+
+  @@index([module, action])
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+}
+
+model UserRole {
+  userId String
+  roleId String
+  user   AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@index([roleId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique @db.VarChar(255)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user      AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@index([userId])
+}
+
+model ActivityLog {
+  id           String     @id @default(cuid())
+  userId       String?
+  module       String     @db.VarChar(80)
+  action       String     @db.VarChar(80)
+  entityType   String?    @db.VarChar(120)
+  entityId     String?    @db.VarChar(191)
+  metadataJson Json?
+  ipAddress    String?    @db.VarChar(80)
+  userAgent    String?    @db.Text
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  user         AdminUser? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([module, action, createdAt])
+  @@index([entityType, entityId])
+  @@index([userId])
+}
+
+model NotificationSetting {
+  id                    String   @id @default(cuid())
+  smtpHost              String?  @db.VarChar(191)
+  smtpPort              Int?
+  smtpUser              String?  @db.VarChar(191)
+  smtpPasswordEncrypted String?  @db.Text
+  fromEmail             String?  @db.VarChar(191)
+  adminEmail            String?  @db.VarChar(191)
+  bookingEnabled        Boolean  @default(true)
+  inquiryEnabled        Boolean  @default(true)
+  cancellationEnabled   Boolean  @default(true)
+  checkInReminderEnabled Boolean @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model EmailTemplate {
+  id            String     @id @default(cuid())
+  key           String     @unique @db.VarChar(120)
+  subject       String     @db.VarChar(191)
+  bodyHtml      String?    @db.LongText
+  bodyText      String?    @db.LongText
+  variablesJson Json?
+  isActive      Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  deletedAt     DateTime?
+  logs          EmailLog[]
+
+  @@index([isActive])
+  @@index([deletedAt])
+}
+
+model EmailLog {
+  id           String         @id @default(cuid())
+  templateId   String?
+  templateKey  String?        @db.VarChar(120)
+  recipient    String         @db.VarChar(191)
+  subject      String         @db.VarChar(191)
+  status       EmailStatus    @default(PENDING)
+  errorMessage String?        @db.Text
+  relatedType  String?        @db.VarChar(80)
+  relatedId    String?        @db.VarChar(191)
+  sentAt       DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  template     EmailTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([relatedType, relatedId])
+  @@index([templateId])
+}
+
+model RazorpayWebhookEvent {
+  id        String   @id @default(cuid())
+  eventId   String   @unique @db.VarChar(191)
+  eventName String   @db.VarChar(120)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model MediaAsset {
+  id                        String            @id @default(cuid())
+  publicId                  String            @unique @db.VarChar(191)
+  url                       String            @db.Text
+  secureUrl                 String            @db.Text
+  resourceType              MediaResourceType
+  format                    String?           @db.VarChar(40)
+  width                     Int?
+  height                    Int?
+  bytes                     Int?
+  folder                    String?           @db.VarChar(160)
+  category                  String?           @db.VarChar(120)
+  altText                   String?           @db.VarChar(255)
+  caption                   String?           @db.VarChar(255)
+  uploadedById              String?
+  isActive                  Boolean           @default(true)
+  createdAt                 DateTime          @default(now())
+  updatedAt                 DateTime          @updatedAt
+  deletedAt                 DateTime?
+  uploadedBy                AdminUser?        @relation("MediaUploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+  websiteLogos              WebsiteSetting[]  @relation("WebsiteLogo")
+  websiteFavicons           WebsiteSetting[]  @relation("WebsiteFavicon")
+  websiteHeaderLogos        WebsiteSetting[]  @relation("WebsiteHeaderLogo")
+  websiteFooterLogos        WebsiteSetting[]  @relation("WebsiteFooterLogo")
+  pageBanners               Page[]            @relation("PageBanner")
+  pageSectionMedia          PageSection[]     @relation("PageSectionMedia")
+  bannerDesktopMedia        Banner[]          @relation("BannerDesktopMedia")
+  bannerMobileMedia         Banner[]          @relation("BannerMobileMedia")
+  bannerVideoMedia          Banner[]          @relation("BannerVideoMedia")
+  roomCategoryFeaturedMedia RoomCategory[]    @relation("RoomCategoryFeaturedMedia")
+  roomMedia                 RoomMedia[]       @relation("RoomMediaAsset")
+  facilityMedia             FacilityMedia[]   @relation("FacilityMediaAsset")
+  restaurantMedia           RestaurantMedia[] @relation("RestaurantMediaAsset")
+  foodMenuItemMedia         FoodMenuItem[]    @relation("FoodMenuItemMedia")
+  eventVenueMedia           EventVenueMedia[] @relation("EventVenueMediaAsset")
+  attractionMedia           Attraction[]      @relation("AttractionMedia")
+  packageBannerMedia        PackageOffer[]    @relation("PackageBannerMedia")
+  galleryItemMedia          GalleryItem[]     @relation("GalleryItemMedia")
+  testimonialGuestImages    Testimonial[]     @relation("TestimonialGuestImage")
+  adminProfileImages        AdminUser[]       @relation("AdminProfileImage")
+  blogPostCoverMedia        BlogPost[]        @relation("BlogPostCoverMedia")
+
+  @@index([folder, category, isActive])
+  @@index([uploadedById])
+  @@index([deletedAt])
+}

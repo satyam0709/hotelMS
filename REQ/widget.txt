@@ -1,0 +1,1568 @@
+import { EngagementsWidget } from './index';
+
+export default function Demo() {
+  return (
+    <div className="flex h-full min-h-[400px] items-center justify-center">
+      <EngagementsWidget />
+    </div>
+  );
+}
+
+
+
+import { motion, type Variants } from 'motion/react';
+
+export function EngagementsWidget() {
+  const data = [
+    { value: 50 },
+    { value: 40 },
+    { value: 45 },
+    { value: 30 },
+    { value: 65 },
+    { value: 75 },
+    { value: 52 },
+    { value: 48 },
+    { value: 65 },
+    { value: 85 },
+    { value: 45 },
+    { value: 60 },
+  ];
+
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.08 },
+    },
+  };
+
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 8 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { type: 'spring', stiffness: 350, damping: 25 },
+    },
+  };
+
+  return (
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className="bg-card ring-border/10 flex w-full max-w-lg flex-col gap-6 rounded-3xl p-4 antialiased shadow-[0_2px_8px_rgba(0,0,0,0.04),0_16px_32px_rgba(0,0,0,0.04)] ring-1 sm:flex-row"
+    >
+      <div className="flex flex-1 flex-col justify-between pt-3 pl-3">
+        <div>
+          <motion.h3
+            variants={itemVariants}
+            className="text-muted-foreground mb-1 text-sm font-medium text-balance"
+          >
+            Total Engagements
+          </motion.h3>
+          <motion.div
+            variants={itemVariants}
+            className="mb-4 flex items-baseline gap-2"
+          >
+            <span className="text-foreground text-4xl font-bold tracking-tight tabular-nums">
+              12.8K
+            </span>
+            <span className="text-destructive bg-destructive/10 rounded-md px-2 py-0.5 text-sm font-medium tabular-nums">
+              -5%
+            </span>
+          </motion.div>
+
+          <motion.div
+            variants={itemVariants}
+            className="mt-6 flex flex-col gap-2"
+          >
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Organic</span>
+              <span className="text-foreground font-medium tabular-nums">
+                8.2K
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Promoted</span>
+              <span className="text-foreground font-medium tabular-nums">
+                4.6K
+              </span>
+            </div>
+          </motion.div>
+        </div>
+        <motion.div
+          variants={itemVariants}
+          className="text-muted-foreground mt-6 text-xs"
+        >
+          Last 28 Days vs Previous Period
+        </motion.div>
+      </div>
+
+      <motion.div
+        variants={itemVariants}
+        className="bg-muted/10 ring-border/10 relative flex h-[160px] w-full items-end justify-between gap-[3px] overflow-hidden rounded-lg px-3 pt-6 pb-3 shadow-inner ring-1 ring-inset sm:w-[200px]"
+      >
+        {data.map((item, i) => (
+          <motion.div
+            key={i}
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: `${item.value}%`, opacity: 1 }}
+            transition={{
+              delay: 0.2 + i * 0.04,
+              duration: 0.6,
+              type: 'spring',
+              stiffness: 150,
+              damping: 15,
+            }}
+            whileHover={{
+              scaleY: 1.05,
+              filter: 'brightness(1.5)',
+              transition: { duration: 0.2 },
+            }}
+            className="bg-foreground/20 group hover:bg-foreground/30 flex w-full origin-bottom transform-gpu cursor-pointer flex-col justify-start transition-colors active:scale-[0.96]"
+          >
+            {/* Top Cap */}
+            <div className="bg-foreground/80 group-hover:bg-foreground h-[2px] w-full rounded-t-sm transition-colors" />
+          </motion.div>
+        ))}
+      </motion.div>
+    </motion.div>
+  );
+}
+
+
+
+
+
+import { PortfolioPerformanceWidget } from "./index"
+
+export default function Demo() {
+  return (
+    <div className="flex min-h-[600px] h-full items-center justify-center ">
+      <PortfolioPerformanceWidget />
+    </div>
+  )
+}
+
+
+
+
+
+'use client';
+
+import { useState } from 'react';
+import { ArrowUpRight, Plus, ArrowRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const accounts = [
+  { id: 0, name: 'Main Vault', number: '•••• 8092', balance: '5 240', cents: '.00' },
+  { id: 1, name: 'Checking', number: '•••• 3762', balance: '1 480', cents: '.24' },
+  { id: 2, name: 'Savings', number: '•••• 9104', balance: '12 850', cents: '.50' },
+  { id: 3, name: 'Business', number: '•••• 5521', balance: '8 420', cents: '.90' },
+];
+
+export function PortfolioPerformanceWidget() {
+  const [activeDot, setActiveDot] = useState(0);
+  const activeAccount = accounts[activeDot];
+
+  return (
+    <div className="bg-muted border-border/30 w-full max-w-[380px] rounded-[3rem] border p-2.5 shadow-sm">
+      {/* Top White Card */}
+      <motion.div
+        initial={{ y: 10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="bg-card border-border/50 rounded-[2.5rem] border p-8 pb-10 shadow-sm overflow-hidden"
+      >
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeAccount.id}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.15, ease: "easeInOut" }}
+          >
+            <div className="mb-10 flex items-center justify-between">
+              <span className="text-muted-foreground/80 text-[1.1rem] font-medium">
+                {activeAccount.name}
+              </span>
+              <span className="text-muted-foreground/60 text-[1.1rem] font-medium tracking-widest">
+                {activeAccount.number}
+              </span>
+            </div>
+
+            <div className="flex items-end justify-between">
+              <div className="text-card-foreground text-5xl font-bold tracking-tight">
+                ${activeAccount.balance}
+                <span className="text-muted-foreground/80 text-4xl font-semibold">
+                  {activeAccount.cents}
+                </span>
+              </div>
+              <button className="text-muted-foreground/40 hover:text-foreground mb-1 p-1 transition-colors">
+                <ArrowUpRight className="h-8 w-8" strokeWidth={2.5} />
+              </button>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </motion.div>
+
+      {/* Pagination Dots */}
+      <div className="flex items-center justify-center gap-2 py-6">
+        {accounts.map((acc, idx) => (
+          <button
+            key={acc.id}
+            onClick={() => setActiveDot(idx)}
+            className="relative flex h-4 cursor-pointer items-center justify-center"
+            aria-label={`Go to slide ${idx + 1}`}
+          >
+            <motion.div
+              layout
+              className={`rounded-full ${
+                activeDot === idx
+                  ? 'bg-foreground/40 h-1.5 w-5'
+                  : 'bg-foreground/20 h-1.5 w-1.5'
+              }`}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            />
+          </button>
+        ))}
+      </div>
+
+      {/* Action Buttons */}
+      <div className="grid grid-cols-3 gap-2 px-4 pt-1 pb-6">
+        {[
+          { label: 'Send', icon: ArrowUpRight },
+          { label: 'Deposit', icon: Plus },
+          { label: 'Transfer', icon: ArrowRight },
+        ].map((action, i) => (
+          <motion.button
+            key={i}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            whileTap={{ scale: 0.92 }}
+            transition={{
+              opacity: { duration: 0.4, delay: 0.15 + i * 0.1 },
+              y: { duration: 0.4, delay: 0.15 + i * 0.1 },
+              scale: { duration: 0.1 },
+            }}
+            className="group flex flex-col items-center gap-3 cursor-pointer"
+          >
+            <div className="bg-card border-border/50 text-foreground group-hover:bg-foreground group-hover:text-background flex h-16 w-16 items-center justify-center rounded-full border shadow-sm transition-all duration-300">
+              <action.icon className="h-7 w-7" strokeWidth={2.5} />
+            </div>
+            <span className="text-foreground/80 group-hover:text-foreground text-[15px] font-medium transition-colors">
+              {action.label}
+            </span>
+          </motion.button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+
+
+import { AccountBalanceWidget } from './index';
+
+export default function Demo() {
+  return (
+    <div className="flex h-full min-h-[600px] items-center justify-center">
+      <AccountBalanceWidget />
+    </div>
+  );
+}
+
+
+
+
+"use client";
+
+import { useState, useRef, useEffect } from 'react';
+import { Eye, ChevronDown, ArrowDownToLine, ArrowRightLeft, ArrowUpFromLine, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+type Currency = {
+  code: string;
+  symbol: string;
+  balance: string;
+  growth: string;
+};
+
+const currencies: Currency[] = [
+  { code: 'USD', symbol: '$', balance: '8,459.50', growth: '+$342.10' },
+  { code: 'INR', symbol: '₹', balance: '706,450.00', growth: '+₹28,500.00' },
+  { code: 'USDC', symbol: 'USDC', balance: '8,459.50', growth: '+USDC 342.10' },
+  { code: 'EUR', symbol: '€', balance: '7,890.25', growth: '+€310.50' },
+];
+
+export function AccountBalanceWidget() {
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency>(currencies[0]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const chartPath = "M 0 120 C 50 110, 80 120, 130 85 C 170 55, 210 70, 260 35 C 290 15, 320 20, 320 20";
+  const fillPath = `${chartPath} L 320 160 L 0 160 Z`;
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="flex flex-col gap-4 w-full max-w-[420px]">
+      {/* Main Card */}
+      <div className="bg-card border-border w-full rounded-[2rem] border p-6 shadow-sm relative overflow-hidden flex flex-col min-h-[320px]">
+        {/* Header */}
+        <div className="mb-4 flex items-center justify-between relative z-10">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <span className="text-sm font-medium">Available Funds</span>
+            <Eye className="h-4 w-4" />
+          </div>
+          
+          <div className="relative" ref={dropdownRef}>
+            <button 
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-card-foreground hover:bg-muted/50 transition-colors"
+            >
+              {selectedCurrency.code} 
+              <motion.div animate={{ rotate: isDropdownOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                <ChevronDown className="h-3 w-3 opacity-70" />
+              </motion.div>
+            </button>
+            
+            <AnimatePresence>
+              {isDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  transition={{ duration: 0.15, ease: "easeOut" }}
+                  className="absolute right-0 top-full mt-2 w-32 rounded-xl border border-border bg-popover p-1 shadow-md z-50"
+                >
+                  {currencies.map((currency) => (
+                    <button
+                      key={currency.code}
+                      onClick={() => {
+                        setSelectedCurrency(currency);
+                        setIsDropdownOpen(false);
+                      }}
+                      className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-popover-foreground hover:bg-muted transition-colors"
+                    >
+                      <span>{currency.code}</span>
+                      {selectedCurrency.code === currency.code && (
+                        <Check className="h-3 w-3 text-primary" />
+                      )}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Balance */}
+        <div className="mb-2 flex items-baseline gap-1 relative z-10">
+          <span className={`font-semibold text-muted-foreground ${selectedCurrency.code === 'USDC' ? 'text-xl mr-1' : 'text-3xl'}`}>
+            {selectedCurrency.symbol}
+          </span>
+          <motion.span 
+            key={selectedCurrency.code}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-card-foreground text-5xl font-bold tracking-tighter"
+          >
+            {selectedCurrency.balance}
+          </motion.span>
+        </div>
+
+        {/* Growth */}
+        <div className="mb-8 flex items-center gap-3 relative z-10">
+          <motion.span 
+            key={selectedCurrency.growth}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="text-primary font-medium text-sm"
+          >
+            {selectedCurrency.growth}
+          </motion.span>
+          <div className="bg-primary/10 text-primary flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-semibold">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+            4.2%
+          </div>
+        </div>
+
+        <div className="flex-1" />
+
+        {/* Chart */}
+        <div className="absolute left-0 right-0 bottom-0 h-[180px] pointer-events-none opacity-80">
+          <svg viewBox="0 0 320 160" className="w-full h-full text-primary" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="fillGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="currentColor" stopOpacity="0.25" />
+                <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <motion.path
+              key={`fill-${selectedCurrency.code}`}
+              d={fillPath}
+              fill="url(#fillGradient)"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1, delay: 0.1 }}
+            />
+            <motion.path
+              key={`chart-${selectedCurrency.code}`}
+              d={chartPath}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 1, ease: "easeInOut" }}
+            />
+          </svg>
+        </div>
+
+        {/* Time Filters */}
+        <div className="relative z-10 flex justify-center gap-2 pt-8">
+          {['1D', '1W', '1M', '1Y'].map((period) => (
+            <button
+              key={period}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${
+                period === '1W'
+                  ? 'bg-muted text-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+              }`}
+            >
+              {period}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: 'Deposit', icon: ArrowDownToLine },
+          { label: 'Transfer', icon: ArrowRightLeft },
+          { label: 'Withdraw', icon: ArrowUpFromLine },
+        ].map((action, i) => (
+          <button
+            key={i}
+            className="bg-card border-border flex flex-col items-center justify-center gap-3 rounded-2xl border py-4 shadow-sm transition-colors hover:bg-muted/50"
+          >
+            <div className="bg-foreground text-background rounded-full p-3">
+              <action.icon className="h-5 w-5" />
+            </div>
+            <span className="text-card-foreground text-sm font-semibold">{action.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+
+
+
+import { ProgressTrackerWidget } from './index';
+
+export default function Demo() {
+  return (
+    <div className="flex min-h-[500px] h-full items-center justify-center">
+      <ProgressTrackerWidget />
+    </div>
+  );
+}
+
+
+
+
+
+import { MoreHorizontal, TrendingUp } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+export function ProgressTrackerWidget() {
+  const totalBars = 32;
+  const filledBars = 23;
+
+  return (
+    <div className="bg-card border-border w-full max-w-[480px] rounded-3xl border p-6 shadow-sm">
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h3 className="text-card-foreground text-base font-semibold">
+            Weekly Engagement
+          </h3>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Community interaction is growing steadily
+          </p>
+        </div>
+        <button className="text-muted-foreground hover:text-foreground transition-colors p-1">
+          <MoreHorizontal className="h-5 w-5" />
+        </button>
+      </div>
+
+      <div className="mb-6 flex items-end justify-between">
+        <div className="text-card-foreground text-5xl font-bold tracking-tighter">
+          72%
+        </div>
+        <div className="mb-1 flex items-center gap-2">
+          <div className="text-primary bg-primary/10 flex items-center gap-1 rounded-full px-2.5 py-1 text-sm font-semibold">
+            <TrendingUp
+              className="h-4 w-4"
+              strokeWidth={2.5}
+            />
+            <span>+12%</span>
+          </div>
+          <span className="text-muted-foreground text-sm font-medium">vs last week</span>
+        </div>
+      </div>
+
+      <div className="flex h-12 w-full gap-[3px]">
+        {Array.from({ length: totalBars }).map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ scaleY: 0, opacity: 0 }}
+            animate={{ scaleY: 1, opacity: 1 }}
+            transition={{
+              duration: 0.4,
+              delay: i * 0.02,
+              ease: 'easeOut',
+            }}
+            style={{ originY: 1 }}
+            className={`flex-1 rounded-[2px] ${
+              i < filledBars ? 'bg-primary' : 'bg-muted'
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+
+
+
+import { RevenueOverviewWidget } from './index';
+
+export default function Demo() {
+  return (
+    <div className="flex min-h-[400px] h-full items-center justify-center bg-background ">
+      <RevenueOverviewWidget />
+    </div>
+  );
+}
+
+
+
+
+
+'use client';
+
+import * as React from 'react';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  type TooltipContentProps,
+} from 'recharts';
+import { Card, CardContent } from '@/components/base-ui/card';
+import { Button } from '@/components/base-ui/button';
+import {
+  FaArrowTrendUp,
+  FaArrowTrendDown,
+  FaArrowRight,
+  FaChartLine,
+  FaSackDollar,
+} from 'react-icons/fa6';
+
+export type TimeRange = '7d' | '14d' | '30d';
+
+export interface RevenueDataPoint {
+  label: string;
+  value: number;
+}
+
+export interface RevenueStat {
+  id: string;
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}
+
+export interface RevenueOverviewWidgetProps {
+  title?: string;
+  timeRanges?: TimeRange[];
+  defaultRange?: TimeRange;
+  datasets?: Record<TimeRange, RevenueDataPoint[]>;
+  stats?: Record<TimeRange, RevenueStat[]>;
+  metricLabel?: string;
+  metricValues?: Record<TimeRange, string>;
+  metricChanges?: Record<TimeRange, { value: string; positive: boolean }>;
+  ctaLabel?: string;
+  onCtaClick?: () => void;
+}
+
+const defaultDatasets: Record<TimeRange, RevenueDataPoint[]> = {
+  '7d': [
+    { label: 'Mon', value: 3100 },
+    { label: 'Tue', value: 7200 },
+    { label: 'Wed', value: 4400 },
+    { label: 'Thu', value: 8600 },
+    { label: 'Fri', value: 5100 },
+    { label: 'Sat', value: 9300 },
+    { label: 'Sun', value: 6800 },
+  ],
+  '14d': [
+    { label: 'Apr 25', value: 3200 },
+    { label: 'Apr 26', value: 7800 },
+    { label: 'Apr 27', value: 4100 },
+    { label: 'Apr 28', value: 8500 },
+    { label: 'Apr 29', value: 5300 },
+    { label: 'Apr 30', value: 9100 },
+    { label: 'May 1', value: 4600 },
+    { label: 'May 2', value: 7400 },
+    { label: 'May 3', value: 5000 },
+    { label: 'May 4', value: 9600 },
+    { label: 'May 5', value: 6200 },
+    { label: 'May 6', value: 8800 },
+    { label: 'May 7', value: 5700 },
+    { label: 'May 8', value: 10200 },
+  ],
+  '30d': [
+    { label: 'Apr 9', value: 2800 },
+    { label: 'Apr 11', value: 6500 },
+    { label: 'Apr 13', value: 3400 },
+    { label: 'Apr 15', value: 7900 },
+    { label: 'Apr 17', value: 4200 },
+    { label: 'Apr 19', value: 8700 },
+    { label: 'Apr 21', value: 3800 },
+    { label: 'Apr 23', value: 9200 },
+    { label: 'Apr 25', value: 5100 },
+    { label: 'Apr 27', value: 10400 },
+    { label: 'Apr 29', value: 6000 },
+    { label: 'May 1', value: 8100 },
+    { label: 'May 3', value: 4700 },
+    { label: 'May 5', value: 9800 },
+    { label: 'May 7', value: 6500 },
+    { label: 'May 8', value: 11200 },
+  ],
+};
+
+const defaultStats: Record<TimeRange, RevenueStat[]> = {
+  '7d': [
+    {
+      id: 'avg',
+      icon: <FaChartLine className="size-3.5" />,
+      label: 'Avg. daily revenue',
+      value: '$6,214',
+    },
+    {
+      id: 'top',
+      icon: <FaSackDollar className="size-3.5" />,
+      label: 'Top earning day',
+      value: '$8,100',
+    },
+  ],
+  '14d': [
+    {
+      id: 'avg',
+      icon: <FaChartLine className="size-3.5" />,
+      label: 'Avg. daily revenue',
+      value: '$5,943',
+    },
+    {
+      id: 'top',
+      icon: <FaSackDollar className="size-3.5" />,
+      label: 'Top earning day',
+      value: '$8,400',
+    },
+  ],
+  '30d': [
+    {
+      id: 'avg',
+      icon: <FaChartLine className="size-3.5" />,
+      label: 'Avg. daily revenue',
+      value: '$5,581',
+    },
+    {
+      id: 'top',
+      icon: <FaSackDollar className="size-3.5" />,
+      label: 'Top earning day',
+      value: '$8,400',
+    },
+  ],
+};
+
+const defaultMetricValues: Record<TimeRange, string> = {
+  '7d': '$43,500',
+  '14d': '$84,200',
+  '30d': '$172,600',
+};
+
+const defaultMetricChanges: Record<
+  TimeRange,
+  { value: string; positive: boolean }
+> = {
+  '7d': { value: '+8.4%', positive: true },
+  '14d': { value: '+14.2%', positive: true },
+  '30d': { value: '-3.1%', positive: false },
+};
+
+function RevenueTooltip({
+  active,
+  payload,
+  label,
+}: Partial<TooltipContentProps<number, string>>) {
+  if (!active || !payload?.length) return null;
+
+  return (
+    <div className="bg-background/50 border-border/50 rounded-lg border px-2 py-2 shadow-sm backdrop-blur-2xl">
+      <p className="text-muted-foreground text-xs">{label}</p>
+      <p className="text-foreground text-sm font-medium tabular-nums">
+        ${payload[0].value?.toLocaleString()}
+      </p>
+    </div>
+  );
+}
+
+export function RevenueOverviewWidget({
+  timeRanges = ['7d', '14d', '30d'],
+  defaultRange = '14d',
+  datasets = defaultDatasets,
+  stats = defaultStats,
+  metricLabel = 'Total Revenue',
+  metricValues = defaultMetricValues,
+  metricChanges = defaultMetricChanges,
+  ctaLabel = 'Full Report',
+  onCtaClick,
+}: RevenueOverviewWidgetProps) {
+  const [activeRange, setActiveRange] = React.useState<TimeRange>(defaultRange);
+
+  const chartData = datasets[activeRange] ?? [];
+  const metricValue = metricValues[activeRange] ?? '—';
+  const metricChange = metricChanges[activeRange];
+  const activeStats = stats[activeRange] ?? [];
+
+  return (
+    <div className="bg-muted w-full max-w-sm rounded-[30px] p-2">
+      <Card className="w-full rounded-3xl shadow-[0px_0px_0px_1px_rgba(0,0,0,0.06),0px_1px_2px_-1px_rgba(0,0,0,0.06),0px_2px_4px_0px_rgba(0,0,0,0.04)] ring-0">
+        <CardContent className="flex flex-col gap-0">
+          <div className="flex items-center justify-between">
+            <p className="text-muted-foreground text-md font-medium">
+              {metricLabel}
+            </p>
+
+            <div className="bg-muted flex items-center gap-0.5 rounded-full p-0.5">
+              {timeRanges.map((range) => (
+                <button
+                  key={range}
+                  onClick={() => setActiveRange(range)}
+                  className={[
+                    'rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200',
+                    activeRange === range
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground',
+                  ].join(' ')}
+                >
+                  {range}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-2 flex items-end gap-3">
+            <span className="text-foreground text-4xl leading-none font-bold tracking-tight tabular-nums">
+              {metricValue}
+            </span>
+            {metricChange && (
+              <span
+                className={[
+                  'mb-0.5 flex items-center gap-1 text-sm font-semibold',
+                  metricChange.positive
+                    ? 'text-emerald-500'
+                    : 'text-destructive',
+                ].join(' ')}
+              >
+                {metricChange.positive ? (
+                  <FaArrowTrendUp className="size-3.5" />
+                ) : (
+                  <FaArrowTrendDown className="size-3.5" />
+                )}
+                {metricChange.value}
+              </span>
+            )}
+          </div>
+
+          <div
+            className="mx-auto mt-3 h-36 w-full"
+            style={{ width: 'calc(100% )' }}
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={chartData}
+                margin={{ top: 4, right: 0, left: 0, bottom: 0 }}
+              >
+                <defs>
+                  <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="0%"
+                      stopColor="var(--primary)"
+                      stopOpacity={0.25}
+                    />
+                    <stop
+                      offset="100%"
+                      stopColor="var(--primary)"
+                      stopOpacity={0}
+                    />
+                  </linearGradient>
+                </defs>
+
+                <XAxis
+                  dataKey="label"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{
+                    fill: 'var(--muted-foreground)',
+                    fontSize: 10,
+                    fontWeight: 400,
+                  }}
+                  interval="preserveStartEnd"
+                  padding={{ left: 4, right: 4 }}
+                />
+                <YAxis hide />
+                <Tooltip
+                  content={<RevenueTooltip />}
+                  cursor={{
+                    stroke: 'var(--border)',
+                    strokeWidth: 1,
+                    strokeDasharray: '3 3',
+                  }}
+                />
+                <Area
+                  type="linear"
+                  dataKey="value"
+                  stroke="var(--primary)"
+                  strokeWidth={2}
+                  fill="url(#revenueGrad)"
+                  dot={false}
+                  activeDot={{
+                    r: 4,
+                    fill: 'var(--primary)',
+                    strokeWidth: 2,
+                    stroke: 'var(--background)',
+                  }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="mt-1 flex flex-col gap-2">
+            {activeStats.map((stat) => (
+              <div key={stat.id} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">{stat.icon}</span>
+                  <span className="text-muted-foreground text-sm font-medium">
+                    {stat.label}
+                  </span>
+                </div>
+                <span className="text-foreground text-sm font-semibold tabular-nums">
+                  {stat.value}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <Button
+            variant="default"
+            className="group mt-4 w-full gap-2 rounded-full font-semibold shadow-[inset_0_2px_4px_0_rgba(255,255,255,0.7),inset_0_-2px_4px_0_rgba(0,0,0,0.2),0px_4px_24px_0px_rgba(0,0,0,0.1),0px_2px_12px_0px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_-2px_4px_0_rgba(0,0,0,0.2),inset_0_2px_4px_0_rgba(255,255,255,0.5)]"
+            onClick={onCtaClick}
+          >
+            {ctaLabel}
+            <FaArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+export default RevenueOverviewWidget;
+
+
+
+
+import { RevenueWidget } from "./index"
+
+export default function RevenueWidgetDemo() {
+  return (
+    <div className="flex items-center justify-center bg-background min-h-[500px] h-full">
+      <RevenueWidget />
+    </div>
+  )
+}
+    
+
+
+
+
+import * as React from 'react';
+import { Card, CardContent } from '@/components/base-ui/card';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+
+export interface RevenueSource {
+  id: string;
+  label: string;
+  value: string;
+  numericValue: number;
+  colorClass: string;
+  fill?: string;
+  opacity?: number;
+}
+
+export interface RevenueWidgetProps {
+  title?: string;
+  data?: RevenueSource[];
+}
+
+const defaultData: RevenueSource[] = [
+  {
+    id: 'subscriptions',
+    label: 'Subscriptions',
+    value: '12,450',
+    numericValue: 12450,
+    colorClass: 'text-primary',
+    fill: 'var(--primary)',
+    opacity: 1,
+  },
+  {
+    id: 'one-time',
+    label: 'One-time Sales',
+    value: '8,320',
+    numericValue: 8320,
+    colorClass: 'text-primary/70',
+    fill: 'var(--primary)',
+    opacity: 0.7,
+  },
+  {
+    id: 'services',
+    label: 'Services',
+    value: '4,110',
+    numericValue: 4110,
+    colorClass: 'text-primary/40',
+    fill: 'var(--primary)',
+    opacity: 0.4,
+  },
+];
+
+export function RevenueWidget({
+  title = 'Revenue Sources',
+  data = defaultData,
+}: RevenueWidgetProps) {
+  const chartData = React.useMemo(() => {
+    const defaultFills = [
+      'var(--primary)',
+      'var(--primary)',
+      'var(--primary)',
+      'var(--primary)',
+    ];
+    const defaultOpacities = [1, 0.7, 0.4, 0.2];
+    return data.map((item, index) => ({
+      ...item,
+      fill: item.fill || defaultFills[index % defaultFills.length],
+      opacity:
+        item.opacity ?? defaultOpacities[index % defaultOpacities.length],
+    }));
+  }, [data]);
+
+  return (
+    <div className="bg-muted w-full max-w-sm rounded-[30px] p-2">
+      <Card className="text-card-foreground w-full rounded-3xl px-2 shadow-[0px_0px_0px_1px_rgba(0,0,0,0.06),0px_1px_2px_-1px_rgba(0,0,0,0.06),0px_2px_4px_0px_rgba(0,0,0,0.04)] ring-0">
+        <CardContent className="flex flex-col gap-2">
+          <div className="">
+            <h3 className="text-foreground text-center text-lg font-semibold sm:text-start">
+              {title}
+            </h3>
+          </div>
+
+          <div className="flex flex-col items-center gap-4 sm:flex-row">
+            <div className="relative h-28 w-28 flex-shrink-0 sm:h-32 sm:w-32">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius="70%"
+                    outerRadius="100%"
+                    paddingAngle={5}
+                    dataKey="numericValue"
+                    stroke="none"
+                    cornerRadius={4}
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${entry.id || index}`}
+                        fill={entry.fill}
+                        fillOpacity={entry.opacity}
+                        className="cursor-pointer transition-all duration-300 outline-none hover:opacity-80"
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    cursor={false}
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="border-border/50 bg-background/20 flex flex-col gap-1 rounded-lg border p-2 shadow-sm backdrop-blur-xl">
+                            <span className="text-muted-foreground text-[0.70rem] font-semibold">
+                              {payload[0].payload.label}
+                            </span>
+                            <span className="text-foreground text-sm font-medium">
+                              {payload[0].payload.value}
+                            </span>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="flex w-full flex-col gap-1">
+              {chartData.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex w-full cursor-default items-center justify-between gap-2"
+                >
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`size-3`}
+                      style={{ backgroundColor: item.fill }}
+                    />
+                    <span className="text-muted-foreground group-hover/item:text-foreground text-sm font-medium transition-colors duration-300">
+                      {item.label}
+                    </span>
+                  </div>
+                  <span className="text-foreground text-md font-semibold tabular-nums">
+                    {item.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+
+
+
+import { SalesBreakdownWidget } from "./index";
+
+export default function Widget3Demo() {
+  return (
+    <div className="flex items-center justify-center bg-background min-h-[500px] h-full">
+      <SalesBreakdownWidget />
+    </div>
+  );
+}
+
+
+
+
+'use client';
+
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+  type TooltipContentProps,
+} from 'recharts';
+import { Card, CardContent, CardHeader } from '@/components/base-ui/card';
+import { Button } from '@/components/base-ui/button';
+
+export interface SalesDataPoint {
+  day: string;
+  food: number;
+  drink: number;
+  grocery: number;
+  shopping: number;
+}
+
+export interface SalesChannel {
+  key: keyof Omit<SalesDataPoint, 'day'>;
+  label: string;
+  color: string;
+}
+
+export interface SalesBreakdownWidgetProps {
+  title?: string;
+  subtitle?: string;
+  actionLabel?: string;
+  data?: SalesDataPoint[];
+  channels?: SalesChannel[];
+  onActionClick?: () => void;
+}
+
+const defaultData: SalesDataPoint[] = [
+  { day: '01', food: 32, drink: 18, grocery: 14, shopping: 22 },
+  { day: '02', food: 20, drink: 12, grocery: 10, shopping: 8 },
+  { day: '03', food: 54, drink: 24, grocery: 18, shopping: 16 },
+  { day: '04', food: 26, drink: 18, grocery: 14, shopping: 12 },
+  { day: '05', food: 18, drink: 10, grocery: 8, shopping: 10 },
+  { day: '06', food: 32, drink: 16, grocery: 12, shopping: 22 },
+  { day: '07', food: 30, drink: 14, grocery: 12, shopping: 16 },
+];
+
+const defaultChannels: SalesChannel[] = [
+  {
+    key: 'food',
+    label: 'Food',
+    color: '#38bdf8',
+  },
+  {
+    key: 'drink',
+    label: 'Drink',
+    color: '#a3e635',
+  },
+  {
+    key: 'grocery',
+    label: 'Grocery',
+    color: '#ef4444',
+  },
+  {
+    key: 'shopping',
+    label: 'Shopping',
+    color: '#f0529c',
+  },
+];
+
+interface CustomTooltipPayload {
+  name: string;
+  value: number;
+  fill: string;
+}
+
+function CustomTooltip({
+  active,
+  payload,
+  label,
+}: Omit<Partial<TooltipContentProps<number, string>>, 'payload'> & {
+  payload?: CustomTooltipPayload[]
+}) {
+  if (!active || !payload?.length) return null;
+
+  const total = payload.reduce((sum, item) => sum + (item.value ?? 0), 0);
+
+  return (
+    <div className="bg-background/80 text-foreground shadow-border/50 min-w-[130px] rounded-none p-3 shadow-[0px_0px_0px_1px_rgba(0,0,0,0.06),0px_1px_2px_-1px_rgba(0,0,0,0.06),0px_2px_4px_0px_rgba(0,0,0,0.04)] ring-0 backdrop-blur-sm dark:shadow-[0px_0px_0px_1px_rgba(255,255,255,0.1),0px_1px_2px_-1px_rgba(255,255,255,0.1),0px_2px_4px_0px_rgba(255,255,255,0.08)]">
+      <p className="text-muted-foreground mb-2 text-sm font-medium tracking-widest">
+        {label}
+      </p>
+      <div className="flex flex-col gap-1.5">
+        {[...payload].reverse().map((entry) => (
+          <div
+            key={entry.name}
+            className="flex items-center justify-between gap-4"
+          >
+            <div className="flex items-center gap-1.5">
+              <span
+                className="h-2 w-2 shrink-0 rounded-none"
+                style={{ background: entry.fill }}
+              />
+              <span className="text-muted-foreground text-xs font-medium">
+                {entry.name}
+              </span>
+            </div>
+            <span className="text-foreground text-xs font-medium tabular-nums">
+              {entry.value}
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className="border-border/50 mt-2 flex justify-between border-t pt-2">
+        <span className="text-muted-foreground text-xs font-semibold">
+          Total
+        </span>
+        <span className="text-foreground text-xs font-semibold">{total}</span>
+      </div>
+    </div>
+  );
+}
+
+export function SalesBreakdownWidget({
+  title = 'Daily Expense',
+  subtitle = 'Data from 1-12 Apr, 2024',
+  actionLabel = 'View Report',
+  data = defaultData,
+  channels = defaultChannels,
+  onActionClick,
+}: SalesBreakdownWidgetProps) {
+  return (
+    <Card className="w-full max-w-sm rounded-none shadow-[0px_0px_0px_1px_rgba(0,0,0,0.06),0px_1px_2px_-1px_rgba(0,0,0,0.06),0px_2px_4px_0px_rgba(0,0,0,0.04)] ring-0 dark:shadow-[0px_0px_0px_1px_rgba(255,255,255,0.1),0px_1px_2px_-1px_rgba(255,255,255,0.1),0px_2px_4px_0px_rgba(255,255,255,0.08)]">
+      <CardHeader className="">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-col">
+            <h3 className="text-foreground text-base leading-snug font-medium tracking-tight">
+              {title}
+            </h3>
+            <p className="text-muted-foreground text-xs font-medium">
+              {subtitle}
+            </p>
+          </div>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={onActionClick}
+            className="h-8 shrink-0 rounded-none px-3 text-sm font-medium shadow-[0px_0px_4px_1px_rgba(0,0,0,0.05),inset_0_0px_4px_1px_rgba(255,255,255,0.45),inset_0_1px_0px_0px_rgba(255,255,255,0.35)]"
+          >
+            {actionLabel}
+          </Button>
+        </div>
+      </CardHeader>
+
+      <CardContent className="flex flex-col gap-0">
+        <div className="h-64 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data} barSize={24} barCategoryGap="0%">
+              <CartesianGrid
+                vertical={false}
+                stroke="var(--border)"
+                strokeDasharray="2 4"
+              />
+              <XAxis
+                dataKey="day"
+                axisLine={false}
+                tickLine={false}
+                tick={{
+                  fill: 'var(--muted-foreground)',
+                  fontSize: 12,
+                  fontWeight: 400,
+                }}
+              />
+              <YAxis hide axisLine={false} tickLine={false} />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{
+                  fill: 'var(--accent)',
+                  opacity: 0,
+                  radius: 8,
+                }}
+              />
+              {channels.map((channel) => (
+                <Bar
+                  key={channel.key}
+                  dataKey={channel.key}
+                  name={channel.label}
+                  stackId="expense"
+                  fill={channel.color}
+                />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+          {channels.map((channel) => (
+            <div key={channel.key} className="flex items-center gap-1.5">
+              <div
+                className="h-2 w-2 rounded-none"
+                style={{ backgroundColor: channel.color }}
+              />
+              <span className="text-muted-foreground text-[11px] font-semibold">
+                {channel.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default SalesBreakdownWidget;
+
+
+
+
+import { StorageWidget } from "./index";
+
+export default function Widget2Demo() {
+  return (
+    <div className="flex min-h-[400px] h-full items-center justify-center p-8 bg-background ">
+      <StorageWidget />
+    </div>
+  );
+}
+
+
+
+
+
+'use client';
+import { Card } from '@/components/base-ui/card';
+import { Button } from '@/components/base-ui/button';
+import { FaCloud } from 'react-icons/fa';
+
+export interface StorageWidgetProps {
+  title?: string;
+  subtitle?: string;
+  usedAmount?: string;
+  totalAmount?: string;
+  segments?: number;
+  actionLabel?: string;
+  onActionClick?: () => void;
+  className?: string;
+}
+
+function getNumericValue(value: string) {
+  return Number.parseFloat(value.replace(/,/g, ''));
+}
+
+export function StorageWidget({
+  title = 'Cloud Storage',
+  subtitle = 'Billing cycle: May 1 - May 31',
+  usedAmount = '45 GB',
+  totalAmount = '100 GB',
+  segments = 5,
+  actionLabel = 'Upgrade',
+  onActionClick,
+  className = '',
+}: StorageWidgetProps) {
+  const segmentCount = Math.max(1, Math.floor(segments));
+  const usedValue = getNumericValue(usedAmount);
+  const totalValue = getNumericValue(totalAmount);
+  const progress =
+    Number.isFinite(usedValue) && Number.isFinite(totalValue) && totalValue > 0
+      ? Math.min(Math.max(usedValue / totalValue, 0), 1)
+      : 0;
+
+  return (
+    <Card
+      className={`w-full max-w-sm gap-4 px-4 shadow-[0px_0px_0px_1px_rgba(0,0,0,0.06),0px_1px_2px_-1px_rgba(0,0,0,0.06),0px_2px_4px_0px_rgba(0,0,0,0.04)] ring-0 ${className}`}
+    >
+      <div className="flex items-start justify-between">
+        <div className="space-y-1">
+          <div className="text-primary flex items-center gap-2">
+            <FaCloud className="h-4 w-4" />
+            <h3 className="text-foreground text-base font-semibold tracking-tight">
+              {title}
+            </h3>
+          </div>
+          <p className="text-muted-foreground text-sm">{subtitle}</p>
+        </div>
+        <Button
+          variant="default"
+          size="sm"
+          onClick={onActionClick}
+          className="shadow-[0px_0px_4px_1px_rgba(0,0,0,0.05),inset_0_0px_4px_1px_rgba(255,255,255,0.45),inset_0_1px_0px_0px_rgba(255,255,255,0.35)]"
+        >
+          {actionLabel}
+        </Button>
+      </div>
+      <div className="flex flex-col gap-0.5">
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-foreground text-3xl font-bold tracking-tight tabular-nums">
+            {usedAmount}
+          </span>
+          <span className="text-muted-foreground text-sm font-medium tabular-nums">
+            of {totalAmount}
+          </span>
+        </div>
+
+        <div className="flex h-2 w-full gap-1.5">
+          {Array.from({ length: segmentCount }).map((_, index) => {
+            const segmentProgress = Math.min(
+              Math.max(progress * segmentCount - index, 0),
+              1,
+            );
+            const isFull = segmentProgress === 1;
+            const isEmpty = segmentProgress === 0;
+
+            return (
+              <div
+                key={index}
+                className="bg-primary/10 relative flex-1 overflow-hidden rounded-full"
+              >
+                <div
+                  className={`bg-primary absolute inset-y-0 left-0 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.16)] ${
+                    isFull ? 'w-full' : isEmpty ? 'w-0' : ''
+                  }`}
+                  style={
+                    !isFull && !isEmpty
+                      ? { width: `${segmentProgress * 100}%` }
+                      : undefined
+                  }
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+export default StorageWidget;
+
+
+
+
+
+import { ApiUsageWidget } from "./index"
+
+export default function Demo() {
+  return (
+    <div className="flex min-h-[400px] h-full items-center justify-center ">
+      <ApiUsageWidget />
+    </div>
+  )
+}
+
+
+
+
+
+import * as React from 'react';
+import { Card, CardContent } from '@/components/base-ui/card';
+import { Button } from '@/components/base-ui/button';
+import { Progress } from '@/components/base-ui/progress';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/base-ui/dropdown-menu';
+import { FaChevronDown } from 'react-icons/fa6';
+
+export interface ApiUsageWidgetProps {
+  title?: string;
+  limitValue?: string;
+  progressLabel?: string;
+  progressValue?: number;
+  usedLabel?: string;
+  usedValue?: string;
+  remainingLabel?: string;
+  remainingValue?: string;
+  buttonText?: string;
+  onAction?: () => void;
+  planOptions?: string[];
+  defaultPlan?: string;
+}
+
+export function ApiUsageWidget({
+  title = 'Api Requests Quota',
+  limitValue = '100,000',
+  progressLabel = 'Monthly Request Limit',
+  progressValue = 45.23,
+  usedLabel = 'Used',
+  usedValue = '45,231',
+  remainingLabel = 'Remaining',
+  remainingValue = '54,769',
+  buttonText = 'Upgrade Plan',
+  onAction,
+  planOptions = ['Pro', 'Enterprise', 'Basic'],
+  defaultPlan = 'Pro',
+}: ApiUsageWidgetProps) {
+  const [selectedPlan, setSelectedPlan] = React.useState(defaultPlan);
+
+  return (
+    <div className="bg-muted flex w-full max-w-sm rounded-[40px] p-2">
+      <Card className="bg-card/80 w-full rounded-[32px] ring-0">
+        <CardContent className="px-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-muted-foreground text-sm font-normal">
+              {title}
+            </h3>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 gap-1.5 rounded-md border-none px-3 py-2 text-xs font-medium tracking-wide shadow-[0px_0px_4px_1px_rgba(0,0,0,0.05),inset_0_0px_4px_1px_rgba(255,255,255,0.45),inset_0_1px_0px_0px_rgba(255,255,255,0.35)] focus-visible:ring-0 focus-visible:ring-offset-0"
+                >
+                  {selectedPlan}{' '}
+                  <FaChevronDown className="h-3 w-3 opacity-70" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="bg-background/20 rounded-xl border shadow-sm ring-0 backdrop-blur-2xl"
+              >
+                {planOptions.map((plan) => (
+                  <DropdownMenuItem
+                    key={plan}
+                    onClick={() => setSelectedPlan(plan)}
+                    className="cursor-pointer rounded-md bg-transparent text-xs font-medium"
+                  >
+                    {plan}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          <div>
+            <div className="text-foreground text-3xl font-semibold tracking-tight tabular-nums">
+              {limitValue}
+            </div>
+          </div>
+          <div className="mt-2 space-y-1">
+            <p className="text-muted-foreground text-sm font-normal">
+              {progressLabel}
+            </p>
+            <Progress
+              value={progressValue}
+              className="bg-muted h-2 w-full **:data-[slot=progress-indicator]:shadow-[inset_0_2px_4px_0_rgba(255,255,255,0.7),inset_0_-2px_4px_0_rgba(0,0,0,0.2),0px_4px_24px_0px_rgba(0,0,0,0.1),0px_2px_12px_0px_rgba(0,0,0,0.1)]"
+            />
+          </div>
+
+          <div className="mt-3 flex items-center justify-between text-xs">
+            <div className="flex flex-col leading-tight">
+              <span className="text-muted-foreground">{usedLabel}</span>
+              <span className="text-foreground text-base font-semibold">
+                {usedValue}
+              </span>
+            </div>
+            <div className="flex flex-col items-end leading-tight">
+              <span className="text-muted-foreground">{remainingLabel}</span>
+              <span className="text-foreground text-base font-semibold">
+                {remainingValue}
+              </span>
+            </div>
+          </div>
+          <div className="pt-2">
+            <Button
+              onClick={onAction}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 w-full rounded-full text-base font-semibold shadow-[inset_0_2px_4px_0_rgba(255,255,255,0.7),inset_0_-2px_4px_0_rgba(0,0,0,0.2),0px_4px_24px_0px_rgba(0,0,0,0.1),0px_2px_12px_0px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_-2px_4px_0_rgba(0,0,0,0.2),inset_0_2px_4px_0_rgba(255,255,255,0.5)]"
+              size="lg"
+            >
+              {buttonText}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
