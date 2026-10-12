@@ -150,8 +150,10 @@ export default function AdminBlogsManager() {
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.isFeatured} onChange={(e) => setForm((p) => ({ ...p, isFeatured: e.target.checked }))} />Featured</label>
             <div className="flex flex-wrap gap-2">
               <Button type="submit" disabled={saving || (editId ? !canUpdate : !canCreate)}>Save draft</Button>
-              {editId && editStatus !== "PUBLISHED" ? (
-                {canPublish ? <Button type="button" variant="secondary" onClick={() => handlePublish(editId)}>Publish</Button> : null}
+              {editId && editStatus !== "PUBLISHED" && canPublish ? (
+                <Button type="button" variant="secondary" onClick={() => handlePublish(editId)}>
+                  Publish
+                </Button>
               ) : null}
               {editId ? <Button type="button" variant="secondary" onClick={resetForm}>Cancel</Button> : null}
             </div>
