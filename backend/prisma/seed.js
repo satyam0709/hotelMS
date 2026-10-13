@@ -6,7 +6,7 @@ const { hashPassword } = require("../src/utils/password");
 const prisma = new PrismaClient();
 
 const defaultAdmin = {
-  name: process.env.DEFAULT_ADMIN_NAME || "HotelMS Super Admin",
+  name: process.env.DEFAULT_ADMIN_NAME || "ExoStay Super Admin",
   email: (process.env.DEFAULT_ADMIN_EMAIL || "admin@example.com").trim().toLowerCase(),
   username: process.env.DEFAULT_ADMIN_USERNAME || "admin",
   password: process.env.DEFAULT_ADMIN_PASSWORD || "ChangeMe123!",
@@ -238,15 +238,15 @@ async function seedCoreContent() {
   if (!existingSettings) {
     await prisma.websiteSetting.create({
       data: {
-        websiteName: "HotelLMS Resort",
+        websiteName: "ExoStay - Hotel/Resort",
         phone: "+91 98765 43210",
         whatsapp: "+919876543210",
-        email: "reservations@hotellms.example",
+        email: "reservations@exostay.com",
         address: "Coastal Road, Serenity Bay",
         currency: "INR",
         timezone: "Asia/Kolkata",
         defaultLanguage: "en",
-        copyrightText: "© HotelLMS Resort. All rights reserved.",
+        copyrightText: "© ExoStay - Hotel/Resort. All rights reserved.",
         socialLinksJson: {
           Facebook: "https://facebook.com/",
           Instagram: "https://instagram.com/",
@@ -368,7 +368,7 @@ async function seedCoreContent() {
     await prisma.banner.create({
       data: {
         title: "Quiet luxury by the water",
-        subtitle: "Suites, spa, and open-air dining at HotelLMS Resort",
+        subtitle: "Suites, spa, and open-air dining at ExoStay - Hotel/Resort",
         ctaText: "Explore suites",
         ctaLink: "/rooms",
         displayOrder: 1,
@@ -480,7 +480,7 @@ async function seedCmsPages() {
           sectionKey: "story",
           title: "A place shaped by stillness",
           subtitle: "Our story",
-          description: "HotelLMS Resort was created for unhurried mornings, thoughtful dining, and restorative stays by the water.",
+          description: "ExoStay - Hotel/Resort was created for unhurried mornings, thoughtful dining, and restorative stays by the water.",
           displayOrder: 0,
           isEnabled: true,
         },
@@ -506,7 +506,7 @@ async function seedCmsPages() {
       deletedAt: null,
       publishedAt: new Date(),
       metaTitle: "Home",
-      metaDescription: "Homepage section visibility controls for HotelLMS.",
+      metaDescription: "Homepage section visibility controls for ExoStay.",
     },
     create: {
       title: "Home",
@@ -516,7 +516,7 @@ async function seedCmsPages() {
       displayOrder: 0,
       publishedAt: new Date(),
       metaTitle: "Home",
-      metaDescription: "Homepage section visibility controls for HotelLMS.",
+      metaDescription: "Homepage section visibility controls for ExoStay.",
     },
   });
 

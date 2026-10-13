@@ -23,7 +23,8 @@ const fallbackLinks = [
 export default function Navbar({ settings, navigation = [] }) {
   const [open, setOpen] = useState(false);
 
-  const brand = settings?.websiteName || siteConfig.name;
+  const rawBrand = settings?.websiteName;
+  const brand = !rawBrand || /hotel\s*l?ms/i.test(rawBrand) ? siteConfig.name : rawBrand;
   const logo = settings?.headerLogoMedia || settings?.logoMedia;
   const logoSrc = mediaUrl(logo);
   const links = navigation.length ? navigation : fallbackLinks;

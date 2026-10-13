@@ -54,10 +54,9 @@ export default function BookingSearch({ variant = "default" }) {
       animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
       transition={{ type: "spring", stiffness: 110, damping: 18, delay: 0.45 }}
       className={cn(
-        "border border-line bg-elevated p-4 shadow-soft md:p-5",
         isHero
-          ? "rounded-md border-line bg-white text-ink shadow-[0_18px_50px_rgba(0,0,0,0.22)] md:rounded-md md:px-4 md:py-4"
-          : "rounded-[1.75rem]"
+          ? "bg-transparent p-0 border-0 shadow-none text-ink"
+          : "border border-line bg-elevated p-4 shadow-soft md:p-5 rounded-[1.75rem]"
       )}
     >
       <div
@@ -77,7 +76,7 @@ export default function BookingSearch({ variant = "default" }) {
           onChange={(event) => setCheckIn(event.target.value)}
           inputClassName={
             isHero
-              ? "border-line bg-white text-ink md:h-11 md:rounded-full [color-scheme:light]"
+              ? "border-[#dcd9ce] bg-[#faf9f5] hover:bg-white text-ink md:h-11 md:rounded-full [color-scheme:light] font-medium transition-colors focus:bg-white focus:border-[#2c6700]"
               : undefined
           }
         />
@@ -90,7 +89,7 @@ export default function BookingSearch({ variant = "default" }) {
           onChange={(event) => setCheckOut(event.target.value)}
           inputClassName={
             isHero
-              ? "border-line bg-white text-ink md:h-11 md:rounded-full [color-scheme:light]"
+              ? "border-[#dcd9ce] bg-[#faf9f5] hover:bg-white text-ink md:h-11 md:rounded-full [color-scheme:light] font-medium transition-colors focus:bg-white focus:border-[#2c6700]"
               : undefined
           }
         />
@@ -105,7 +104,7 @@ export default function BookingSearch({ variant = "default" }) {
           onChange={(event) => setAdults(Number(event.target.value))}
           inputClassName={
             isHero
-              ? "border-line bg-white text-ink md:h-11 md:rounded-full [color-scheme:light]"
+              ? "border-[#dcd9ce] bg-[#faf9f5] hover:bg-white text-ink md:h-11 md:rounded-full [color-scheme:light] font-medium transition-colors focus:bg-white focus:border-[#2c6700]"
               : undefined
           }
         />
@@ -119,7 +118,7 @@ export default function BookingSearch({ variant = "default" }) {
           onChange={(event) => setChildren(Number(event.target.value))}
           inputClassName={
             isHero
-              ? "border-line bg-white text-ink md:h-11 md:rounded-full [color-scheme:light]"
+              ? "border-[#dcd9ce] bg-[#faf9f5] hover:bg-white text-ink md:h-11 md:rounded-full [color-scheme:light] font-medium transition-colors focus:bg-white focus:border-[#2c6700]"
               : undefined
           }
         />
@@ -133,7 +132,7 @@ export default function BookingSearch({ variant = "default" }) {
           onChange={(event) => setRooms(Number(event.target.value))}
           inputClassName={
             isHero
-              ? "border-line bg-white text-ink md:h-11 md:rounded-full [color-scheme:light]"
+              ? "border-[#dcd9ce] bg-[#faf9f5] hover:bg-white text-ink md:h-11 md:rounded-full [color-scheme:light] font-medium transition-colors focus:bg-white focus:border-[#2c6700]"
               : undefined
           }
         />
@@ -142,10 +141,12 @@ export default function BookingSearch({ variant = "default" }) {
             type="submit"
             className={cn(
               "w-full",
-              isHero ? "md:min-w-44 md:rounded-full !bg-accent !text-white" : "xl:min-w-36"
+              isHero
+                ? "md:min-w-44 md:rounded-full !bg-gradient-to-r !from-[#2c6700] !to-[#3f8f00] hover:!from-[#367d00] hover:!to-[#49a600] !text-white font-semibold shadow-[0_8px_20px_rgba(44,103,0,0.35)] py-3 transition-all active:scale-95"
+                : "xl:min-w-36"
             )}
           >
-            {isHero ? "Book now" : "Search"}
+            {isHero ? "Check Rates →" : "Search"}
           </Button>
         </div>
       </div>

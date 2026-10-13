@@ -4,7 +4,7 @@ import FeaturedRooms from "@/components/hotel/FeaturedRooms";
 import HomeGalleryVignettes from "@/components/hotel/HomeGalleryVignettes";
 import JournalSection from "@/components/hotel/JournalSection";
 import LocalGuideSection from "@/components/hotel/LocalGuideSection";
-import CinematicHero from "@/components/hotel/CinematicHero";
+import LuxuryInteractiveHero from "@/components/hotel/LuxuryInteractiveHero";
 import SignatureExperiences from "@/components/hotel/SignatureExperiences";
 import SpecialOffersStrip from "@/components/hotel/SpecialOffersStrip";
 import TestimonialsGrid from "@/components/hotel/TestimonialsGrid";
@@ -101,6 +101,9 @@ export default async function HomePage() {
   );
   const aboutPageContent = aboutPage || getDemoAboutPage();
   const siteSettings = { ...demoContactSettings, ...(settings || {}) };
+  if (!siteSettings.websiteName || /hotel\s*l?ms/i.test(siteSettings.websiteName)) {
+    siteSettings.websiteName = "ExoStay - Hotel/Resort";
+  }
   const galleryRoomItems = Array.isArray(galleryRooms?.items)
     ? galleryRooms.items
     : Array.isArray(galleryRooms)
@@ -119,7 +122,7 @@ export default async function HomePage() {
   const hotelJsonLd = {
     "@context": "https://schema.org",
     "@type": "Hotel",
-    name: siteSettings.websiteName || "HotelLMS Resort",
+    name: siteSettings.websiteName || "ExoStay - Hotel/Resort",
     description: siteSettings.metaDescription || siteSettings.address || undefined,
     telephone: siteSettings.phone || undefined,
     email: siteSettings.email || undefined,
@@ -138,7 +141,7 @@ export default async function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(hotelJsonLd) }}
       />
-      {show.hero ? <CinematicHero banners={bannerItems} /> : null}
+      {show.hero ? <LuxuryInteractiveHero banners={bannerItems} settings={siteSettings} /> : null}
       {show.about ? <AboutPreview page={aboutPageContent} settings={siteSettings} /> : null}
       {show.rooms ? <FeaturedRooms rooms={featuredRooms} /> : null}
       {show.gallery ? <HomeGalleryVignettes items={galleryPreviewItems} /> : null}

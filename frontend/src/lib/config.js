@@ -16,10 +16,10 @@ const publicApiBase = trimSlash(
 );
 
 export const siteConfig = {
-  name: "HotelLMS Resort",
-  defaultTitle: "HotelLMS Resort — Rooms, Dining & Curated Stays",
+  name: "ExoStay - Hotel/Resort",
+  defaultTitle: "ExoStay - Hotel/Resort — Luxury Rooms, Dining & Curated Stays",
   description:
-    "Book refined rooms and suites, enjoy resort dining, and explore seasonal packages at HotelLMS Resort. Live availability, secure booking, and thoughtful hospitality.",
+    "Experience bespoke hospitality at ExoStay - Hotel/Resort. Book refined rooms and suites, enjoy oceanfront dining, private spa retreats, and seasonal resort packages.",
   apiBaseUrl: typeof window === "undefined" ? serverApiBase : publicApiBase,
   publicApiBaseUrl: publicApiBase,
   bookingPath: "/booking",

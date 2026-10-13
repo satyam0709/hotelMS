@@ -29,7 +29,8 @@ const defaultSupportLinks = [
 ];
 
 export default function Footer({ settings, navigation = [] }) {
-  const brand = settings?.websiteName || siteConfig.name;
+  const rawBrand = settings?.websiteName;
+  const brand = !rawBrand || /hotel\s*l?ms/i.test(rawBrand) ? siteConfig.name : rawBrand;
   const quickLinks = navigation.length ? navigation : defaultQuickLinks;
   const socials = Array.isArray(settings?.socialLinksJson)
     ? settings.socialLinksJson

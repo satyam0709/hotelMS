@@ -49,7 +49,7 @@ export default function AdminLoginPage() {
         <div className="flex flex-col px-6 py-7 sm:px-10 sm:py-10 lg:px-12 lg:py-12">
           <div className="flex items-center justify-between gap-3">
             <span className="inline-flex items-center rounded-full border border-[#d9d4c6] bg-white/70 px-4 py-1.5 text-sm font-semibold tracking-wide text-ink">
-              HotelMS
+              ExoStay
             </span>
             <Link
               href="/"

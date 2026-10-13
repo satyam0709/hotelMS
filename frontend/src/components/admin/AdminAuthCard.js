@@ -2,7 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import Button from "@/components/ui/Button";
 
 export default function AdminAuthCard({
-  eyebrow = "HotelMS",
+  eyebrow = "ExoStay",
   title,
   description,
   children,

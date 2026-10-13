@@ -78,7 +78,7 @@ export default function AdminSidebar() {
   return (
     <aside className="admin-sidebar flex w-full flex-col border-b border-line bg-[#f7f5ef] md:w-60 md:border-b-0 md:border-r">
       <div className="px-5 py-5">
-        <p className="text-xs font-semibold tracking-[0.2em] text-muted uppercase">HotelMS</p>
+        <p className="text-xs font-semibold tracking-[0.2em] text-muted uppercase">ExoStay</p>
         <p className="mt-1 font-display text-xl text-ink">Admin</p>
       </div>
       <nav className="flex flex-1 flex-row gap-1 overflow-x-auto px-3 pb-3 md:flex-col md:overflow-visible md:pb-6">

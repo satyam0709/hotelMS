@@ -413,8 +413,8 @@ async function overview(query = {}, admin) {
     today,
     range: { from, to },
     property: property
-      ? { name: property.websiteName || "HotelMS", phone: property.phone, email: property.email }
-      : { name: "HotelMS", phone: null, email: null },
+      ? { name: property.websiteName || "ExoStay - Hotel/Resort", phone: property.phone, email: property.email }
+      : { name: "ExoStay - Hotel/Resort", phone: null, email: null },
     permissions: sections,
     kpis,
     bookingSummary,

@@ -13,7 +13,9 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata() {
   try {
     const settings = await getSettings();
-    const title = settings?.metaTitle || settings?.websiteName || siteConfig.name;
+    const rawName = settings?.websiteName;
+    const brandName = !rawName || /hotel\s*l?ms/i.test(rawName) ? siteConfig.name : rawName;
+    const title = settings?.metaTitle || brandName;
     const description = settings?.metaDescription || settings?.tagline || siteConfig.description;
     const keywords = settings?.metaKeywords
       ? String(settings.metaKeywords).split(",").map((part) => part.trim()).filter(Boolean)
@@ -21,7 +23,7 @@ export async function generateMetadata() {
     return {
       title: {
         default: title,
-        template: `%s · ${settings?.websiteName || siteConfig.name}`,
+        template: `%s · ${brandName}`,
       },
       description,
       keywords,
@@ -43,10 +45,14 @@ async function loadShellData() {
     getBanners(),
   ]);
 
+  const rawSettings = settingsResult.status === "fulfilled" ? settingsResult.value : {};
   const settings = {
     ...demoContactSettings,
-    ...(settingsResult.status === "fulfilled" ? settingsResult.value : {}),
+    ...(rawSettings || {}),
   };
+  if (!settings.websiteName || /hotel\s*l?ms/i.test(settings.websiteName)) {
+    settings.websiteName = siteConfig.name;
+  }
   const navigation = navigationResult.status === "fulfilled" ? navigationResult.value : [];
   const banners = bannersResult.status === "fulfilled" && Array.isArray(bannersResult.value)
     ? bannersResult.value

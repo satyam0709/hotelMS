@@ -42,7 +42,7 @@ function CopyIcon({ className }) {
 export default function ImmersiveHomeHero({ banners = [], settings = {} }) {
   const hero = useMemo(() => buildHeroPresentation({ banners }), [banners]);
   const email =
-    settings.email || settings.contactEmail || "reservations@hotellms.example";
+    settings.email || settings.contactEmail || "reservations@exostay.com";
   const brand = settings.websiteName || siteConfig.name;
 
   const { displayed, done } = useTypewriter(TYPEWRITER_TEXT, {

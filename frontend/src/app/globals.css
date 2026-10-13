@@ -146,6 +146,36 @@ img {
   }
 }
 
+@keyframes goldShimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes gentleFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+.animate-gold-shimmer {
+  background-size: 220% auto;
+  animation: goldShimmer 6s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: gentleFloat 6s ease-in-out infinite;
+}
+
 .font-display {
   font-family: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
   font-weight: 600;

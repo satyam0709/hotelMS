@@ -540,7 +540,7 @@ export function findDemoBlog(slug) {
 
 export const demoContactSettings = {
   phone: "+91 98765 43210",
-  email: "reservations@hotellms.example",
+  email: "reservations@exostay.com",
   whatsapp: "+91 98765 43210",
   address: "12 Palm Grove Road, Green Valley, Karnataka 560001, India",
   receptionHours: "Front desk open 24 hours",

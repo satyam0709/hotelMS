@@ -31,8 +31,8 @@ export default async function AboutPage() {
   ]);
 
   const page = (pageResult.status === "fulfilled" && pageResult.value) || getDemoAboutPage();
-  const settings = settingsResult.status === "fulfilled" ? settingsResult.value : {};
-  const brand = settings?.websiteName || siteConfig.name;
+  const rawBrand = settings?.websiteName;
+  const brand = !rawBrand || /hotel\s*l?ms/i.test(rawBrand) ? siteConfig.name : rawBrand;
 
   const sections = Array.isArray(page.sections) && page.sections.length
     ? page.sections
