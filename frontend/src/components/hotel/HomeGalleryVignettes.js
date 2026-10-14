@@ -92,7 +92,7 @@ export default function HomeGalleryVignettes({ items = [] }) {
   }, [sourceItems, filter]);
 
   return (
-    <section className="section-pad bg-elevated/40">
+    <section className="pt-6 pb-8 md:pt-10 md:pb-12 bg-elevated/40">
       <Container>
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <SectionHeader

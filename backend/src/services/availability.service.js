@@ -600,21 +600,24 @@ async function ensureAvailabilityRows(tx, room, nights, blocks) {
     select: { date: true },
   });
   const existingDates = new Set(existing.map((row) => toDateString(row.date)));
+  const missingNights = nights.filter((night) => !existingDates.has(night));
 
-  for (const night of nights) {
-    if (existingDates.has(night)) continue;
-    const blocked = blockedQuantityForNight(night, blocks);
-    const capacity = room.totalInventory;
-    await tx.roomAvailability.create({
-      data: {
-        roomId: room.id,
-        date: asDatabaseDate(night),
-        totalInventory: capacity,
-        bookedCount: 0,
-        blockedCount: blocked,
-        availableCount: Math.max(0, capacity - blocked),
-        isClosed: false,
-      },
+  if (missingNights.length > 0) {
+    await tx.roomAvailability.createMany({
+      data: missingNights.map((night) => {
+        const blocked = blockedQuantityForNight(night, blocks);
+        const capacity = room.totalInventory;
+        return {
+          roomId: room.id,
+          date: asDatabaseDate(night),
+          totalInventory: capacity,
+          bookedCount: 0,
+          blockedCount: blocked,
+          availableCount: Math.max(0, capacity - blocked),
+          isClosed: false,
+        };
+      }),
+      skipDuplicates: true,
     });
   }
 }

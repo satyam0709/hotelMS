@@ -2,6 +2,8 @@ import AboutPreview from "@/components/hotel/AboutPreview";
 import CtaBand from "@/components/hotel/CtaBand";
 import FeaturedRooms from "@/components/hotel/FeaturedRooms";
 import HomeGalleryVignettes from "@/components/hotel/HomeGalleryVignettes";
+import HomePaymentSection from "@/components/hotel/HomePaymentSection";
+import HomeMapSection from "@/components/hotel/HomeMapSection";
 import JournalSection from "@/components/hotel/JournalSection";
 import LocalGuideSection from "@/components/hotel/LocalGuideSection";
 import LuxuryInteractiveHero from "@/components/hotel/LuxuryInteractiveHero";
@@ -145,6 +147,8 @@ export default async function HomePage() {
       {show.about ? <AboutPreview page={aboutPageContent} settings={siteSettings} /> : null}
       {show.rooms ? <FeaturedRooms rooms={featuredRooms} /> : null}
       {show.gallery ? <HomeGalleryVignettes items={galleryPreviewItems} /> : null}
+      <HomePaymentSection brandName={siteSettings.websiteName} />
+      <HomeMapSection settings={siteSettings} />
       {show.facilities ? <SignatureExperiences facilities={facilityItems} /> : null}
       {show.offers ? <SpecialOffersStrip banners={bannerItems} /> : null}
       {show.testimonials ? <TestimonialsGrid testimonials={testimonialItems} /> : null}

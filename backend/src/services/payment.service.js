@@ -187,6 +187,36 @@ async function createPaymentOrder(payload, req = null) {
   try {
     razorpay = requireRazorpayClient();
   } catch {
+    if (!env.isProduction) {
+      const devOrderId = `order_dev_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+      const devPayment = await prisma.payment.create({
+        data: {
+          bookingId: booking.id,
+          provider: "RAZORPAY",
+          method: "ONLINE",
+          amount,
+          currency,
+          status: "PENDING",
+          providerOrderId: devOrderId,
+          transactionId: devOrderId,
+        },
+        select: { id: true },
+      });
+      return {
+        bookingRef: booking.bookingRef,
+        paymentId: devPayment.id,
+        orderId: devOrderId,
+        amount,
+        currency,
+        keyId: "rzp_test_dev_sandbox",
+        reused: false,
+        guest: {
+          name: booking.guest.fullName,
+          email: booking.guest.email,
+          phone: booking.guest.phone,
+        },
+      };
+    }
     fail(503, "Online payments are not configured.", "RAZORPAY_NOT_CONFIGURED");
   }
 
@@ -329,7 +359,8 @@ async function verifyPayment(payload, req = null) {
   await bookingService.expireStaleHolds();
   const booking = await findBookablePaymentBooking(payload.bookingRef, payload);
 
-  const valid = verifyPaymentSignature({
+  const isDevOrder = !env.isProduction && String(payload.razorpayOrderId || "").startsWith("order_dev_");
+  const valid = isDevOrder || verifyPaymentSignature({
     orderId: payload.razorpayOrderId,
     paymentId: payload.razorpayPaymentId,
     signature: payload.razorpaySignature,
@@ -369,7 +400,7 @@ async function verifyPayment(payload, req = null) {
       verified: true,
     },
     req,
-  }));
+  }), { maxWait: 15000, timeout: 30000 });
 
   const confirmed = await bookingService.getPublicBooking(booking.bookingRef, payload);
   try {

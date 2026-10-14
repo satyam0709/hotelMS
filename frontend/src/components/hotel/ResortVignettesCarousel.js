@@ -857,14 +857,14 @@ export default function ResortVignettesCarousel({ items = [] }) {
   }
 
   return (
-    <div className="mt-10 space-y-8">
-      <div className="h-[400px] w-full sm:h-[460px] lg:h-[520px]">
+    <div className="mt-4 sm:mt-6 space-y-5">
+      <div className="h-[440px] w-full sm:h-[520px] lg:h-[600px]">
         <MagazineFlip
           images={unique}
           background="transparent"
           pages={Math.min(20, Math.max(8, unique.length))}
-          pageWidth={420}
-          pageHeight={340}
+          pageWidth={500}
+          pageHeight={400}
           spacing={5}
           travel={{ drift: 2, smoothing: 5, wave: 5 }}
         />

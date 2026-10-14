@@ -512,7 +512,7 @@ async function createBooking(payload, req = null, options = {}) {
       where: { id: bookingId },
       select: bookingDetailSelect,
     });
-  });
+  }, { maxWait: 15000, timeout: 30000 });
 
   await notifyBookingCreated(booking);
   emitBooking("booking.created", booking);
@@ -634,7 +634,7 @@ async function updateBookingStatus(id, { status, note }, req) {
       action: "status",
     });
     return tx.booking.findUnique({ where: { id }, select: bookingDetailSelect });
-  });
+  }, { maxWait: 15000, timeout: 30000 });
 
   if (status === "CONFIRMED" && updated.guest?.email) {
     try {
@@ -659,7 +659,7 @@ async function cancelBooking(id, { reason } = {}, req = null, { isAdmin = false 
       action: "cancel",
     });
     return tx.booking.findUnique({ where: { id }, select: bookingDetailSelect });
-  });
+  }, { maxWait: 15000, timeout: 30000 });
 
   if (updated.guest?.email) {
     try {
