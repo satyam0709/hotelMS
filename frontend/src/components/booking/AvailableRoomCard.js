@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import { cardHover, cardTap, hoverBright, smoothSpring } from "@/lib/motion/presets";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
+import { fallbackAsset } from "@/lib/site-assets";
 import { formatCurrency, mediaAlt, mediaUrl } from "@/lib/utils";
 
 export default function AvailableRoomCard({
@@ -12,8 +13,11 @@ export default function AvailableRoomCard({
   nights,
   selected,
   onSelect,
+  fallbackIndex = 0,
 }) {
-  const imageSrc = mediaUrl(room.featuredImage);
+  const localFallback = fallbackAsset("room", fallbackIndex);
+  const imageSrc = mediaUrl(room.featuredImage) || localFallback?.src;
+  const imageAlt = mediaUrl(room.featuredImage) ? mediaAlt(room.featuredImage, room.name) : (localFallback?.alt || room.name);
   const amenities = Array.isArray(room.amenities) ? room.amenities.slice(0, 4) : [];
 
   return (

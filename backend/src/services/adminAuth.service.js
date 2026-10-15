@@ -138,15 +138,14 @@ async function requestPasswordReset(email, request) {
 
   const resetUrl = new URL(env.passwordResetUrl);
   resetUrl.searchParams.set("token", rawToken);
+  console.log(`[PASSWORD RESET] Generated reset link for ${email}: ${resetUrl.toString()}`);
   try {
-    await emailService.sendPasswordResetEmail({ to: email, resetUrl: resetUrl.toString() });
-  } catch {
-    try {
-      await prisma.passwordResetToken.deleteMany({ where: { tokenHash } });
-    } catch {
-      // Keep delivery failures generic and do not expose token details.
+    const delivery = await emailService.sendPasswordResetEmail({ to: email, resetUrl: resetUrl.toString() });
+    if (delivery && !delivery.delivered) {
+      console.warn(`[PASSWORD RESET] Email delivery was not completed (${delivery.reason}). Direct reset link: ${resetUrl.toString()}`);
     }
-    console.error("Password reset email delivery failed.");
+  } catch (err) {
+    console.error(`[PASSWORD RESET] Email delivery error: ${err.message}. Direct reset link: ${resetUrl.toString()}`);
   }
 }
 

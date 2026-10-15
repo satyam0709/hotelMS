@@ -106,13 +106,14 @@ export default function BookingFlow({
 
           {orderedItems.length ? (
             <div className="space-y-4">
-              {orderedItems.map((room) => (
+              {orderedItems.map((room, index) => (
                 <AvailableRoomCard
                   key={room.id}
                   room={room}
                   nights={availability?.nights}
                   selected={selectedRoom?.id === room.id}
                   onSelect={selectRoom}
+                  fallbackIndex={index}
                 />
               ))}
             </div>
