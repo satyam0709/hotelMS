@@ -73,6 +73,7 @@ export default async function RoomsPage({ searchParams }) {
           <aside className="lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start">
             <RoomsFilters
               key={buildQueryString({
+                search: filters.search,
                 category: filters.category,
                 guestCount: filters.guestCount,
                 minPrice: filters.minPrice,

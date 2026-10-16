@@ -26,16 +26,22 @@ export function normalizeRoomFilters(searchParams = {}) {
     .map((value) => value.trim())
     .filter(Boolean);
 
-  const guestCount = Number(searchParams.guestCount || searchParams.guests || "");
-  const minPrice = Number(searchParams.minPrice || "");
-  const maxPrice = Number(searchParams.maxPrice || "");
+  const rawGuests = searchParams.guestCount || searchParams.guests;
+  const guestCount = rawGuests !== undefined && rawGuests !== "" && rawGuests !== null ? Number(rawGuests) : undefined;
+
+  const rawMinPrice = searchParams.minPrice;
+  const minPrice = rawMinPrice !== undefined && rawMinPrice !== "" && rawMinPrice !== null ? Number(rawMinPrice) : undefined;
+
+  const rawMaxPrice = searchParams.maxPrice;
+  const maxPrice = rawMaxPrice !== undefined && rawMaxPrice !== "" && rawMaxPrice !== null ? Number(rawMaxPrice) : undefined;
+
   const page = Number(searchParams.page || 1);
 
   return {
     category: searchParams.category || undefined,
     guestCount: Number.isFinite(guestCount) && guestCount > 0 ? guestCount : undefined,
-    minPrice: Number.isFinite(minPrice) && minPrice >= 0 ? minPrice : undefined,
-    maxPrice: Number.isFinite(maxPrice) && maxPrice >= 0 ? maxPrice : undefined,
+    minPrice: Number.isFinite(minPrice) && minPrice > 0 ? minPrice : undefined,
+    maxPrice: Number.isFinite(maxPrice) && maxPrice > 0 ? maxPrice : undefined,
     amenityIds: amenityIds.length ? amenityIds : undefined,
     isFeatured: searchParams.isFeatured === "true" ? "true" : undefined,
     page: Number.isFinite(page) && page > 0 ? page : 1,

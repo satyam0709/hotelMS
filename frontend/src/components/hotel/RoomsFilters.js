@@ -15,31 +15,40 @@ export default function RoomsFilters({
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [search, setSearch] = useState(initialValues.search || initialValues.q || "");
   const [category, setCategory] = useState(initialValues.category || "");
   const [guestCount, setGuestCount] = useState(initialValues.guestCount || "");
-  const [minPrice, setMinPrice] = useState(initialValues.minPrice ?? "");
-  const [maxPrice, setMaxPrice] = useState(initialValues.maxPrice ?? "");
+  const [minPrice, setMinPrice] = useState(
+    initialValues.minPrice && Number(initialValues.minPrice) > 0 ? initialValues.minPrice : ""
+  );
+  const [maxPrice, setMaxPrice] = useState(
+    initialValues.maxPrice && Number(initialValues.maxPrice) > 0 ? initialValues.maxPrice : ""
+  );
   const [selectedAmenities, setSelectedAmenities] = useState(
     Array.isArray(initialValues.amenityIds) ? initialValues.amenityIds : []
   );
 
   const activeCount = useMemo(() => {
     let count = 0;
+    if (search.trim()) count += 1;
     if (category) count += 1;
-    if (guestCount) count += 1;
-    if (minPrice !== "" && minPrice != null) count += 1;
-    if (maxPrice !== "" && maxPrice != null) count += 1;
+    if (guestCount && Number(guestCount) > 0) count += 1;
+    if (minPrice !== "" && Number(minPrice) > 0) count += 1;
+    if (maxPrice !== "" && Number(maxPrice) > 0) count += 1;
     count += selectedAmenities.length;
     return count;
-  }, [category, guestCount, minPrice, maxPrice, selectedAmenities]);
+  }, [search, category, guestCount, minPrice, maxPrice, selectedAmenities]);
 
   function applyFilters(event) {
     event?.preventDefault?.();
+    const minVal = minPrice !== "" && Number(minPrice) > 0 ? Number(minPrice) : undefined;
+    const maxVal = maxPrice !== "" && Number(maxPrice) > 0 ? Number(maxPrice) : undefined;
     const query = buildQueryString({
+      search: search.trim() || undefined,
       category: category || undefined,
-      guestCount: guestCount || undefined,
-      minPrice: minPrice === "" ? undefined : minPrice,
-      maxPrice: maxPrice === "" ? undefined : maxPrice,
+      guestCount: guestCount && Number(guestCount) > 0 ? Number(guestCount) : undefined,
+      minPrice: minVal,
+      maxPrice: maxVal,
       amenityIds: selectedAmenities,
     });
     startTransition(() => {
@@ -48,6 +57,7 @@ export default function RoomsFilters({
   }
 
   function clearFilters() {
+    setSearch("");
     setCategory("");
     setGuestCount("");
     setMinPrice("");
@@ -96,6 +106,15 @@ export default function RoomsFilters({
       </div>
 
       <div className="grid gap-4">
+        <Input
+          label="Search room"
+          type="search"
+          name="search"
+          placeholder="Room name or keyword…"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
+
         <label className="flex w-full flex-col gap-1.5">
           <span className="text-xs font-medium tracking-[0.08em] text-muted uppercase">
             Category

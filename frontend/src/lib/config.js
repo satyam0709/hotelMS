@@ -2,17 +2,18 @@ function trimSlash(value) {
   return String(value || "").replace(/\/+$/, "");
 }
 
+const publicApiBase = trimSlash(
+  process.env.NEXT_PUBLIC_API_BASE_URL
+  || process.env.NEXT_PUBLIC_BACKEND_URL
+  || process.env.NEXT_PUBLIC_BACKEND_API_URL
+  || "http://localhost:5000"
+);
+
 const serverApiBase = trimSlash(
   process.env.API_BASE_URL
   || process.env.BACKEND_API_URL
   || process.env.BACKEND_URL
-  || "http://localhost:5000"
-);
-
-const publicApiBase = trimSlash(
-  process.env.NEXT_PUBLIC_API_BASE_URL
-  || process.env.NEXT_PUBLIC_BACKEND_URL
-  || serverApiBase
+  || publicApiBase
 );
 
 export const siteConfig = {
