@@ -15,9 +15,15 @@ function originFromReferer(referer) {
 /**
  * For cookie-authenticated admin mutations, require Origin/Referer in FRONTEND_ORIGIN.
  * Safe no-op for GET/HEAD and for requests without an Origin when not mutating.
+ * Bearer token requests (Postman / API clients / server-to-server) bypass this check
+ * because they are not vulnerable to CSRF — the origin gate only protects cookie auth.
  */
 function requireTrustedOrigin(req, res, next) {
   if (!MUTATING.has(req.method)) return next();
+
+  // Bearer token requests are not CSRF-vulnerable — skip origin enforcement.
+  const authHeader = req.get("authorization") || req.get("Authorization");
+  if (authHeader?.startsWith("Bearer ")) return next();
 
   const origin = req.get("origin") || originFromReferer(req.get("referer"));
   if (!origin) {
