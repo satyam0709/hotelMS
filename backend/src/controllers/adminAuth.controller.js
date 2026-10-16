@@ -3,13 +3,17 @@ const adminAuthService = require("../services/adminAuth.service");
 const { sendSuccess } = require("../utils/response");
 
 function cookieOptions() {
-  return {
+  const options = {
     httpOnly: true,
     secure: env.cookieSecure,
     sameSite: env.cookieSameSite,
     path: "/",
     maxAge: env.jwtExpiresInMs,
   };
+  if (env.cookieSameSite === "none" && env.cookieSecure) {
+    options.partitioned = true;
+  }
+  return options;
 }
 
 function clearCookieOptions() {
@@ -20,7 +24,7 @@ function clearCookieOptions() {
 async function login(req, res) {
   const result = await adminAuthService.login({ ...req.body, request: req });
   res.cookie(env.cookieName, result.token, cookieOptions());
-  return sendSuccess(res, { admin: result.admin });
+  return sendSuccess(res, { admin: result.admin, token: result.token });
 }
 
 async function logout(req, res) {

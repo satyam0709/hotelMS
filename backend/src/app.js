@@ -25,6 +25,8 @@ const { sendSuccess } = require("./utils/response");
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 app.use(helmet());
 app.use(
   cors({
@@ -32,6 +34,7 @@ app.use(
       callback(null, !origin || env.frontendOrigins.includes(origin));
     },
     credentials: true,
+    exposedHeaders: ["set-cookie"],
   })
 );
 app.use(

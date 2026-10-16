@@ -51,7 +51,7 @@ const cookieSecure = parseBoolean("COOKIE_SECURE", isProduction);
 if (isProduction && !cookieSecure) {
   throw new Error("COOKIE_SECURE must be true in production.");
 }
-const cookieSameSite = (process.env.COOKIE_SAME_SITE || "lax").toLowerCase();
+const cookieSameSite = (process.env.COOKIE_SAME_SITE || (isProduction ? "none" : "lax")).toLowerCase();
 if (!["lax", "strict", "none"].includes(cookieSameSite)) {
   throw new Error("COOKIE_SAME_SITE must be lax, strict, or none.");
 }

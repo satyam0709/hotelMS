@@ -56,7 +56,9 @@ function serializeAdmin(admin) {
 }
 
 async function requireAdminAuth(req, res, next) {
-  const token = req.cookies?.[env.cookieName];
+  const authHeader = req.get("authorization") || req.get("Authorization");
+  const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
+  const token = req.cookies?.[env.cookieName] || bearerToken;
   if (!token) return next(new AppError(401, "Authentication required.", "AUTH_REQUIRED"));
 
   let claims;

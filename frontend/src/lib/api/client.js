@@ -24,6 +24,29 @@ function buildUrl(path, query) {
   return url.toString();
 }
 
+const ADMIN_TOKEN_KEY = "hotel_admin_token";
+
+export function getAdminToken() {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem(ADMIN_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setAdminToken(token) {
+  if (typeof window === "undefined") return;
+  try {
+    if (token) localStorage.setItem(ADMIN_TOKEN_KEY, token);
+    else localStorage.removeItem(ADMIN_TOKEN_KEY);
+  } catch {}
+}
+
+export function clearAdminToken() {
+  setAdminToken(null);
+}
+
 export async function apiFetch(path, {
   method = "GET",
   query,
@@ -43,6 +66,9 @@ export async function apiFetch(path, {
     else signal.addEventListener("abort", () => controller.abort(), { once: true });
   }
 
+  const storedToken = headers?.Authorization || headers?.authorization ? null : getAdminToken();
+  const authHeaders = storedToken ? { Authorization: `Bearer ${storedToken}` } : {};
+
   let response;
   try {
     response = await fetch(buildUrl(path, query), {
@@ -50,6 +76,7 @@ export async function apiFetch(path, {
       headers: {
         Accept: "application/json",
         ...(body && !isFormData ? { "Content-Type": "application/json" } : {}),
+        ...authHeaders,
         ...headers,
       },
       body: isFormData ? body : body ? JSON.stringify(body) : undefined,

@@ -17,7 +17,7 @@ function createLimiter({ windowMs, limit }) {
 }
 
 /** Admin auth endpoints (login, forgot password, etc.). */
-const authLimiter = createLimiter({ windowMs: 15 * 60 * 1000, limit: 10 });
+const authLimiter = createLimiter({ windowMs: 15 * 60 * 1000, limit: 60 });
 
 /** Booking lookup, cancel, payment order/verify, invoice. */
 const strictPublicLimiter = createLimiter({ windowMs: 15 * 60 * 1000, limit: 20 });
