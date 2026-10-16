@@ -36,6 +36,7 @@ export default async function BookingPage({ searchParams }) {
         rooms: search.rooms,
         category: search.category,
         roomId: search.roomId,
+        room: search.room,
         limit: 50,
       });
     } catch (error) {

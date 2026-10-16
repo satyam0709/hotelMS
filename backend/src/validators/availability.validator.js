@@ -38,6 +38,7 @@ const availabilitySearchQuery = z.object({
   ),
   isFeatured: z.enum(["true", "false"]).transform((value) => value === "true").optional(),
   roomId: id.optional(),
+  room: slug.optional(),
 }).strict()
   .refine((value) => value.checkIn < value.checkOut, {
     message: "checkOut must be after checkIn.",

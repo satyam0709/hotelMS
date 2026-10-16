@@ -903,7 +903,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/bookings/{{bookingRef}}?email={{guestEmail}}",
+              "raw": "{{baseUrl}}/api/bookings/{{bookingRef}}?email={{guestEmail}}&phone={{guestPhone}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -916,6 +916,10 @@
                 {
                   "key": "email",
                   "value": "{{guestEmail}}"
+                },
+                {
+                  "key": "phone",
+                  "value": "{{guestPhone}}"
                 }
               ]
             },
@@ -928,7 +932,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/bookings/{{bookingRef}}/invoice?email={{guestEmail}}",
+              "raw": "{{baseUrl}}/api/bookings/{{bookingRef}}/invoice?email={{guestEmail}}&phone={{guestPhone}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -942,6 +946,10 @@
                 {
                   "key": "email",
                   "value": "{{guestEmail}}"
+                },
+                {
+                  "key": "phone",
+                  "value": "{{guestPhone}}"
                 }
               ]
             },
@@ -1007,7 +1015,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"bookingRef\": \"{{bookingRef}}\"\n}"
+              "raw": "{\n  \"bookingRef\": \"{{bookingRef}}\",\n  \"email\": \"{{guestEmail}}\",\n  \"phone\": \"{{guestPhone}}\"\n}"
             }
           }
         },
@@ -1036,7 +1044,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"razorpay_order_id\": \"\",\n  \"razorpay_payment_id\": \"\",\n  \"razorpay_signature\": \"\"\n}"
+              "raw": "{\n  \"bookingRef\": \"{{bookingRef}}\",\n  \"razorpayOrderId\": \"{{razorpayOrderId}}\",\n  \"razorpayPaymentId\": \"{{razorpayPaymentId}}\",\n  \"razorpaySignature\": \"{{razorpaySignature}}\",\n  \"email\": \"{{guestEmail}}\",\n  \"phone\": \"{{guestPhone}}\"\n}"
             }
           }
         },

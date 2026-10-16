@@ -154,10 +154,16 @@ const collection = {
         },
       }),
       req("Lookup booking", "GET", "/api/bookings/{{bookingRef}}", {
-        query: [{ key: "email", value: "{{guestEmail}}" }],
+        query: [
+          { key: "email", value: "{{guestEmail}}" },
+          { key: "phone", value: "{{guestPhone}}" },
+        ],
       }),
       req("Public invoice", "GET", "/api/bookings/{{bookingRef}}/invoice", {
-        query: [{ key: "email", value: "{{guestEmail}}" }],
+        query: [
+          { key: "email", value: "{{guestEmail}}" },
+          { key: "phone", value: "{{guestPhone}}" },
+        ],
       }),
       req("Guest cancel request", "POST", "/api/bookings/{{bookingRef}}/cancel-request", {
         description:
@@ -171,10 +177,21 @@ const collection = {
     ]),
     folder("Public Payments", [
       req("Create Razorpay order", "POST", "/api/payments/razorpay/order", {
-        body: { bookingRef: "{{bookingRef}}" },
+        body: {
+          bookingRef: "{{bookingRef}}",
+          email: "{{guestEmail}}",
+          phone: "{{guestPhone}}",
+        },
       }),
       req("Verify Razorpay payment", "POST", "/api/payments/razorpay/verify", {
-        body: { razorpay_order_id: "", razorpay_payment_id: "", razorpay_signature: "" },
+        body: {
+          bookingRef: "{{bookingRef}}",
+          razorpayOrderId: "{{razorpayOrderId}}",
+          razorpayPaymentId: "{{razorpayPaymentId}}",
+          razorpaySignature: "{{razorpaySignature}}",
+          email: "{{guestEmail}}",
+          phone: "{{guestPhone}}",
+        },
       }),
       req("Razorpay webhook", "POST", "/api/payments/razorpay/webhook", {
         description: "Called by Razorpay. Uses raw body + signature header.",

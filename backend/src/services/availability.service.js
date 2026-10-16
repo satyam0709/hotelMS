@@ -234,6 +234,8 @@ function roomWhere(query = {}) {
     category: { is: { isActive: true, deletedAt: null } },
   };
   if (query.roomId) where.id = query.roomId;
+  // Support filtering by room slug (e.g. when navigating from a room detail page)
+  if (query.room) where.slug = query.room;
   if (query.categoryId) where.roomCategoryId = query.categoryId;
   if (query.category) {
     where.category = { is: { slug: query.category, isActive: true, deletedAt: null } };
