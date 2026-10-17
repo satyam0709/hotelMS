@@ -52,13 +52,13 @@ export async function apiFetch(path, {
   query,
   body,
   headers,
-  cache = "no-store",
+  cache,
   next,
   signal,
   timeoutMs,
 } = {}) {
   const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
-  const effectiveTimeout = timeoutMs ?? (isFormData ? 60000 : 8000);
+  const effectiveTimeout = timeoutMs ?? (isFormData ? 60000 : 10000);
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), effectiveTimeout);
   if (signal) {
@@ -69,22 +69,31 @@ export async function apiFetch(path, {
   const storedToken = headers?.Authorization || headers?.authorization ? null : getAdminToken();
   const authHeaders = storedToken ? { Authorization: `Bearer ${storedToken}` } : {};
 
+  // In Next.js, cache: 'no-store' and next.revalidate conflict if both are sent.
+  const fetchOptions = {
+    method,
+    headers: {
+      Accept: "application/json",
+      ...(body && !isFormData ? { "Content-Type": "application/json" } : {}),
+      ...authHeaders,
+      ...headers,
+    },
+    body: isFormData ? body : body ? JSON.stringify(body) : undefined,
+    signal: controller.signal,
+    credentials: "include",
+  };
+
+  if (next) {
+    fetchOptions.next = next;
+  } else if (cache) {
+    fetchOptions.cache = cache;
+  } else {
+    fetchOptions.cache = "no-store";
+  }
+
   let response;
   try {
-    response = await fetch(buildUrl(path, query), {
-      method,
-      headers: {
-        Accept: "application/json",
-        ...(body && !isFormData ? { "Content-Type": "application/json" } : {}),
-        ...authHeaders,
-        ...headers,
-      },
-      body: isFormData ? body : body ? JSON.stringify(body) : undefined,
-      cache,
-      next,
-      signal: controller.signal,
-      credentials: "include",
-    });
+    response = await fetch(buildUrl(path, query), fetchOptions);
   } catch (error) {
     if (error?.name === "AbortError") {
       throw new ApiError("The request timed out. Please try again.", {

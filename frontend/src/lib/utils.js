@@ -47,8 +47,8 @@ export function pickFeaturedRoomImage(room) {
 
 export function roomGalleryItems(room) {
   const media = Array.isArray(room?.media) ? room.media : [];
-  return media
-    .map((item) => item?.media)
+  const list = media
+    .map((item) => (item?.media ? item.media : item))
     .filter(Boolean)
     .map((item, idx) => ({
       id: item.id || item.secureUrl || item.url || `room-media-${idx}`,
@@ -57,12 +57,41 @@ export function roomGalleryItems(room) {
       resourceType: String(item.resourceType || "IMAGE").toUpperCase() === "VIDEO" ? "VIDEO" : "IMAGE",
     }))
     .filter((item) => item.src);
+
+  if (list.length) return list;
+
+  const featured = pickFeaturedRoomImage(room);
+  if (featured) {
+    const src = mediaUrl(featured);
+    if (src) {
+      list.push({
+        id: "room-featured",
+        src,
+        alt: mediaAlt(featured, room?.name || "Room image"),
+        resourceType: "IMAGE",
+      });
+    }
+  }
+
+  if (!list.length) {
+    list.push({
+      id: "room-default-fallback",
+      src: "/assets/Room.jpg",
+      alt: room?.name || "Room preview",
+      resourceType: "IMAGE",
+    });
+  }
+
+  return list;
 }
 
 export function roomAmenities(room) {
   const rows = Array.isArray(room?.amenities) ? room.amenities : [];
   return rows
-    .map((row) => row?.amenity || row)
+    .map((row) => {
+      if (typeof row === "string") return { id: row, name: row };
+      return row?.amenity || row;
+    })
     .filter((item) => item && (item.id || item.name));
 }
 

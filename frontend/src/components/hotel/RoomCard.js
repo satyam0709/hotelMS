@@ -25,7 +25,11 @@ export default function RoomCard({ room, bookingHref, fallbackIndex = 0 }) {
   return (
     <MotionCard className="group flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-line/80 bg-elevated shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition-all duration-500 hover:-translate-y-1.5 hover:border-accent/40 hover:shadow-[0_20px_35px_rgba(26,38,30,0.08)]">
       {/* Visual Image Header */}
-      <Link href={detailHref} className="relative block aspect-[16/11] overflow-hidden bg-accent-soft/30">
+      <Link
+        href={detailHref}
+        className="relative block aspect-[16/11] overflow-hidden bg-accent-soft/30 cursor-pointer"
+        aria-label={`View details of ${room.name}`}
+      >
         <Image
           src={imageSrc}
           alt={imageAlt}
@@ -35,7 +39,7 @@ export default function RoomCard({ room, bookingHref, fallbackIndex = 0 }) {
         />
 
         {/* Gradient overlay for contrast */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent pointer-events-none" />
 
         {/* Badges on Image */}
         <div className="absolute top-3.5 inset-x-3.5 flex items-center justify-between pointer-events-none">
@@ -51,7 +55,7 @@ export default function RoomCard({ room, bookingHref, fallbackIndex = 0 }) {
         </div>
 
         {/* Price Tag Floating at bottom of image */}
-        <div className="absolute bottom-3.5 right-3.5 rounded-2xl bg-black/75 px-3.5 py-1.5 text-right backdrop-blur-md border border-white/15">
+        <div className="absolute bottom-3.5 right-3.5 rounded-2xl bg-black/75 px-3.5 py-1.5 text-right backdrop-blur-md border border-white/15 pointer-events-none">
           <p className="text-[10px] font-medium tracking-wider text-white/70 uppercase">Starting from</p>
           <p className="font-display text-xl font-bold text-white leading-tight">
             {formatCurrency(room.nightlyFrom ?? room.basePrice)}

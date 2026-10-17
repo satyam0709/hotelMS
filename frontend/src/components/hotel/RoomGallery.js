@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 export default function RoomGallery({ images = [], roomName = "Room" }) {
   const [index, setIndex] = useState(0);
   const total = images.length;
-  const current = images[index] || null;
+  const current = (total > 0 && images[index]) ? images[index] : (images[0] || null);
 
   const go = useCallback(
     (direction) => {
@@ -29,7 +29,7 @@ export default function RoomGallery({ images = [], roomName = "Room" }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [go, total]);
 
-  if (!total) {
+  if (!total || !current) {
     return (
       <div className="relative aspect-[16/10] overflow-hidden rounded-[2rem] media-fallback-bg" />
     );
@@ -40,7 +40,7 @@ export default function RoomGallery({ images = [], roomName = "Room" }) {
       <div className="relative aspect-[16/10] overflow-hidden rounded-[2rem] bg-accent-soft">
         <AnimatePresence mode="wait">
           <motion.div
-            key={current.id || current.src || index}
+            key={current?.id || current?.src || index}
             initial={{ opacity: 0, scale: 1.03 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.99 }}
@@ -48,8 +48,8 @@ export default function RoomGallery({ images = [], roomName = "Room" }) {
             className="absolute inset-0"
           >
             <Image
-              src={current.src}
-              alt={current.alt || roomName}
+              src={current?.src || "/assets/Room.jpg"}
+              alt={current?.alt || roomName}
               fill
               priority
               className="object-cover"

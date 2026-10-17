@@ -17,18 +17,36 @@ import { getRoom } from "@/lib/api/rooms";
 import { demoRooms, findDemoRoom } from "@/lib/demo-content";
 import { formatCurrency, roomGalleryItems } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
+export async function generateStaticParams() {
+  return [
+    { slug: "deluxe-garden-room" },
+    { slug: "terrace-suite" },
+    { slug: "premium-pool-view" },
+    { slug: "pool-view-suite" },
+  ];
+}
+
 async function loadRoom(slug) {
+  if (!slug) return null;
   try {
-    return await getRoom(slug);
+    const data = await getRoom(slug);
+    if (data && (data.id || data.slug || data.name)) {
+      return data;
+    }
   } catch (error) {
     // Gracefully handle backend errors/timeouts and allow fallback to demo room
     return null;
   }
+  return null;
 }
 
 export async function generateMetadata({ params }) {
-  const { slug } = await params;
-  const room = (await loadRoom(slug).catch(() => null)) || findDemoRoom(slug);
+  const resolved = await params;
+  const rawSlug = resolved?.slug;
+  const slug = typeof rawSlug === "string" ? decodeURIComponent(rawSlug).trim() : "";
+  const room = (await loadRoom(slug).catch(() => null)) || findDemoRoom(slug) || demoRooms.find((r) => r.slug?.toLowerCase() === slug.toLowerCase()) || demoRooms[0];
   if (!room) {
     return { title: "Room Not Found" };
   }
@@ -39,8 +57,10 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function RoomDetailPage({ params }) {
-  const { slug } = await params;
-  const room = (await loadRoom(slug)) || findDemoRoom(slug);
+  const resolved = await params;
+  const rawSlug = resolved?.slug;
+  const slug = typeof rawSlug === "string" ? decodeURIComponent(rawSlug).trim() : "";
+  const room = (await loadRoom(slug)) || findDemoRoom(slug) || demoRooms.find((r) => r.slug?.toLowerCase() === slug.toLowerCase());
   if (!room) notFound();
 
   const images = roomGalleryItems(room);
