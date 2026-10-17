@@ -24,11 +24,17 @@ const staticPaths = [
   "/policies/check-in-check-out",
 ];
 
+export const dynamic = "force-dynamic";
+
 async function fetchJson(path) {
   try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3500);
     const response = await fetch(`${getApiBaseUrl()}/api${path}`, {
       next: { revalidate: 3600 },
-    });
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timer));
+
     if (!response.ok) return null;
     const payload = await response.json();
     return payload?.data ?? payload;
