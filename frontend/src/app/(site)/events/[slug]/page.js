@@ -27,8 +27,7 @@ async function loadEvent(slug) {
   try {
     return await getEvent(slug);
   } catch (error) {
-    if (error instanceof ApiError && error.status === 404) return null;
-    throw error;
+    return null;
   }
 }
 

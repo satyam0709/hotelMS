@@ -5,8 +5,12 @@ function media(src, alt) {
   return { url: src, altText: alt };
 }
 
-function roomMedia(src, alt) {
-  return [{ usage: "featured", media: media(src, alt) }];
+function roomMedia(srcs, alt) {
+  const list = Array.isArray(srcs) ? srcs : [srcs];
+  return list.map((src, i) => ({
+    usage: i === 0 ? "featured" : "gallery",
+    media: media(src, i === 0 ? alt : `${alt} — View ${i + 1}`),
+  }));
 }
 
 export function coalesceList(value, fallback = []) {
@@ -21,51 +25,99 @@ export const demoRooms = [
     slug: "deluxe-garden-room",
     name: "Deluxe Garden Room",
     shortDescription: "Floor-to-ceiling windows open to palm-lined gardens and morning light.",
+    description:
+      "A serene sanctuary framed by lush botanical gardens. Featuring an expansive king-sized bed adorned with bespoke linens, an artisan stone bathroom with a deep rain shower, and a private sunlit reading lounge overlooking the palms.",
     basePrice: 5200,
     nightlyFrom: 5200,
     isFeatured: true,
     maxAdults: 2,
     maxChildren: 1,
     maxOccupancy: 3,
-    bedType: "King",
+    bedType: "King Bed",
     roomSize: "32 m²",
+    checkInTime: "14:00",
+    checkOutTime: "11:00",
     category: { name: "Deluxe" },
-    media: roomMedia(fallbackSrc("room", 0), "Deluxe garden room"),
-    amenities: [{ name: "Wi‑Fi" }, { name: "Rain shower" }, { name: "Garden view" }],
+    media: roomMedia(
+      [fallbackSrc("room", 0), fallbackSrc("gallery", 0), fallbackSrc("gallery", 2)],
+      "Deluxe garden room"
+    ),
+    amenities: [
+      { name: "High-Speed Wi‑Fi" },
+      { name: "Forest Rain Shower" },
+      { name: "Garden Vista Balcony" },
+      { name: "Espresso Maker" },
+      { name: "Organic Botanical Toiletries" },
+      { name: "24-hr Room Service" },
+    ],
+    policies:
+      "• Check-in from 2:00 PM; Check-out by 11:00 AM.\n• Complimentary gourmet breakfast included.\n• Non-smoking accommodation.\n• Free cancellation up to 48 hours prior to arrival.",
   },
   {
     id: "demo-room-suite",
     slug: "terrace-suite",
     name: "Terrace Suite",
     shortDescription: "A private terrace, lounge seating, and space for unhurried mornings.",
+    description:
+      "Designed for generous comfort, the Terrace Suite features a sprawling private open-air terrace with cushioned sun loungers, an independent living lounge, an oversized soaking bathtub, and bespoke handcrafted furnishings.",
     basePrice: 8900,
     nightlyFrom: 8900,
     isFeatured: true,
     maxAdults: 3,
     maxChildren: 2,
     maxOccupancy: 4,
-    bedType: "King + sofa bed",
+    bedType: "King Bed + Plush Daybed",
     roomSize: "48 m²",
+    checkInTime: "14:00",
+    checkOutTime: "11:00",
     category: { name: "Suite" },
-    media: roomMedia(fallbackSrc("room", 1), "Terrace suite"),
-    amenities: [{ name: "Terrace" }, { name: "Mini bar" }, { name: "Bathtub" }],
+    media: roomMedia(
+      [fallbackSrc("room", 1), fallbackSrc("room", 2), fallbackSrc("gallery", 1)],
+      "Terrace suite"
+    ),
+    amenities: [
+      { name: "Private Open-Air Terrace" },
+      { name: "Deep Soaking Bathtub" },
+      { name: "Gourmet Mini Bar" },
+      { name: "Dedicated Butler Service" },
+      { name: "Smart Bang & Olufsen Sound" },
+      { name: "Walk-in Wardrobe" },
+    ],
+    policies:
+      "• Check-in from 2:00 PM; Check-out by 11:00 AM.\n• Champagne arrival amenity included.\n• Non-smoking accommodation.\n• Free cancellation up to 48 hours prior to arrival.",
   },
   {
     id: "demo-room-premium",
     slug: "premium-pool-view",
     name: "Premium Pool View",
     shortDescription: "Balcony overlooking the pool deck with curated in-room amenities.",
+    description:
+      "Unwind with panoramic vistas of the sparkling azure pool. Featuring breezy coastal architecture, dedicated writing desk, marble vanity, and effortless sunset terrace access.",
     basePrice: 6800,
     nightlyFrom: 6800,
     isFeatured: false,
     maxAdults: 2,
     maxChildren: 1,
     maxOccupancy: 3,
-    bedType: "Queen",
+    bedType: "Queen Bed",
     roomSize: "36 m²",
+    checkInTime: "14:00",
+    checkOutTime: "11:00",
     category: { name: "Premium" },
-    media: roomMedia(fallbackSrc("room", 2), "Pool view room"),
-    amenities: [{ name: "Pool view" }, { name: "Desk" }, { name: "Room service" }],
+    media: roomMedia(
+      [fallbackSrc("room", 2), fallbackSrc("hero", 0), fallbackSrc("gallery", 4)],
+      "Pool view room"
+    ),
+    amenities: [
+      { name: "Poolside Balcony" },
+      { name: "Marble Vanity" },
+      { name: "High-Speed Wi-Fi" },
+      { name: "Executive Workstation" },
+      { name: "In-Room Safe" },
+      { name: "Plush Bathrobes & Slippers" },
+    ],
+    policies:
+      "• Check-in from 2:00 PM; Check-out by 11:00 AM.\n• Complimentary pool cabana access.\n• Non-smoking accommodation.\n• Free cancellation up to 48 hours prior to arrival.",
   },
 ];
 
@@ -73,38 +125,74 @@ export const demoFacilities = [
   {
     id: "demo-facility-spa",
     slug: "wellness-spa",
-    name: "Wellness & Spa",
+    name: "Wellness & Ayurvedic Spa",
     category: "Wellness",
-    description: "Thermal rituals, massage suites, and a quiet hydrotherapy circuit.",
+    description: "Holistic thermal circuits, aromatherapy massage suites, steam chambers, and ancient Ayurvedic rituals.",
     operatingHours: "Daily · 8:00 AM – 9:00 PM",
-    media: [{ media: media(fallbackSrc("facility", 0), "Spa") }],
+    media: [
+      { media: media(fallbackSrc("facility", 0), "Resort Spa") },
+      { media: media(fallbackSrc("gallery", 1), "Spa Treatment Suite") },
+    ],
   },
   {
     id: "demo-facility-pool",
     slug: "infinity-pool",
-    name: "Infinity Pool",
+    name: "Horizon Infinity Pool",
     category: "Recreation",
-    description: "Sun loungers, shaded cabanas, and poolside service through the afternoon.",
+    description: "Sun-warmed waters overlooking tropical gardens, equipped with private shaded daybeds and chilled poolside service.",
     operatingHours: "Daily · 7:00 AM – 8:00 PM",
-    media: [{ media: media(fallbackSrc("hero", 1), "Pool") }],
+    media: [
+      { media: media(fallbackSrc("hero", 1), "Infinity Pool") },
+      { media: media(fallbackSrc("hero", 0), "Pool at Sunset") },
+    ],
   },
   {
     id: "demo-facility-dining",
     slug: "pavilion-dining",
-    name: "Garden Pavilion",
+    name: "The Garden Pavilion",
     category: "Dining",
-    description: "Open-air tables for breakfast, light lunches, and candlelit dinners.",
+    description: "Veranda dining celebrating farm-fresh produce, artisanal breakfast baskets, and candlelit dinners under palm trees.",
     operatingHours: "Daily · 7:00 AM – 11:00 PM",
-    media: [{ media: media(fallbackSrc("gallery", 2), "Dining pavilion") }],
+    media: [
+      { media: media(fallbackSrc("gallery", 2), "Dining Pavilion") },
+      { media: media(fallbackSrc("gallery", 3), "Chefs Table") },
+    ],
+  },
+  {
+    id: "demo-facility-yoga",
+    slug: "yoga-pavilion",
+    name: "Sunrise Yoga & Zen Garden",
+    category: "Wellness",
+    description: "Open-air teak pavilion for morning guided vinyasa, sound bath meditation, and quiet mindfulness sessions.",
+    operatingHours: "Daily · 6:30 AM – 10:00 AM & 5:00 PM – 7:30 PM",
+    media: [
+      { media: media(fallbackSrc("gallery", 4), "Yoga Pavilion") },
+      { media: media(fallbackSrc("gallery", 5), "Zen Garden") },
+    ],
+  },
+  {
+    id: "demo-facility-fitness",
+    slug: "fitness-studio",
+    name: "Movement & Fitness Studio",
+    category: "Recreation",
+    description: "State-of-the-art Technogym cardio machines, free weights, resistance bands, and private personal training.",
+    operatingHours: "24 Hours for Hotel Guests",
+    media: [
+      { media: media(fallbackSrc("facility", 1), "Fitness Studio") },
+      { media: media(fallbackSrc("gallery", 6), "Movement Studio") },
+    ],
   },
   {
     id: "demo-facility-parking",
     slug: "guest-parking",
-    name: "Guest Parking",
+    name: "Valet & Executive Chauffeur",
     category: "Services",
-    description: "Covered bays, valet assistance, and EV charging on request.",
-    operatingHours: "24 hours",
-    media: [{ media: media(fallbackSrc("parking", 0), "Parking") }],
+    description: "Secure shaded bays, 24/7 complimentary valet assistance, high-speed EV chargers, and airport limousine transfers.",
+    operatingHours: "24 Hours Service",
+    media: [
+      { media: media(fallbackSrc("parking", 0), "Valet & Parking") },
+      { media: media(fallbackSrc("reception", 0), "Concierge Desk") },
+    ],
   },
 ];
 
@@ -362,14 +450,26 @@ export const demoFaqCategories = [
 ];
 
 export function demoGalleryItems() {
-  return allSiteAssetSources().map((asset, index) => ({
-    id: `demo-gallery-${index}`,
-    src: asset.src,
-    alt: asset.alt,
-    caption: asset.alt,
-    category: asset.roles.includes("room") ? "rooms" : "facilities",
-    href: "/gallery",
-  }));
+  return allSiteAssetSources().map((asset, index) => {
+    let category = "facilities";
+    if (asset.roles.includes("room")) {
+      category = "rooms";
+    } else if (index % 4 === 1) {
+      category = "dining";
+    } else if (index % 4 === 2) {
+      category = "events";
+    } else if (index % 4 === 3) {
+      category = "nearby";
+    }
+    return {
+      id: `demo-gallery-${index}`,
+      src: asset.src,
+      alt: asset.alt,
+      caption: asset.alt,
+      category,
+      href: "/gallery",
+    };
+  });
 }
 
 export function getDemoAboutPage() {

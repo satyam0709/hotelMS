@@ -191,14 +191,6 @@ export default function FooterContent({
               Seasonal offers and stay inspiration.
             </p>
             <NewsletterForm className="mt-4" layout="stack" />
-
-            <div className="mt-8">
-              <p className="text-sm font-semibold text-ink">Book your stay</p>
-              <Button href="/booking" className="mt-3 w-full sm:w-auto">
-                Reserve now
-              </Button>
-              <p className="mt-2 text-xs text-muted">Secure checkout when online pay is enabled.</p>
-            </div>
           </motion.div>
         </div>
       </Container>

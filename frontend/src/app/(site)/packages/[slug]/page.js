@@ -18,14 +18,13 @@ async function loadPackage(slug) {
   try {
     return await getPackage(slug);
   } catch (error) {
-    if (error instanceof ApiError && error.status === 404) return null;
-    throw error;
+    return null;
   }
 }
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const pkg = await loadPackage(slug).catch(() => null);
+  const pkg = (await loadPackage(slug).catch(() => null)) || findDemoPackage(slug);
   if (!pkg) return { title: "Package not found" };
   return {
     title: pkg.name,

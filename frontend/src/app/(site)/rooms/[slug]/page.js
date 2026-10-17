@@ -21,19 +21,19 @@ async function loadRoom(slug) {
   try {
     return await getRoom(slug);
   } catch (error) {
-    if (error instanceof ApiError && error.status === 404) return null;
-    throw error;
+    // Gracefully handle backend errors/timeouts and allow fallback to demo room
+    return null;
   }
 }
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const room = await loadRoom(slug).catch(() => null);
+  const room = (await loadRoom(slug).catch(() => null)) || findDemoRoom(slug);
   if (!room) {
-    return { title: "Room not found" };
+    return { title: "Room Not Found" };
   }
   return {
-    title: room.name,
+    title: `${room.name} — Luxury Stays`,
     description: room.shortDescription || room.description || `${room.name} details and booking.`,
   };
 }

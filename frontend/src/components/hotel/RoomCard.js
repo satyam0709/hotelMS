@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowUpRight, BedDouble, Check, Maximize2, Sparkles, Users } from "lucide-react";
 import MotionCard from "@/components/motion/MotionCard";
-import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import { fallbackAsset } from "@/lib/site-assets";
 import { bookingSearchHref } from "@/lib/booking-transitions";
@@ -23,73 +23,111 @@ export default function RoomCard({ room, bookingHref, fallbackIndex = 0 }) {
   const bookHref = bookingHref || bookingSearchHref({ roomSlug: room.slug });
 
   return (
-    <MotionCard className="group flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-line bg-elevated shadow-[0_1px_0_rgba(255,255,255,0.8)]">
-      <Link href={detailHref} className="block">
-        <div className="relative aspect-[4/3] overflow-hidden bg-accent-soft">
-          <Image
-            src={imageSrc}
-            alt={imageAlt}
-            fill
-            className="object-cover transition-transform duration-700 group-hover:scale-105"
-            sizes="(max-width: 768px) 100vw, 33vw"
-          />
+    <MotionCard className="group flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-line/80 bg-elevated shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition-all duration-500 hover:-translate-y-1.5 hover:border-accent/40 hover:shadow-[0_20px_35px_rgba(26,38,30,0.08)]">
+      {/* Visual Image Header */}
+      <Link href={detailHref} className="relative block aspect-[16/11] overflow-hidden bg-accent-soft/30">
+        <Image
+          src={imageSrc}
+          alt={imageAlt}
+          fill
+          className="object-cover transition-transform duration-700 ease-out group-hover:scale-108"
+          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+        />
+
+        {/* Gradient overlay for contrast */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+
+        {/* Badges on Image */}
+        <div className="absolute top-3.5 inset-x-3.5 flex items-center justify-between pointer-events-none">
+          <span className="inline-flex items-center rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold tracking-wider text-ink uppercase shadow-sm backdrop-blur-md">
+            {room.category?.name || "Suite"}
+          </span>
           {room.isFeatured ? (
-            <div className="absolute top-3 left-3">
-              <Badge>Featured</Badge>
-            </div>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/95 px-3 py-1 text-[11px] font-semibold tracking-wide text-white shadow-sm backdrop-blur-md">
+              <Sparkles className="size-3 text-white/90" />
+              Featured
+            </span>
           ) : null}
+        </div>
+
+        {/* Price Tag Floating at bottom of image */}
+        <div className="absolute bottom-3.5 right-3.5 rounded-2xl bg-black/75 px-3.5 py-1.5 text-right backdrop-blur-md border border-white/15">
+          <p className="text-[10px] font-medium tracking-wider text-white/70 uppercase">Starting from</p>
+          <p className="font-display text-xl font-bold text-white leading-tight">
+            {formatCurrency(room.nightlyFrom ?? room.basePrice)}
+            <span className="ml-1 text-xs font-normal text-white/80">/ night</span>
+          </p>
         </div>
       </Link>
 
-      <div className="flex flex-1 flex-col space-y-3 p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs tracking-[0.16em] text-muted uppercase">
-              {room.category?.name || "Room"}
+      {/* Card Content Body */}
+      <div className="flex flex-1 flex-col p-5 md:p-6">
+        <div>
+          <h3 className="font-display text-2xl tracking-tight text-ink transition-colors group-hover:text-accent">
+            <Link href={detailHref} className="inline-flex items-center gap-1.5">
+              <span>{room.name}</span>
+              <ArrowUpRight className="size-4 opacity-0 -translate-x-1 translate-y-1 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 text-accent" />
+            </Link>
+          </h3>
+
+          {room.shortDescription ? (
+            <p className="mt-2.5 line-clamp-2 text-sm leading-relaxed text-muted">
+              {room.shortDescription}
             </p>
-            <h3 className="mt-1 font-display text-2xl text-ink">
-              <Link href={detailHref} className="transition-colors hover:text-accent">
-                {room.name}
-              </Link>
-            </h3>
-          </div>
-          <p className="text-sm font-semibold text-accent">
-            {formatCurrency(room.nightlyFrom ?? room.basePrice)}
-            <span className="block text-[11px] font-normal tracking-normal text-muted">
-              per night
-            </span>
-          </p>
+          ) : null}
         </div>
 
-        {room.shortDescription ? (
-          <p className="line-clamp-2 text-sm leading-relaxed text-muted">
-            {room.shortDescription}
-          </p>
+        {/* Curated Specs Strip */}
+        <div className="mt-4 grid grid-cols-3 gap-2 rounded-xl border border-line/60 bg-sand-soft/40 p-2.5 text-center">
+          <div className="flex flex-col items-center justify-center">
+            <Users className="size-3.5 text-accent" />
+            <span className="mt-1 text-[11px] font-medium text-ink">
+              {room.maxOccupancy ? `${room.maxOccupancy} Guests` : "2 Guests"}
+            </span>
+          </div>
+          <div className="flex flex-col items-center justify-center border-x border-line/60 px-1">
+            <BedDouble className="size-3.5 text-accent" />
+            <span className="mt-1 truncate max-w-full text-[11px] font-medium text-ink">
+              {room.bedType || "King Bed"}
+            </span>
+          </div>
+          <div className="flex flex-col items-center justify-center">
+            <Maximize2 className="size-3.5 text-accent" />
+            <span className="mt-1 text-[11px] font-medium text-ink">
+              {room.roomSize || "32 m²"}
+            </span>
+          </div>
+        </div>
+
+        {/* Top Amenities Pills */}
+        {amenities.length ? (
+          <div className="mt-3.5 flex flex-wrap gap-1.5">
+            {amenities.map((amenity) => (
+              <span
+                key={amenity.id || amenity.slug || amenity.name}
+                className="inline-flex items-center gap-1 rounded-full bg-elevated px-2.5 py-0.5 text-[11px] text-muted border border-line/70"
+              >
+                <Check className="size-3 text-accent shrink-0" />
+                <span>{amenity.name}</span>
+              </span>
+            ))}
+          </div>
         ) : null}
 
-        <div className="flex flex-wrap gap-2 text-xs text-muted">
-          <span className="rounded-full bg-accent-soft px-2.5 py-1 text-accent">
-            Up to {room.maxOccupancy} guests
-          </span>
-          {room.bedType ? (
-            <span className="rounded-full border border-line px-2.5 py-1">{room.bedType}</span>
-          ) : null}
-          {room.roomSize ? (
-            <span className="rounded-full border border-line px-2.5 py-1">{room.roomSize}</span>
-          ) : null}
-          {amenities.map((amenity) => (
-            <span key={amenity.id || amenity.slug || amenity.name} className="rounded-full border border-line px-2.5 py-1">
-              {amenity.name}
-            </span>
-          ))}
-        </div>
-
-        <div className="mt-auto flex flex-wrap gap-2 pt-2">
-          <Button href={detailHref} variant="secondary" size="sm">
-            View Details
-          </Button>
-          <Button href={bookHref} size="sm">
-            Book Now
+        {/* Action Buttons */}
+        <div className="mt-6 flex items-center justify-between gap-3 border-t border-line/70 pt-4">
+          <Link
+            href={detailHref}
+            className="text-sm font-semibold text-ink/80 transition-colors hover:text-accent"
+          >
+            Explore details
+          </Link>
+          <Button
+            href={bookHref}
+            size="sm"
+            className="rounded-xl shadow-sm hover:shadow-md font-medium"
+          >
+            Reserve Now
           </Button>
         </div>
       </div>

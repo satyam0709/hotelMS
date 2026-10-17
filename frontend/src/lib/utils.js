@@ -50,8 +50,8 @@ export function roomGalleryItems(room) {
   return media
     .map((item) => item?.media)
     .filter(Boolean)
-    .map((item) => ({
-      id: item.id,
+    .map((item, idx) => ({
+      id: item.id || item.secureUrl || item.url || `room-media-${idx}`,
       src: mediaUrl(item),
       alt: mediaAlt(item, room?.name || "Room image"),
       resourceType: String(item.resourceType || "IMAGE").toUpperCase() === "VIDEO" ? "VIDEO" : "IMAGE",

@@ -399,7 +399,7 @@ async function getPublicRoom(slug) {
     where: {
       deletedAt: null,
       isActive: true,
-      roomCategoryId: room.category.id,
+      ...(room.category?.id ? { roomCategoryId: room.category.id } : {}),
       id: { not: room.id },
     },
     orderBy: [{ isFeatured: "desc" }, { name: "asc" }],
