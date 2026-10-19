@@ -29,6 +29,14 @@ async function updateEmailTemplate(req, res) {
   return sendSuccess(res, await service.updateEmailTemplate(params(req).id, body(req), req));
 }
 
+async function sendTestEmail(req, res) {
+  return sendSuccess(res, await service.testEmail(body(req), req), "Test email dispatched.");
+}
+
+async function resendEmailLog(req, res) {
+  return sendSuccess(res, await service.resendEmailLog(params(req).id, req), "Email retry initiated.");
+}
+
 module.exports = {
   getSettings,
   updateSettings,
@@ -36,4 +44,6 @@ module.exports = {
   listEmailTemplates,
   getEmailTemplate,
   updateEmailTemplate,
+  sendTestEmail,
+  resendEmailLog,
 };

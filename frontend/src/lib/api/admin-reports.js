@@ -24,7 +24,9 @@ export async function downloadReportsExport(query = {}) {
   const response = await fetch(buildExportUrl(query), {
     method: "GET",
     credentials: "include",
-    headers: { Accept: "text/csv,application/json" },
+    headers: {
+      Accept: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf,text/csv,application/json",
+    },
     cache: "no-store",
   });
 
@@ -42,10 +44,11 @@ export async function downloadReportsExport(query = {}) {
     throw new ApiError(message, { status: response.status, errorCode: "EXPORT_FAILED" });
   }
 
+  const ext = query.format === "xlsx" ? "xlsx" : query.format === "pdf" ? "pdf" : "csv";
   const blob = await response.blob();
   const filename = filenameFromDisposition(
     response.headers.get("content-disposition"),
-    `hotelms-${query.type || "export"}.csv`,
+    `hotelms-${query.type || "export"}.${ext}`,
   );
   const objectUrl = URL.createObjectURL(blob);
   const anchor = document.createElement("a");

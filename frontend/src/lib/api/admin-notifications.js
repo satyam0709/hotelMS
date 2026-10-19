@@ -1,4 +1,4 @@
-import { apiGet, apiPatch } from "@/lib/api/client";
+import { apiGet, apiPatch, apiPost } from "@/lib/api/client";
 import { normalizeAdminList } from "@/lib/api/admin-list";
 
 export async function getNotificationSettings() {
@@ -20,4 +20,12 @@ export async function listEmailTemplates() {
 
 export async function updateEmailTemplate(id, payload) {
   return apiPatch(`/admin/notifications/templates/${id}`, payload);
+}
+
+export async function sendTestEmail(payload = {}) {
+  return apiPost("/admin/notifications/test-email", payload);
+}
+
+export async function resendEmailLog(id) {
+  return apiPost(`/admin/notifications/logs/${id}/resend`, {});
 }

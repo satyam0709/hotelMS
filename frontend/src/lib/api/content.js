@@ -87,6 +87,10 @@ export async function createInquiry(payload) {
   return apiPost("/inquiries", payload);
 }
 
+export async function createRestaurantReservation(payload) {
+  return apiPost("/restaurant/reservations", payload);
+}
+
 export async function searchSite(q, query = {}) {
   return apiGet("/search", { query: { q, ...query }, cache: "no-store" });
 }

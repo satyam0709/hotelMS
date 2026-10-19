@@ -12,12 +12,18 @@ const {
 } = require("../templates/bookingEmails");
 const { createAdminInquiryNotificationEmail } = require("../templates/inquiryEmails");
 const {
+  createAdminRestaurantReservationEmail,
+  createGuestRestaurantReservationStatusEmail,
+} = require("../templates/restaurantReservationEmails");
+const {
   bookingVariables,
   inquiryVariables,
   interpolate,
 } = require("../utils/emailTemplateRender");
 
-function createEmailService(config = env, mailer = nodemailer) {
+function createEmailService(config, mailer = nodemailer) {
+  const useDatabaseConfig = config === undefined;
+  config = config || env;
   let transporter;
   let transporterKey = "";
 
@@ -41,11 +47,13 @@ function createEmailService(config = env, mailer = nodemailer) {
 
   async function resolveRuntime() {
     let db = {};
-    try {
-      const notificationService = require("./notification.service");
-      db = await notificationService.getRuntimeEmailConfig();
-    } catch {
-      db = {};
+    if (useDatabaseConfig) {
+      try {
+        const notificationService = require("./notification.service");
+        db = await notificationService.getRuntimeEmailConfig();
+      } catch {
+        db = {};
+      }
     }
 
     const smtpHost = db.smtpHost || config.smtpHost || "";
@@ -130,12 +138,20 @@ function createEmailService(config = env, mailer = nodemailer) {
         }
 
         await transporter.sendMail({ from: runtime.fromEmail, to, ...message });
-        await writeEmailLog({
+        const logEntry = await writeEmailLog({
           ...meta,
           recipient: to,
           subject: message.subject,
           status: "SENT",
         });
+        try {
+          require("../realtime/hub").publish("email.log", {
+            recipient: to,
+            subject: message.subject,
+            status: "SENT",
+            at: new Date().toISOString(),
+          });
+        } catch {}
         return { delivered: true, channel: "smtp" };
       }
 
@@ -155,6 +171,15 @@ function createEmailService(config = env, mailer = nodemailer) {
         subject: message.subject,
         status: "SENT",
       });
+      try {
+        require("../realtime/hub").publish("email.log", {
+          recipient: to,
+          subject: message.subject,
+          status: "SENT",
+          channel: "outbox",
+          at: new Date().toISOString(),
+        });
+      } catch {}
       return { delivered: true, channel: "outbox" };
     } catch (error) {
       await writeEmailLog({
@@ -164,6 +189,15 @@ function createEmailService(config = env, mailer = nodemailer) {
         status: "FAILED",
         errorMessage: error?.message || "email-send-failed",
       });
+      try {
+        require("../realtime/hub").publish("email.log", {
+          recipient: to,
+          subject: message.subject,
+          status: "FAILED",
+          errorMessage: error?.message || "email-send-failed",
+          at: new Date().toISOString(),
+        });
+      } catch {}
       if (config.isProduction) throw error;
       return { delivered: false, reason: error?.message || "email-send-failed" };
     }
@@ -252,6 +286,30 @@ function createEmailService(config = env, mailer = nodemailer) {
     });
   }
 
+  async function sendAdminRestaurantReservationNotification(reservation) {
+    const runtime = await resolveRuntime();
+    if (!runtime.inquiryEnabled) return { delivered: false, reason: "inquiry-emails-disabled" };
+    if (!runtime.adminEmail) return { delivered: false, reason: "admin-email-not-configured" };
+    const message = createAdminRestaurantReservationEmail(reservation);
+    return deliver(runtime.adminEmail, message, {
+      templateKey: "admin-restaurant-reservation",
+      relatedType: "RestaurantReservation",
+      relatedId: reservation?.id,
+    });
+  }
+
+  async function sendRestaurantReservationStatusNotification(reservation) {
+    const runtime = await resolveRuntime();
+    if (!runtime.inquiryEnabled) return { delivered: false, reason: "inquiry-emails-disabled" };
+    if (!reservation?.guestEmail) return { delivered: false, reason: "guest-email-not-provided" };
+    const message = createGuestRestaurantReservationStatusEmail(reservation);
+    return deliver(reservation.guestEmail, message, {
+      templateKey: "restaurant-reservation-status",
+      relatedType: "RestaurantReservation",
+      relatedId: reservation?.id,
+    });
+  }
+
   async function sendCheckInReminderEmail(booking) {
     const runtime = await resolveRuntime();
     if (!runtime.checkInReminderEnabled) return { delivered: false, reason: "check-in-reminder-disabled" };
@@ -285,13 +343,53 @@ function createEmailService(config = env, mailer = nodemailer) {
     });
   }
 
+  async function sendTestEmail({ to }) {
+    const runtime = await resolveRuntime();
+    const recipient = to || runtime.adminEmail || runtime.fromEmail;
+    if (!recipient) {
+      return { delivered: false, reason: "No recipient specified and no admin/from email configured." };
+    }
+
+    const testTime = new Date().toLocaleString();
+    const message = {
+      subject: `[HotelMS] Test Email Notification - ${testTime}`,
+      text: `Hello,\n\nThis is a real-time test email sent from your Hotel Management System.\nTimestamp: ${testTime}\nSMTP Host: ${runtime.smtpHost || "Development Local Outbox"}\nFrom: ${runtime.fromEmail || "System"}\n\nIf you received this message, your email service is fully functional!`,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
+          <h2 style="color: #0f172a; margin-top: 0;">HotelMS Email Service Test</h2>
+          <p style="color: #334155; font-size: 15px; line-height: 1.6;">
+            This is a real-time verification email from your <strong>Hotel Management System</strong>.
+          </p>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 20px 0;">
+            <p style="margin: 4px 0; font-size: 14px; color: #475569;"><strong>Status:</strong> <span style="color: #16a34a; font-weight: 600;">ACTIVE &amp; OPERATIONAL</span></p>
+            <p style="margin: 4px 0; font-size: 14px; color: #475569;"><strong>Timestamp:</strong> ${testTime}</p>
+            <p style="margin: 4px 0; font-size: 14px; color: #475569;"><strong>Channel:</strong> ${runtime.smtpHost ? `SMTP (${runtime.smtpHost}:${runtime.smtpPort})` : "Local Dev Outbox"}</p>
+            <p style="margin: 4px 0; font-size: 14px; color: #475569;"><strong>From:</strong> ${runtime.fromEmail || "(System default)"}</p>
+            <p style="margin: 4px 0; font-size: 14px; color: #475569;"><strong>To:</strong> ${recipient}</p>
+          </div>
+          <p style="color: #64748b; font-size: 13px; margin-bottom: 0;">
+            You can manage email templates, logs, and triggers anytime in the HotelMS Admin Dashboard.
+          </p>
+        </div>
+      `,
+    };
+
+    return deliver(recipient, message, {
+      templateKey: "system-test",
+      relatedType: "SystemTest",
+    });
+  }
+
   return {
     sendAdminBookingNotification,
     sendAdminInquiryNotification,
+    sendAdminRestaurantReservationNotification,
+    sendRestaurantReservationStatusNotification,
     sendBookingCancellationEmail,
     sendBookingConfirmationEmail,
     sendCheckInReminderEmail,
     sendPasswordResetEmail,
+    sendTestEmail,
     retryFailedEmail,
   };
 }

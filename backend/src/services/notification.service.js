@@ -324,6 +324,43 @@ async function updateEmailTemplate(id, data, req) {
   });
 }
 
+async function testEmail(data, req) {
+  const emailService = require("./email.service");
+  const result = await emailService.sendTestEmail({ to: data?.to });
+  await createActivityLog({
+    userId: req.admin.id,
+    module: "notifications",
+    action: "test-email",
+    entityType: "EmailService",
+    entityId: req.admin.id,
+    metadata: { to: data?.to, delivered: result?.delivered, channel: result?.channel || null },
+    request: req,
+  });
+  return result;
+}
+
+async function resendEmailLog(id, req) {
+  const log = await prisma.emailLog.findUnique({
+    where: { id },
+  });
+  if (!log) fail(404, "Email log not found.", "NOT_FOUND");
+
+  const emailService = require("./email.service");
+  const result = await emailService.retryFailedEmail(log);
+
+  await createActivityLog({
+    userId: req.admin.id,
+    module: "notifications",
+    action: "resend-email",
+    entityType: "EmailLog",
+    entityId: id,
+    metadata: { recipient: log.recipient, subject: log.subject, delivered: result?.delivered },
+    request: req,
+  });
+
+  return result;
+}
+
 module.exports = {
   getSettings,
   getRuntimeEmailConfig,
@@ -335,4 +372,6 @@ module.exports = {
   updateEmailTemplate,
   ensureDefaultTemplates,
   DEFAULT_TEMPLATES,
+  testEmail,
+  resendEmailLog,
 };

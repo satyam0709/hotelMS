@@ -3,12 +3,16 @@ const { createHash } = require("node:crypto");
 const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
-const { test } = require("node:test");
+const { after, test } = require("node:test");
 const env = require("../src/config/env");
 const prisma = require("../src/prisma/client");
 const adminAuthService = require("../src/services/adminAuth.service");
 const emailService = require("../src/services/email.service");
 const { createEmailService } = require("../src/services/email.service");
+
+after(async () => {
+  await prisma.$disconnect();
+});
 
 test("forgot-password delivers a hashed token through the development outbox and logs no secrets", async (t) => {
   const outboxDirectory = await fs.mkdtemp(path.join(os.tmpdir(), "hotelms-email-test-"));

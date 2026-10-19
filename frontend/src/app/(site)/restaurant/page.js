@@ -16,7 +16,7 @@ import Container from "@/components/ui/Container";
 import SectionHeader from "@/components/ui/SectionHeader";
 import FadeIn from "@/components/motion/FadeIn";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
-import InquiryForm from "@/components/site/InquiryForm";
+import RestaurantReservationForm from "@/components/site/RestaurantReservationForm";
 import { getRestaurant } from "@/lib/api/content";
 import { getDemoRestaurant } from "@/lib/demo-content";
 import { fallbackSrc } from "@/lib/site-assets";
@@ -334,11 +334,7 @@ export default async function RestaurantPage() {
             </div>
 
             <div className="rounded-[2rem] border border-line bg-elevated p-6 sm:p-10 shadow-lg">
-              <InquiryForm
-                defaultType="RESTAURANT"
-                sourceRefType="restaurant"
-                sourceRefId={restaurant.id}
-              />
+              <RestaurantReservationForm />
             </div>
           </div>
         </Container>

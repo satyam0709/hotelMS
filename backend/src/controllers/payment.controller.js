@@ -38,13 +38,19 @@ async function getPublicInvoice(req, res) {
 }
 
 async function getAdminInvoice(req, res) {
-  return sendSuccess(res, await service.getAdminInvoice(params(req).id));
+  const invoice = await service.getAdminInvoice(params(req).id, req);
+  return sendSuccess(res, invoice);
+}
+
+async function getAdminInvoicePdf(req, res) {
+  return service.getAdminInvoicePdf(res, params(req).id, req);
 }
 
 module.exports = {
   createPaymentOrder,
   createRefund,
   getAdminInvoice,
+  getAdminInvoicePdf,
   getAdminPayment,
   getPublicInvoice,
   handleWebhook,

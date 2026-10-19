@@ -444,3 +444,75 @@ test("public invoice returns booking amounts for verified guest", async () => {
   assert.equal(body.data.invoiceNumber, "INV-HMS-PAY-1");
   assert.equal(body.data.amounts.totalAmount, "448.00");
 });
+
+test("admin invoice endpoint enforces auth, permissions, 404, and records audit on success", async () => {
+  // 1. 401 unauthenticated
+  const unauth = await request("/api/admin/bookings/booking-1/invoice");
+  assert.equal(unauth.status, 401);
+
+  // 2. 403 without bookings.read
+  stub(prisma.adminUser, "findFirst", async () => adminRecord(["reports.read"])); // missing bookings.read
+  const forbidden = await request("/api/admin/bookings/booking-1/invoice", {
+    headers: { cookie: cookie() },
+  });
+  assert.equal(forbidden.status, 403);
+
+  // 3. 404 unknown booking
+  stub(prisma.adminUser, "findFirst", async () => adminRecord(["bookings.read"]));
+  stub(prisma.booking, "findFirst", async () => null);
+  const notFound = await request("/api/admin/bookings/non-existent/invoice", {
+    headers: { cookie: cookie() },
+  });
+  assert.equal(notFound.status, 404);
+
+  // 4. 200 success + audit log entry
+  let loggedActivity = null;
+  stub(prisma.booking, "findFirst", async (args) => {
+    assert.equal(args.where.id, "booking-1");
+    return {
+      bookingRef: "HMS-INV-001",
+      status: "CONFIRMED",
+      paymentStatus: "PAID",
+      paymentMethod: "ONLINE",
+      currency: "INR",
+      checkInDate: "2026-11-10",
+      checkOutDate: "2026-11-12",
+      adults: 2,
+      children: 0,
+      roomCount: 1,
+      subtotal: "400.00",
+      discountAmount: "0.00",
+      extraBedAmount: "0.00",
+      taxAmount: "48.00",
+      totalAmount: "448.00",
+      guest: { fullName: "Riya", email: "riya@example.com", phone: "9999999999" },
+      rooms: [{
+        quantity: 1,
+        adults: 2,
+        children: 0,
+        priceSubtotal: "400.00",
+        taxAmount: "48.00",
+        totalAmount: "448.00",
+        room: { name: "Deluxe Suite", slug: "deluxe-suite" },
+      }],
+      payments: [],
+    };
+  });
+  stub(prisma.activityLog, "create", async ({ data }) => {
+    loggedActivity = data;
+    return { id: "act-1", ...data };
+  });
+
+  const successRes = await request("/api/admin/bookings/booking-1/invoice", {
+    headers: { cookie: cookie() },
+  });
+  assert.equal(successRes.status, 200);
+  const successBody = await successRes.json();
+  assert.equal(successBody.data.invoiceNumber, "INV-HMS-INV-001");
+  assert.equal(successBody.data.amounts.totalAmount, "448.00");
+  assert.ok(loggedActivity, "Activity log should have been created");
+  assert.equal(loggedActivity.action, "booking.invoice.view");
+  assert.equal(loggedActivity.module, "bookings");
+  assert.equal(loggedActivity.entityId, "booking-1");
+});
+

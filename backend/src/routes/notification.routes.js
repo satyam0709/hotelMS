@@ -35,5 +35,17 @@ router.patch(
   validateBody(validator.updateTemplateBody),
   controller.updateEmailTemplate,
 );
+router.post(
+  "/notifications/test-email",
+  requirePermission("notifications.update"),
+  validateBody(validator.testEmailBody),
+  controller.sendTestEmail,
+);
+router.post(
+  "/notifications/logs/:id/resend",
+  requirePermission("notifications.update"),
+  validateParams(validator.idParams),
+  controller.resendEmailLog,
+);
 
 module.exports = router;

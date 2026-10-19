@@ -10,12 +10,15 @@ import {
   getNotificationSettings,
   listEmailTemplates,
   listNotificationEmailLogs,
+  resendEmailLog,
+  sendTestEmail,
   updateEmailTemplate,
   updateNotificationSettings,
 } from "@/lib/api/admin-notifications";
 import { ApiError } from "@/lib/api/client";
 import { hasPermission } from "@/lib/admin/permissions";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
+import useAdminRealtime from "@/hooks/useAdminRealtime";
 import { formatDateLabel } from "@/lib/utils";
 
 const EMPTY = {
@@ -48,16 +51,19 @@ export default function AdminNotificationsManager() {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [resendingId, setResendingId] = useState("");
+  const [testRecipient, setTestRecipient] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     setError("");
     try {
       const [settings, logPayload, templateRows] = await Promise.all([
         getNotificationSettings(),
-        listNotificationEmailLogs({ limit: 20 }),
+        listNotificationEmailLogs({ limit: 30 }),
         listEmailTemplates(),
       ]);
       setForm({
@@ -76,15 +82,67 @@ export default function AdminNotificationsManager() {
       setLogs(logPayload.items || []);
       setTemplates(Array.isArray(templateRows) ? templateRows : []);
     } catch {
-      setError("Unable to load notification settings.");
+      if (!silent) setError("Unable to load notification settings.");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
+
+  // Listen to realtime server-sent events for instant log updates
+  useAdminRealtime(
+    useCallback((event) => {
+      if (event?.type === "email.log" || event?.type?.startsWith("booking.") || event?.type?.startsWith("inquiry.")) {
+        load(true);
+      }
+    }, [load]),
+    { enabled: true }
+  );
 
   useEffect(() => {
     load();
   }, [load]);
+
+  async function handleSendTest(e) {
+    e?.preventDefault();
+    if (!canUpdate || testing) return;
+    setTesting(true);
+    setError("");
+    setMessage("");
+    try {
+      const payload = testRecipient.trim() ? { to: testRecipient.trim() } : {};
+      const res = await sendTestEmail(payload);
+      if (res?.delivered) {
+        setMessage(`Live test email successfully delivered via ${res.channel || "email service"}!`);
+      } else {
+        setError(`Email service responded: ${res?.reason || "Delivery could not be verified."}`);
+      }
+      await load(true);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to trigger test email.");
+    } finally {
+      setTesting(false);
+    }
+  }
+
+  async function handleResend(logId) {
+    if (!canUpdate || resendingId) return;
+    setResendingId(logId);
+    setError("");
+    setMessage("");
+    try {
+      const res = await resendEmailLog(logId);
+      if (res?.delivered) {
+        setMessage("Email re-sent successfully!");
+      } else {
+        setError(`Email retry result: ${res?.reason || "Failed to deliver."}`);
+      }
+      await load(true);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to retry email delivery.");
+    } finally {
+      setResendingId("");
+    }
+  }
 
   function updateField(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -273,12 +331,45 @@ export default function AdminNotificationsManager() {
           ) : (
             <p className="text-sm text-muted">You have read-only access to notification settings.</p>
           )}
+
+          {canUpdate ? (
+            <div className="mt-6 border-t border-line/80 pt-5">
+              <h3 className="text-sm font-semibold text-ink">Live test dispatch</h3>
+              <p className="mt-1 text-xs text-muted">
+                Trigger an instantaneous live test email to verify your SMTP delivery.
+              </p>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+                <input
+                  type="email"
+                  placeholder={form.adminEmail || form.fromEmail || "Recipient email"}
+                  value={testRecipient}
+                  onChange={(e) => setTestRecipient(e.target.value)}
+                  className="flex-1 rounded-xl border border-line bg-background px-3 py-2 text-sm text-ink placeholder:text-muted/60"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={testing}
+                  onClick={handleSendTest}
+                >
+                  {testing ? "Sending…" : "Send Test Email"}
+                </Button>
+              </div>
+            </div>
+          ) : null}
         </form>
 
         <section className="overflow-hidden rounded-2xl border border-line bg-elevated shadow-soft">
           <div className="flex items-center justify-between border-b border-line px-5 py-4">
-            <h2 className="font-display text-xl text-ink">Recent email log</h2>
-            <Button type="button" variant="secondary" size="sm" onClick={load}>Refresh</Button>
+            <div className="flex items-center gap-2">
+              <h2 className="font-display text-xl text-ink">Recent email log</h2>
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Live stream
+              </span>
+            </div>
+            <Button type="button" variant="secondary" size="sm" onClick={() => load(false)}>Refresh</Button>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
@@ -288,6 +379,7 @@ export default function AdminNotificationsManager() {
                   <th className="px-5 py-3">To</th>
                   <th className="px-5 py-3">Subject</th>
                   <th className="px-5 py-3">Status</th>
+                  {canUpdate ? <th className="px-5 py-3 text-right">Action</th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -301,10 +393,23 @@ export default function AdminNotificationsManager() {
                       {log.errorMessage ? <p className="text-xs text-red-600">{log.errorMessage}</p> : null}
                     </td>
                     <td className="px-5 py-3"><StatusBadge status={log.status} /></td>
+                    {canUpdate ? (
+                      <td className="px-5 py-3 text-right">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          disabled={resendingId === log.id}
+                          onClick={() => handleResend(log.id)}
+                        >
+                          {resendingId === log.id ? "Retrying…" : "Resend"}
+                        </Button>
+                      </td>
+                    ) : null}
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan={4} className="px-5 py-10 text-center text-muted">No email attempts logged yet.</td>
+                    <td colSpan={canUpdate ? 5 : 4} className="px-5 py-10 text-center text-muted">No email attempts logged yet.</td>
                   </tr>
                 )}
               </tbody>

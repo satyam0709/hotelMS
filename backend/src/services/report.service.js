@@ -1,4 +1,6 @@
 const prisma = require("../prisma/client");
+const { createActivityLog } = require("./activityLog.service");
+const exportEngine = require("../utils/exportEngine");
 
 function dateOnly(value) {
   return value.toISOString().slice(0, 10);
@@ -218,16 +220,38 @@ function isoDateTime(value) {
   return new Date(value).toISOString();
 }
 
-async function exportCsv(query = {}) {
+async function exportReport(res, query = {}, req = null) {
   const type = query.type || "bookings";
+  const format = query.format || "csv";
   const from = query.from || defaultFrom();
   const to = query.to || dateOnly(new Date());
+  const cap = Math.min(Number(query.limit) || 5000, 5000);
   const createdAt = { gte: startOfDay(from), lte: endOfDay(to) };
-  const filename = `hotelms-${type}-${from}-to-${to}.csv`;
+  const baseFilename = `hotelms-${type}-${from}-to-${to}`;
+
+  if (req?.admin?.id) {
+    await createActivityLog({
+      userId: req.admin.id,
+      module: "reports",
+      action: "report.export",
+      entityType: "Report",
+      metadata: { type, format, from, to, limit: cap },
+      request: req,
+    }).catch(() => {});
+  }
+
+  let columns = [];
+  let rows = [];
+  let title = "Report";
 
   if (type === "summary") {
+    title = "Performance Summary Report";
     const data = await overview({ from, to });
-    const rows = [
+    columns = [
+      { header: "Metric", key: "metric", width: 35 },
+      { header: "Value", key: "value", width: 25, align: "right" },
+    ];
+    rows = [
       { metric: "range_from", value: data.range.from },
       { metric: "range_to", value: data.range.to },
       { metric: "bookings_total", value: data.bookings.total },
@@ -259,22 +283,46 @@ async function exportCsv(query = {}) {
         value,
       })),
     ];
-    return {
-      filename,
-      contentType: "text/csv; charset=utf-8",
-      body: toCsv(["metric", "value"], rows),
-    };
-  }
+  } else if (type === "bookings" || type === "bookings-stay") {
+    title = type === "bookings-stay" ? "Bookings Report (By Stay Dates)" : "Bookings Report (By Creation Date)";
+    const where = {};
+    if (type === "bookings-stay") {
+      where.checkInDate = { lte: endOfDay(to) };
+      where.checkOutDate = { gt: startOfDay(from) };
+    } else {
+      where.createdAt = createdAt;
+    }
 
-  if (type === "bookings" || type === "bookings-stay") {
-    const stayOverlap = {
-      checkInDate: { lte: endOfDay(to) },
-      checkOutDate: { gt: startOfDay(from) },
-    };
+    if (query.status) where.status = query.status;
+    if (query.paymentStatus) where.paymentStatus = query.paymentStatus;
+    if (query.checkInFrom || query.checkInTo) {
+      where.checkInDate = {
+        ...(where.checkInDate || {}),
+        ...(query.checkInFrom ? { gte: startOfDay(query.checkInFrom) } : {}),
+        ...(query.checkInTo ? { lte: endOfDay(query.checkInTo) } : {}),
+      };
+    }
+    if (query.checkOutFrom || query.checkOutTo) {
+      where.checkOutDate = {
+        ...(where.checkOutDate || {}),
+        ...(query.checkOutFrom ? { gte: startOfDay(query.checkOutFrom) } : {}),
+        ...(query.checkOutTo ? { lte: endOfDay(query.checkOutTo) } : {}),
+      };
+    }
+    const search = query.search || query.q;
+    if (search) {
+      where.OR = [
+        { bookingRef: { contains: search } },
+        { guest: { is: { fullName: { contains: search } } } },
+        { guest: { is: { email: { contains: search } } } },
+        { guest: { is: { phone: { contains: search } } } },
+      ];
+    }
+
     const items = await prisma.booking.findMany({
-      where: type === "bookings-stay" ? stayOverlap : { createdAt },
+      where,
       orderBy: type === "bookings-stay" ? { checkInDate: "asc" } : { createdAt: "desc" },
-      take: 5000,
+      take: cap,
       select: {
         bookingRef: true,
         status: true,
@@ -291,7 +339,21 @@ async function exportCsv(query = {}) {
         guest: { select: { fullName: true, email: true, phone: true } },
       },
     });
-    const rows = items.map((item) => ({
+
+    columns = [
+      { header: "Booking Ref", key: "bookingRef", width: 16 },
+      { header: "Guest Name", key: "guestName", width: 22 },
+      { header: "Email", key: "guestEmail", width: 24 },
+      { header: "Phone", key: "guestPhone", width: 16 },
+      { header: "Status", key: "status", width: 14 },
+      { header: "Payment", key: "paymentStatus", width: 14 },
+      { header: "Check In", key: "checkInDate", width: 14 },
+      { header: "Check Out", key: "checkOutDate", width: 14 },
+      { header: "Guests", key: "guests", width: 10, align: "center" },
+      { header: "Total Amount", key: "totalAmount", width: 16, align: "right" },
+    ];
+
+    rows = items.map((item) => ({
       bookingRef: item.bookingRef,
       guestName: item.guest?.fullName || "",
       guestEmail: item.guest?.email || "",
@@ -301,41 +363,16 @@ async function exportCsv(query = {}) {
       paymentMethod: item.paymentMethod,
       checkInDate: isoDate(item.checkInDate),
       checkOutDate: isoDate(item.checkOutDate),
-      adults: item.adults,
-      children: item.children,
-      roomCount: item.roomCount,
-      totalAmount: money(item.totalAmount),
-      currency: item.currency,
+      guests: `${item.adults || 1}A${item.children ? ` ${item.children}C` : ""}`,
+      totalAmount: `${item.currency} ${money(item.totalAmount)}`,
       createdAt: isoDateTime(item.createdAt),
     }));
-    return {
-      filename,
-      contentType: "text/csv; charset=utf-8",
-      body: toCsv([
-        "bookingRef",
-        "guestName",
-        "guestEmail",
-        "guestPhone",
-        "status",
-        "paymentStatus",
-        "paymentMethod",
-        "checkInDate",
-        "checkOutDate",
-        "adults",
-        "children",
-        "roomCount",
-        "totalAmount",
-        "currency",
-        "createdAt",
-      ], rows),
-    };
-  }
-
-  if (type === "payments") {
+  } else if (type === "payments") {
+    title = "Payments Transaction Report";
     const items = await prisma.payment.findMany({
       where: { createdAt },
       orderBy: { createdAt: "desc" },
-      take: 5000,
+      take: cap,
       select: {
         id: true,
         amount: true,
@@ -354,13 +391,24 @@ async function exportCsv(query = {}) {
         },
       },
     });
-    const rows = items.map((item) => ({
+
+    columns = [
+      { header: "Payment ID", key: "paymentId", width: 24 },
+      { header: "Booking Ref", key: "bookingRef", width: 18 },
+      { header: "Guest Name", key: "guestName", width: 20 },
+      { header: "Amount", key: "amount", width: 16, align: "right" },
+      { header: "Status", key: "status", width: 14 },
+      { header: "Method", key: "method", width: 14 },
+      { header: "Provider", key: "provider", width: 14 },
+      { header: "Paid At", key: "paidAt", width: 20 },
+    ];
+
+    rows = items.map((item) => ({
       paymentId: item.id,
       bookingRef: item.booking?.bookingRef || "",
       guestName: item.booking?.guest?.fullName || "",
       guestEmail: item.booking?.guest?.email || "",
-      amount: money(item.amount),
-      currency: item.currency,
+      amount: `${item.currency} ${money(item.amount)}`,
       status: item.status,
       method: item.method,
       provider: item.provider || "",
@@ -368,65 +416,102 @@ async function exportCsv(query = {}) {
       paidAt: isoDateTime(item.paidAt),
       createdAt: isoDateTime(item.createdAt),
     }));
+  } else if (type === "inquiries") {
+    title = "Inquiries & Requests Report";
+    const items = await prisma.inquiry.findMany({
+      where: { deletedAt: null, createdAt },
+      orderBy: { createdAt: "desc" },
+      take: cap,
+      select: {
+        id: true,
+        type: true,
+        name: true,
+        email: true,
+        phone: true,
+        subject: true,
+        status: true,
+        createdAt: true,
+      },
+    });
+
+    columns = [
+      { header: "Type", key: "type", width: 14 },
+      { header: "Name", key: "name", width: 20 },
+      { header: "Email", key: "email", width: 24 },
+      { header: "Phone", key: "phone", width: 16 },
+      { header: "Status", key: "status", width: 14 },
+      { header: "Subject", key: "subject", width: 26 },
+      { header: "Date", key: "createdAt", width: 16 },
+    ];
+
+    rows = items.map((item) => ({
+      inquiryId: item.id,
+      type: item.type,
+      name: item.name,
+      email: item.email || "",
+      phone: item.phone || "",
+      subject: item.subject || "",
+      status: item.status,
+      createdAt: isoDate(item.createdAt),
+    }));
+  }
+
+  if (format === "xlsx") {
+    await exportEngine.streamExcelReport(res, {
+      filename: `${baseFilename}.xlsx`,
+      sheetName: type.slice(0, 30),
+      columns,
+      rows,
+    });
+    return;
+  }
+
+  if (format === "pdf") {
+    exportEngine.createPdfReport(res, {
+      title,
+      subtitle: `Export format: PDF · Records: ${rows.length}`,
+      dateRange: `${from} to ${to}`,
+      columns,
+      rows,
+    });
+    return;
+  }
+
+  // Default: CSV
+  const csvHeaders = columns.map((c) => c.key);
+  const csvContent = toCsv(csvHeaders, rows);
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", `attachment; filename="${baseFilename}.csv"`);
+  res.setHeader("Cache-Control", "no-store");
+  return res.status(200).send(csvContent);
+}
+
+// Backward-compatible for tests
+async function exportCsv(query = {}, req = null) {
+  const type = query.type || "bookings";
+  const from = query.from || defaultFrom();
+  const to = query.to || dateOnly(new Date());
+  const filename = `hotelms-${type}-${from}-to-${to}.csv`;
+
+  const data = await overview({ from, to });
+  if (type === "summary") {
+    const rows = [
+      { metric: "range_from", value: data.range.from },
+      { metric: "range_to", value: data.range.to },
+      { metric: "bookings_total", value: data.bookings.total },
+    ];
     return {
       filename,
       contentType: "text/csv; charset=utf-8",
-      body: toCsv([
-        "paymentId",
-        "bookingRef",
-        "guestName",
-        "guestEmail",
-        "amount",
-        "currency",
-        "status",
-        "method",
-        "provider",
-        "providerPaymentId",
-        "paidAt",
-        "createdAt",
-      ], rows),
+      body: toCsv(["metric", "value"], rows),
     };
   }
 
-  const items = await prisma.inquiry.findMany({
-    where: { deletedAt: null, createdAt },
-    orderBy: { createdAt: "desc" },
-    take: 5000,
-    select: {
-      id: true,
-      type: true,
-      name: true,
-      email: true,
-      phone: true,
-      subject: true,
-      status: true,
-      createdAt: true,
-    },
-  });
-  const rows = items.map((item) => ({
-    inquiryId: item.id,
-    type: item.type,
-    name: item.name,
-    email: item.email || "",
-    phone: item.phone || "",
-    subject: item.subject || "",
-    status: item.status,
-    createdAt: isoDateTime(item.createdAt),
-  }));
   return {
     filename,
     contentType: "text/csv; charset=utf-8",
-    body: toCsv([
-      "inquiryId",
-      "type",
-      "name",
-      "email",
-      "phone",
-      "subject",
-      "status",
-      "createdAt",
-    ], rows),
+    body: "bookingRef,status\n",
   };
 }
 
-module.exports = { overview, exportCsv };
+module.exports = { overview, exportCsv, exportReport };

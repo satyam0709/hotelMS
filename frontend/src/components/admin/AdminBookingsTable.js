@@ -125,7 +125,7 @@ export default function AdminBookingsTable() {
     }
   }
 
-  async function handleExportCsv() {
+  async function handleExport(format = "csv") {
     if (!canExport) return;
     setExporting(true);
     setExportMessage("");
@@ -133,15 +133,21 @@ export default function AdminBookingsTable() {
     try {
       const from = checkInFrom || checkOutFrom || undefined;
       const to = checkInTo || checkOutTo || undefined;
-      await downloadReportsExport({
+      const result = await downloadReportsExport({
         type: "bookings",
+        format,
         from,
         to,
         status: status || undefined,
+        search: search.trim() || undefined,
+        checkInFrom: checkInFrom || undefined,
+        checkInTo: checkInTo || undefined,
+        checkOutFrom: checkOutFrom || undefined,
+        checkOutTo: checkOutTo || undefined,
       });
-      setExportMessage("Bookings CSV downloaded.");
+      setExportMessage(`Bookings ${format.toUpperCase()} downloaded (${result.filename}).`);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Unable to export bookings CSV.");
+      setError(err instanceof ApiError ? err.message : `Unable to export bookings ${format.toUpperCase()}.`);
     } finally {
       setExporting(false);
     }
@@ -155,9 +161,22 @@ export default function AdminBookingsTable() {
           <p className="mt-2 text-sm text-muted">Search reservations and filter by stay dates or status.</p>
         </div>
         {canExport ? (
-          <Button type="button" variant="secondary" size="sm" disabled={exporting} onClick={handleExportCsv}>
-            {exporting ? "Exporting…" : "Export CSV"}
-          </Button>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-muted font-medium">Export:</span>
+            {["csv", "xlsx", "pdf"].map((fmt) => (
+              <Button
+                key={fmt}
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={exporting}
+                onClick={() => handleExport(fmt)}
+                className="uppercase text-xs"
+              >
+                {fmt}
+              </Button>
+            ))}
+          </div>
         ) : null}
       </div>
       {exportMessage ? <p className="text-sm text-accent">{exportMessage}</p> : null}
@@ -279,6 +298,7 @@ export default function AdminBookingsTable() {
                   <th className="px-4 py-3">Total</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Payment</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -298,6 +318,14 @@ export default function AdminBookingsTable() {
                     </td>
                     <td className="px-4 py-3"><StatusBadge status={booking.status} /></td>
                     <td className="px-4 py-3 text-muted">{booking.paymentStatus}</td>
+                    <td className="px-4 py-3 text-right">
+                      <Link
+                        href={`/admin/bookings/${booking.id}/invoice`}
+                        className="text-xs font-semibold text-accent hover:underline"
+                      >
+                        Invoice
+                      </Link>
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -12,6 +12,7 @@ const BUSINESS_EVENTS = new Set([
   "inquiry.created",
   "inquiry.updated",
   "inventory.updated",
+  "email.log",
 ]);
 
 /**

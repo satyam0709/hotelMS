@@ -42,3 +42,12 @@ export async function updateAdminMenuItem(id, payload) {
 export async function deleteAdminMenuItem(id) {
   return apiDelete(`/admin/restaurant/menu-items/${id}`);
 }
+
+export async function listAdminRestaurantReservations(query = {}) {
+  const data = await apiGet("/admin/restaurant/reservations", { query, cache: "no-store" });
+  return normalizeAdminList(data);
+}
+
+export async function updateAdminRestaurantReservationStatus(id, payload) {
+  return apiPatch(`/admin/restaurant/reservations/${id}/status`, payload);
+}

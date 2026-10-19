@@ -62,5 +62,11 @@ adminRouter.get(
   validateParams(bookingValidator.idParams),
   controller.getAdminInvoice
 );
+adminRouter.get(
+  "/bookings/:id/invoice/pdf",
+  allow("bookings.read"),
+  validateParams(bookingValidator.idParams),
+  controller.getAdminInvoicePdf
+);
 
 module.exports = { adminRouter, publicRouter };

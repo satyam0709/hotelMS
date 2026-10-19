@@ -9,10 +9,12 @@ export default function AdminShell({ children }) {
   const { admin, logout } = useAdminAuth();
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f7f5ef] md:flex-row">
-      <AdminSidebar />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between gap-3 border-b border-line bg-elevated/95 px-4 py-3 backdrop-blur-sm md:px-6">
+    <div className="flex min-h-screen flex-col bg-[#f7f5ef] md:flex-row print:block print:bg-white">
+      <div className="print:hidden">
+        <AdminSidebar />
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col print:block">
+        <header className="flex items-center justify-between gap-3 border-b border-line bg-elevated/95 px-4 py-3 backdrop-blur-sm md:px-6 print:hidden">
           <div className="min-w-0 md:hidden">
             <p className="truncate text-sm font-medium text-ink">{admin?.name}</p>
           </div>
@@ -39,7 +41,7 @@ export default function AdminShell({ children }) {
             </Button>
           </div>
         </header>
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main className="flex-1 p-4 md:p-6 print:p-0">{children}</main>
       </div>
     </div>
   );

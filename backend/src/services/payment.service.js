@@ -879,7 +879,7 @@ async function getPublicInvoice(bookingRef, lookup) {
   return buildInvoice(booking);
 }
 
-async function getAdminInvoice(bookingId) {
+async function getAdminInvoice(bookingId, req = null) {
   const booking = await prisma.booking.findFirst({
     where: { id: bookingId },
     select: {
@@ -925,13 +925,41 @@ async function getAdminInvoice(bookingId) {
     },
   });
   if (!booking) fail(404, "Booking not found.", "NOT_FOUND");
+
+  if (req?.admin?.id) {
+    await createActivityLog({
+      userId: req.admin.id,
+      module: "bookings",
+      action: "booking.invoice.view",
+      entityType: "Booking",
+      entityId: bookingId,
+      metadata: { bookingRef: booking.bookingRef },
+      request: req,
+    }).catch(() => {});
+  }
+
   return buildInvoice(booking);
+}
+
+async function getAdminInvoicePdf(res, bookingId, req = null) {
+  const invoice = await getAdminInvoice(bookingId, req);
+
+  // Retrieve brand name from website settings if available
+  const settings = await prisma.websiteSetting.findFirst({
+    select: { websiteName: true },
+    orderBy: { createdAt: "asc" },
+  });
+  const brandName = settings?.websiteName || "ExoStay Luxury Resort";
+
+  const exportEngine = require("../utils/exportEngine");
+  return exportEngine.buildInvoicePdfStream(res, invoice, brandName);
 }
 
 module.exports = {
   createPaymentOrder,
   createRefund,
   getAdminInvoice,
+  getAdminInvoicePdf,
   getAdminPayment,
   getPublicInvoice,
   handleRazorpayWebhook,

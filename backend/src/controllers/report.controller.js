@@ -8,11 +8,7 @@ async function overview(req, res) {
 }
 
 async function exportCsv(req, res) {
-  const file = await service.exportCsv(query(req));
-  res.setHeader("Content-Type", file.contentType);
-  res.setHeader("Content-Disposition", `attachment; filename="${file.filename}"`);
-  res.setHeader("Cache-Control", "no-store");
-  return res.status(200).send(file.body);
+  return service.exportReport(res, query(req), req);
 }
 
 module.exports = { overview, exportCsv };

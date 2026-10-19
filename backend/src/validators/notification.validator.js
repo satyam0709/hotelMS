@@ -45,4 +45,8 @@ const updateTemplateBody = z.object({
   message: "At least one field is required.",
 });
 
-module.exports = { listLogsQuery, updateSettingsBody, idParams, updateTemplateBody };
+const testEmailBody = z.object({
+  to: z.string().trim().email().max(191).optional(),
+}).strict();
+
+module.exports = { listLogsQuery, updateSettingsBody, idParams, updateTemplateBody, testEmailBody };

@@ -32,9 +32,177 @@
     {
       "key": "id",
       "value": "cuid-here"
+    },
+    {
+      "key": "reservationId",
+      "value": "cuid-here"
     }
   ],
   "item": [
+    {
+      "name": "Restaurant Reservations",
+      "item": [
+        {
+          "name": "Submit reservation request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  if (body.data && body.data.reservation && body.data.reservation.id) {",
+                  "    pm.collectionVariables.set('reservationId', body.data.reservation.id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/restaurant/reservations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "restaurant",
+                "reservations"
+              ]
+            },
+            "description": "Creates a pending request, not an instant confirmation. Supply captchaToken when Turnstile is configured. Restaurant reservationEnabled must be true.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"guestName\": \"Alex Morgan\",\n  \"guestEmail\": \"alex@example.com\",\n  \"guestPhone\": \"+15551234567\",\n  \"guestCount\": 4,\n  \"mealType\": \"DINNER\",\n  \"reservationDate\": \"2027-12-15\",\n  \"reservationTime\": \"19:00\",\n  \"dietaryRequests\": \"One vegetarian guest\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List reservations (admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "{{cookieName}}={{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/restaurant/reservations?page=1&limit=20&status=REQUESTED",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "restaurant",
+                "reservations"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "status",
+                  "value": "REQUESTED"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Requires restaurant.read. Supports status, guest search, reservation date range, and pagination."
+          }
+        },
+        {
+          "name": "Get reservation (admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "{{cookieName}}={{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/restaurant/reservations/{{reservationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "restaurant",
+                "reservations",
+                "{{reservationId}}"
+              ]
+            },
+            "description": "Requires restaurant.read."
+          }
+        },
+        {
+          "name": "Update reservation status (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "{{cookieName}}={{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/restaurant/reservations/{{reservationId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "restaurant",
+                "reservations",
+                "{{reservationId}}",
+                "status"
+              ]
+            },
+            "description": "Requires restaurant.update. Allowed transitions: REQUESTED -> CONFIRMED / DECLINED / CANCELLED; CONFIRMED -> CANCELLED / COMPLETED / NO_SHOW. Terminal statuses cannot transition. Sends a status email when a guest email address is available.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CONFIRMED\",\n  \"adminRemarks\": \"Table for four confirmed at 7 PM.\"\n}"
+            }
+          }
+        }
+      ]
+    },
     {
       "name": "Health",
       "item": [
@@ -3245,7 +3413,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Pavilion\",\n  \"slug\": \"pavilion\",\n  \"breakfastTime\": \"7-10\",\n  \"isActive\": true\n}"
+              "raw": "{\n  \"name\": \"Pavilion\",\n  \"slug\": \"pavilion\",\n  \"breakfastTime\": \"7-10\",\n  \"reservationEnabled\": true,\n  \"isActive\": true\n}"
             }
           }
         },

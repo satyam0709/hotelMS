@@ -12,11 +12,13 @@ import {
   deleteAdminMenuCategory,
   deleteAdminMenuItem,
   getAdminRestaurant,
+  listAdminRestaurantReservations,
   listAdminMenuCategories,
   listAdminMenuItems,
   saveAdminRestaurant,
   updateAdminMenuCategory,
   updateAdminMenuItem,
+  updateAdminRestaurantReservationStatus,
 } from "@/lib/api/admin-restaurant";
 import { emptyToNull, linesToList, listToLines, slugify, toOptionalNumber } from "@/lib/api/admin-list";
 import { ApiError } from "@/lib/api/client";
@@ -55,8 +57,18 @@ export default function AdminRestaurantManager() {
   const [editCatId, setEditCatId] = useState("");
   const [itemForm, setItemForm] = useState({ categoryId: "", name: "", description: "", price: "", mediaId: "", displayOrder: "0", isAvailable: true });
   const [editItemId, setEditItemId] = useState("");
+  const [reservations, setReservations] = useState([]);
+  const [reservationStatus, setReservationStatus] = useState("");
+  const [reservationFrom, setReservationFrom] = useState("");
+  const [reservationTo, setReservationTo] = useState("");
+  const [reservationPage, setReservationPage] = useState(1);
+  const [reservationPagination, setReservationPagination] = useState({ page: 1, pages: 1, total: 0 });
+  const [reservationsLoading, setReservationsLoading] = useState(false);
+  const [reservationError, setReservationError] = useState("");
+  const [reservationActionId, setReservationActionId] = useState("");
 
   const load = useCallback(async () => {
+    await Promise.resolve();
     setLoading(true);
     setLoadError("");
     try {
@@ -92,6 +104,54 @@ export default function AdminRestaurantManager() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const loadReservations = useCallback(async () => {
+    await Promise.resolve();
+    setReservationsLoading(true);
+    setReservationError("");
+    try {
+      const result = await listAdminRestaurantReservations({
+        page: reservationPage,
+        limit: 20,
+        status: reservationStatus,
+        from: reservationFrom,
+        to: reservationTo,
+      });
+      setReservations(result.items);
+      setReservationPagination(result.pagination || { page: reservationPage, pages: 1, total: result.items.length });
+    } catch (err) {
+      setReservationError(err instanceof ApiError ? err.message : "Unable to load table reservations.");
+    } finally {
+      setReservationsLoading(false);
+    }
+  }, [reservationFrom, reservationPage, reservationStatus, reservationTo]);
+
+  useEffect(() => {
+    if (tab === "reservations") loadReservations();
+  }, [loadReservations, tab]);
+
+  async function changeReservationStatus(reservation, status) {
+    setReservationActionId(reservation.id);
+    setReservationError("");
+    try {
+      await updateAdminRestaurantReservationStatus(reservation.id, { status });
+      await loadReservations();
+    } catch (err) {
+      setReservationError(err instanceof ApiError ? err.message : "Unable to update reservation.");
+    } finally {
+      setReservationActionId("");
+    }
+  }
+
+  function reservationActions(status) {
+    if (status === "REQUESTED") {
+      return [["CONFIRMED", "Approve"], ["DECLINED", "Decline"], ["CANCELLED", "Cancel"]];
+    }
+    if (status === "CONFIRMED") {
+      return [["CANCELLED", "Cancel"], ["COMPLETED", "Complete"], ["NO_SHOW", "No-show"]];
+    }
+    return [];
+  }
 
   async function saveProfile(e) {
     e.preventDefault();
@@ -176,9 +236,9 @@ export default function AdminRestaurantManager() {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {["profile", "categories", "menu"].map((id) => (
+        {["profile", "categories", "menu", "reservations"].map((id) => (
           <button key={id} type="button" onClick={() => setTab(id)} className={cn("rounded-md border px-4 py-2 text-sm font-medium capitalize", tab === id ? "border-accent bg-accent text-white" : "border-line bg-elevated")}>
-            {id === "menu" ? "Menu items" : id}
+            {id === "menu" ? "Menu items" : id === "reservations" ? "Reservations" : id}
           </button>
         ))}
       </div>
@@ -252,6 +312,66 @@ export default function AdminRestaurantManager() {
             ))}
           </ul>
         </div>
+      ) : null}
+
+      {!loading && !loadError && tab === "reservations" ? (
+        <section className="space-y-5">
+          <div>
+            <h2 className="font-display text-2xl text-ink">Table reservations</h2>
+            <p className="mt-1 text-sm text-muted">Review guest requests and update their status.</p>
+          </div>
+          <div className="grid gap-3 rounded-2xl border border-line bg-elevated p-4 sm:grid-cols-3">
+            <label className="text-xs font-medium text-muted">Status
+              <select value={reservationStatus} onChange={(event) => { setReservationPage(1); setReservationStatus(event.target.value); }} className="mt-1 h-11 w-full rounded-xl border border-line bg-elevated px-3 text-sm text-ink">
+                <option value="">All statuses</option>
+                {["REQUESTED", "CONFIRMED", "DECLINED", "CANCELLED", "COMPLETED", "NO_SHOW"].map((status) => <option key={status} value={status}>{status.replace("_", " ")}</option>)}
+              </select>
+            </label>
+            <label className="text-xs font-medium text-muted">From date
+              <input type="date" value={reservationFrom} onChange={(event) => { setReservationPage(1); setReservationFrom(event.target.value); }} className="mt-1 h-11 w-full rounded-xl border border-line bg-elevated px-3 text-sm text-ink" />
+            </label>
+            <label className="text-xs font-medium text-muted">To date
+              <input type="date" value={reservationTo} onChange={(event) => { setReservationPage(1); setReservationTo(event.target.value); }} className="mt-1 h-11 w-full rounded-xl border border-line bg-elevated px-3 text-sm text-ink" />
+            </label>
+          </div>
+          {reservationError ? <p role="alert" className="text-sm text-red-600">{reservationError}</p> : null}
+          {reservationsLoading ? <LoadingState label="Loading table reservations" /> : null}
+          {!reservationsLoading && !reservationError && reservations.length === 0 ? <p className="rounded-2xl border border-line bg-elevated p-6 text-sm text-muted">No table reservations match these filters.</p> : null}
+          <div className="space-y-3">
+            {reservations.map((reservation) => (
+              <article key={reservation.id} className="rounded-2xl border border-line bg-elevated p-5 shadow-soft">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <h3 className="font-semibold text-ink">{reservation.guestName} <span className="font-normal text-muted">· {reservation.guestCount} guests</span></h3>
+                    <p className="mt-1 text-sm text-muted">{reservation.guestEmail || "No email"}{reservation.guestPhone ? ` · ${reservation.guestPhone}` : ""}</p>
+                    <p className="mt-2 text-sm text-ink">{String(reservation.reservationDate).slice(0, 10)} · {reservation.reservationTime} · {reservation.mealType}</p>
+                    {reservation.dietaryRequests ? <p className="mt-2 text-sm text-muted">Notes: {reservation.dietaryRequests}</p> : null}
+                    {reservation.adminRemarks ? <p className="mt-1 text-sm text-muted">Staff notes: {reservation.adminRemarks}</p> : null}
+                  </div>
+                  <span className="rounded-full border border-line px-3 py-1 text-xs font-semibold text-ink">{reservation.status.replace("_", " ")}</span>
+                </div>
+                {canUpdate && reservationActions(reservation.status).length ? (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {reservationActions(reservation.status).map(([status, label]) => (
+                      <Button key={status} size="sm" variant={status === "DECLINED" || status === "CANCELLED" || status === "NO_SHOW" ? "danger" : "secondary"} disabled={reservationActionId === reservation.id} onClick={() => changeReservationStatus(reservation, status)}>
+                        {reservationActionId === reservation.id ? "Saving…" : label}
+                      </Button>
+                    ))}
+                  </div>
+                ) : null}
+              </article>
+            ))}
+          </div>
+          {reservationPagination.pages > 1 ? (
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted">{reservationPagination.total} requests</p>
+              <div className="flex gap-2">
+                <Button size="sm" variant="secondary" disabled={reservationPage <= 1 || reservationsLoading} onClick={() => setReservationPage((page) => page - 1)}>Previous</Button>
+                <Button size="sm" variant="secondary" disabled={reservationPage >= reservationPagination.pages || reservationsLoading} onClick={() => setReservationPage((page) => page + 1)}>Next</Button>
+              </div>
+            </div>
+          ) : null}
+        </section>
       ) : null}
     </div>
   );

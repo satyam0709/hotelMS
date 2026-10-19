@@ -78,6 +78,21 @@ enum InquiryStatus {
   CLOSED
 }
 
+enum RestaurantReservationStatus {
+  REQUESTED
+  CONFIRMED
+  DECLINED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+enum RestaurantMealType {
+  BREAKFAST
+  LUNCH
+  DINNER
+}
+
 enum TestimonialApprovalStatus {
   PENDING
   APPROVED
@@ -438,9 +453,32 @@ model Restaurant {
   deletedAt          DateTime?
   media              RestaurantMedia[]
   menuCategories     FoodMenuCategory[]
+  reservations       RestaurantReservation[]
 
   @@index([isActive])
   @@index([deletedAt])
+}
+
+model RestaurantReservation {
+  id              String                      @id @default(cuid())
+  restaurantId    String
+  guestName       String                      @db.VarChar(160)
+  guestEmail      String?                     @db.VarChar(191)
+  guestPhone      String?                     @db.VarChar(40)
+  guestCount      Int
+  mealType        RestaurantMealType
+  reservationDate DateTime                    @db.Date
+  reservationTime String                      @db.VarChar(5)
+  dietaryRequests String?                     @db.Text
+  status          RestaurantReservationStatus @default(REQUESTED)
+  adminRemarks    String?                     @db.Text
+  createdAt       DateTime                    @default(now())
+  updatedAt       DateTime                    @updatedAt
+  restaurant      Restaurant                  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, reservationDate, reservationTime], map: "rest_resv_lookup_idx")
+  @@index([status, reservationDate], map: "rest_resv_status_date_idx")
+  @@index([createdAt], map: "rest_resv_created_at_idx")
 }
 
 model RestaurantMedia {

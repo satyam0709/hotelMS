@@ -21,3 +21,7 @@ export async function cancelAdminBooking(id, reason) {
 export async function createAdminBooking(payload) {
   return apiPost("/admin/bookings", payload);
 }
+
+export async function getAdminBookingInvoice(id) {
+  return apiGet(`/admin/bookings/${id}/invoice`, { cache: "no-store" });
+}

@@ -72,16 +72,18 @@ export default function AdminReportsOverview() {
     }, [load]),
   );
 
+  const [format, setFormat] = useState("csv");
+
   async function handleExport(type) {
     if (!canExport) return;
     setExporting(type);
     setError("");
     setMessage("");
     try {
-      const result = await downloadReportsExport({ type, from, to });
+      const result = await downloadReportsExport({ type, format, from, to });
       setMessage(`Downloaded ${result.filename}`);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Unable to export CSV.");
+      setError(err instanceof ApiError ? err.message : `Unable to export ${format.toUpperCase()}.`);
     } finally {
       setExporting("");
     }
@@ -108,27 +110,44 @@ export default function AdminReportsOverview() {
 
       {canExport ? (
         <section className="rounded-2xl border border-line bg-elevated p-4 shadow-soft">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h2 className="font-display text-xl text-ink">CSV export</h2>
+              <h2 className="font-display text-xl text-ink">Export reports</h2>
               <p className="mt-1 text-sm text-muted">
                 Downloads use the selected date range. Max 5,000 rows per detail export.
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {EXPORT_TYPES.map((item) => (
-                <Button
-                  key={item.type}
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  disabled={Boolean(exporting)}
-                  onClick={() => handleExport(item.type)}
-                >
-                  {exporting === item.type ? "Exporting…" : item.label}
-                </Button>
-              ))}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted">Format:</span>
+              <div className="inline-flex rounded-xl border border-line p-1 bg-muted/5">
+                {["csv", "xlsx", "pdf"].map((fmt) => (
+                  <button
+                    key={fmt}
+                    type="button"
+                    onClick={() => setFormat(fmt)}
+                    className={`rounded-lg px-2.5 py-1 text-xs font-semibold uppercase transition-colors ${
+                      format === fmt ? "bg-accent text-white" : "text-muted hover:text-ink"
+                    }`}
+                  >
+                    {fmt}
+                  </button>
+                ))}
+              </div>
             </div>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2 pt-2 border-t border-line/60">
+            {EXPORT_TYPES.map((item) => (
+              <Button
+                key={item.type}
+                type="button"
+                size="sm"
+                variant="secondary"
+                disabled={Boolean(exporting)}
+                onClick={() => handleExport(item.type)}
+              >
+                {exporting === item.type ? "Exporting…" : `${item.label} (${format.toUpperCase()})`}
+              </Button>
+            ))}
           </div>
         </section>
       ) : null}
