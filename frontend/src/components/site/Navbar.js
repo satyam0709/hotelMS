@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { LogIn, Menu, Phone, X } from "lucide-react";
 import Button from "@/components/ui/Button";
@@ -21,6 +22,8 @@ const fallbackLinks = [
 ];
 
 export default function Navbar({ settings, navigation = [] }) {
+  const pathname = usePathname();
+  const isHomePage = pathname === "/";
   const [open, setOpen] = useState(false);
 
   const rawBrand = settings?.websiteName;
@@ -48,7 +51,19 @@ export default function Navbar({ settings, navigation = [] }) {
             className="grid h-[var(--header-h)] grid-cols-[auto_1fr_auto] items-center gap-3 md:gap-6"
           >
             <Link href="/" className="flex min-w-0 items-center gap-2.5" onClick={() => setOpen(false)}>
-              {logoSrc ? (
+              {isHomePage ? (
+                <div className="relative size-9 overflow-hidden rounded-full border border-accent/20 bg-black shadow-sm ring-1 ring-accent/30">
+                  <video
+                    src="/assets/Logo_design_for_ExoStay_20261019181516.mp4"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="size-full object-cover scale-110"
+                    aria-label={`${brand} animated logo`}
+                  />
+                </div>
+              ) : logoSrc ? (
                 <Image
                   src={logoSrc}
                   alt={mediaAlt(logo, brand)}
