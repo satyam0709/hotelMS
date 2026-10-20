@@ -187,7 +187,13 @@ async function main() {
 
   const superAdminRole = roleRecords["super-admin"];
   const existingAdmin = await prisma.adminUser.findFirst({
-    where: { email: defaultAdmin.email, deletedAt: null },
+    where: {
+      OR: [
+        { email: defaultAdmin.email },
+        { username: defaultAdmin.username },
+      ],
+      deletedAt: null,
+    },
     select: { id: true },
   });
 
@@ -208,6 +214,7 @@ async function main() {
   } else {
     const updateData = {
       name: defaultAdmin.name,
+      email: defaultAdmin.email,
       username: defaultAdmin.username,
       status: "ACTIVE",
       roles: {
