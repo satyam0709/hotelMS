@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { ApiError } from "@/lib/api/client";
+import { ApiError, clearAdminToken } from "@/lib/api/client";
 import { adminLogin, adminLogout, getAdminMe } from "@/lib/api/admin-auth";
 
 const AdminAuthContext = createContext(null);
@@ -17,6 +17,7 @@ export function AdminAuthProvider({ children }) {
       return me;
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
+        clearAdminToken();
         setAdmin(null);
         return null;
       }

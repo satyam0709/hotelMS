@@ -431,7 +431,10 @@ async function seedCoreContent() {
     { label: "Home", href: "/", location: "HEADER", displayOrder: 1 },
     { label: "Rooms", href: "/rooms", location: "HEADER", displayOrder: 2 },
     { label: "Dining", href: "/restaurant", location: "HEADER", displayOrder: 3 },
-    { label: "Contact", href: "/contact", location: "HEADER", displayOrder: 4 },
+    { label: "Facilities", href: "/facilities", location: "HEADER", displayOrder: 4 },
+    { label: "Packages", href: "/packages", location: "HEADER", displayOrder: 5 },
+    { label: "Gallery", href: "/gallery", location: "HEADER", displayOrder: 6 },
+    { label: "Contact", href: "/contact", location: "HEADER", displayOrder: 7 },
   ];
   for (const item of navItems) {
     const existing = await prisma.navigationMenuItem.findFirst({

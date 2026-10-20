@@ -1,12 +1,19 @@
-import { apiGet, apiPatch, apiPost } from "@/lib/api/client";
+import { apiGet, apiPatch, apiPost, clearAdminToken, setAdminToken } from "@/lib/api/client";
 
 export async function adminLogin({ email, password }) {
   const data = await apiPost("/admin/auth/login", { email, password });
+  if (data?.token) {
+    setAdminToken(data.token);
+  }
   return data?.admin;
 }
 
 export async function adminLogout() {
-  return apiPost("/admin/auth/logout", {});
+  try {
+    return await apiPost("/admin/auth/logout", {});
+  } finally {
+    clearAdminToken();
+  }
 }
 
 export async function getAdminMe() {
