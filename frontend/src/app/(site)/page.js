@@ -35,6 +35,8 @@ import {
   getDemoAboutPage,
 } from "@/lib/demo-content";
 
+export const dynamic = "force-dynamic";
+
 async function settledValue(promise, fallback) {
   const result = await Promise.allSettled([promise]);
   return result[0].status === "fulfilled" ? result[0].value : fallback;
