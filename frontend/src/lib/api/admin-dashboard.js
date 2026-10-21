@@ -1,5 +1,5 @@
 import { apiGet } from "@/lib/api/client";
 
 export async function getDashboardOverview(query = {}) {
-  return apiGet("/admin/dashboard/overview", { query, cache: "no-store" });
+  return apiGet("/admin/dashboard/overview", { query, cache: "no-store", timeoutMs: 60000 });
 }

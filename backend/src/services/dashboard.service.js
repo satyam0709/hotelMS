@@ -184,27 +184,88 @@ async function loadTrafficByDay(from, to) {
 
 async function loadWeeklyTrend(from, to) {
   const dates = eachDate(from, to);
-  return Promise.all(
-    dates.map(async (day) => {
-      const [snapshot, paidAgg] = await Promise.all([
-        loadRoomSnapshot(day),
-        prisma.payment.aggregate({
-          where: {
-            status: { in: ["PAID", "PARTIALLY_REFUNDED", "REFUNDED"] },
-            paidAt: { gte: startOfDay(day), lte: endOfDay(day) },
-          },
-          _sum: { amount: true },
-        }),
-      ]);
-      return {
-        date: day,
-        occupancyPercent: snapshot.occupancyPercent,
-        revenue: money(paidAgg._sum.amount),
-        occupied: snapshot.occupied,
-        available: snapshot.available,
-      };
+  if (!dates.length) return [];
+  const minDay = startOfDay(dates[0]);
+  const maxDay = endOfDay(dates[dates.length - 1]);
+
+  const [rooms, bookingRooms, blocks, payments] = await Promise.all([
+    prisma.room.findMany({
+      where: { deletedAt: null, isActive: true },
+      select: { id: true, totalInventory: true },
     }),
-  );
+    prisma.bookingRoom.findMany({
+      where: {
+        booking: {
+          status: { in: OCCUPYING_STATUSES },
+          checkInDate: { lte: maxDay },
+          checkOutDate: { gt: minDay },
+        },
+      },
+      select: {
+        quantity: true,
+        roomId: true,
+        booking: { select: { checkInDate: true, checkOutDate: true } },
+      },
+    }),
+    prisma.roomBlock.findMany({
+      where: {
+        isActive: true,
+        deletedAt: null,
+        startDate: { lte: maxDay },
+        endDate: { gte: minDay },
+      },
+      select: { quantity: true, roomId: true, startDate: true, endDate: true },
+    }),
+    prisma.payment.findMany({
+      where: {
+        status: { in: ["PAID", "PARTIALLY_REFUNDED", "REFUNDED"] },
+        paidAt: { gte: minDay, lte: maxDay },
+      },
+      select: { amount: true, paidAt: true },
+    }),
+  ]);
+
+  const totalUnits = rooms.reduce((sum, r) => sum + Number(r.totalInventory || 0), 0);
+
+  return dates.map((day) => {
+    const dayStart = startOfDay(day);
+    const dayEnd = endOfDay(day);
+
+    const occupiedByRoom = new Map();
+    for (const row of bookingRooms) {
+      if (row.booking?.checkInDate <= dayStart && row.booking?.checkOutDate > dayStart) {
+        occupiedByRoom.set(row.roomId, (occupiedByRoom.get(row.roomId) || 0) + row.quantity);
+      }
+    }
+
+    const blockedByRoom = new Map();
+    for (const row of blocks) {
+      if (row.startDate <= dayStart && row.endDate >= dayStart) {
+        blockedByRoom.set(row.roomId, (blockedByRoom.get(row.roomId) || 0) + row.quantity);
+      }
+    }
+
+    let occupied = 0;
+    let blocked = 0;
+    for (const room of rooms) {
+      const units = Number(room.totalInventory || 0);
+      occupied += Math.min(units, occupiedByRoom.get(room.id) || 0);
+      blocked += Math.min(units, blockedByRoom.get(room.id) || 0);
+    }
+
+    const available = Math.max(0, totalUnits - occupied - blocked);
+    const dayRevenue = payments
+      .filter((p) => p.paidAt && p.paidAt >= dayStart && p.paidAt <= dayEnd)
+      .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+    return {
+      date: day,
+      occupancyPercent: pct(occupied, totalUnits),
+      revenue: money(dayRevenue),
+      occupied,
+      available,
+    };
+  });
 }
 
 async function overview(query = {}, admin) {
