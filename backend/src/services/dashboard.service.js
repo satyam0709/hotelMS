@@ -74,9 +74,14 @@ async function loadRoomSnapshot(today) {
     prisma.bookingRoom.findMany({
       where: {
         booking: {
-          status: { in: OCCUPYING_STATUSES },
-          checkInDate: { lte: day },
-          checkOutDate: { gt: day },
+          OR: [
+            { status: "CHECKED_IN" },
+            {
+              status: { in: OCCUPYING_STATUSES.filter((s) => s !== "CHECKED_IN") },
+              checkInDate: { lte: day },
+              checkOutDate: { gt: day },
+            },
+          ],
         },
       },
       select: { quantity: true, roomId: true },
@@ -298,14 +303,30 @@ async function overview(query = {}, admin) {
       prisma.booking.count({ where: { createdAt, status: "CHECKED_IN" } }),
       prisma.booking.count({
         where: {
-          checkInDate: todayRange,
-          status: { notIn: ["CANCELLED", "EXPIRED", "NO_SHOW"] },
+          OR: [
+            {
+              checkInDate: todayRange,
+              status: { notIn: ["CANCELLED", "EXPIRED", "NO_SHOW"] },
+            },
+            {
+              status: "CHECKED_IN",
+              updatedAt: todayRange,
+            },
+          ],
         },
       }),
       prisma.booking.count({
         where: {
-          checkOutDate: todayRange,
-          status: { notIn: ["CANCELLED", "EXPIRED"] },
+          OR: [
+            {
+              checkOutDate: todayRange,
+              status: { notIn: ["CANCELLED", "EXPIRED"] },
+            },
+            {
+              status: "CHECKED_OUT",
+              updatedAt: todayRange,
+            },
+          ],
         },
       }),
       prisma.booking.findMany({
@@ -323,6 +344,7 @@ async function overview(query = {}, admin) {
           totalAmount: true,
           currency: true,
           createdAt: true,
+          updatedAt: true,
           guest: { select: { id: true, fullName: true, email: true, phone: true } },
           rooms: {
             take: 1,
@@ -450,6 +472,7 @@ async function overview(query = {}, admin) {
       totalAmount: money(booking.totalAmount),
       currency: booking.currency,
       createdAt: booking.createdAt,
+      updatedAt: booking.updatedAt,
       guest: booking.guest,
       roomName: booking.rooms[0]?.room?.name || null,
       roomCode: booking.rooms[0]?.room?.roomCode || null,

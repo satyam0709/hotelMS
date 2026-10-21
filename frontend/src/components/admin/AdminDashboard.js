@@ -170,7 +170,9 @@ export default function AdminDashboard() {
     return rows.filter((booking) => {
       if (tab === "arrivals") {
         const today = data?.today || todayIso();
-        if (String(booking.checkInDate).slice(0, 10) !== today) return false;
+        const isScheduledToday = String(booking.checkInDate).slice(0, 10) === today;
+        const isCheckedInToday = booking.status === "CHECKED_IN" && String(booking.updatedAt || booking.checkInDate).slice(0, 10) === today;
+        if (!isScheduledToday && !isCheckedInToday) return false;
       } else if (tab === "pending") {
         if (!["PENDING", "PENDING_PAYMENT"].includes(booking.status) && booking.paymentStatus !== "PENDING") return false;
       } else if (tab === "checked_in") {
@@ -194,7 +196,11 @@ export default function AdminDashboard() {
     const today = data?.today || todayIso();
     return {
       all: rows.length,
-      arrivals: rows.filter((b) => String(b.checkInDate).slice(0, 10) === today).length,
+      arrivals: rows.filter((b) => {
+        const isScheduledToday = String(b.checkInDate).slice(0, 10) === today;
+        const isCheckedInToday = b.status === "CHECKED_IN" && String(b.updatedAt || b.checkInDate).slice(0, 10) === today;
+        return isScheduledToday || isCheckedInToday;
+      }).length,
       pending: rows.filter((b) => ["PENDING", "PENDING_PAYMENT"].includes(b.status) || b.paymentStatus === "PENDING").length,
       checked_in: rows.filter((b) => b.status === "CHECKED_IN").length,
     };
