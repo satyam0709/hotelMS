@@ -104,6 +104,7 @@ async function loadRoomSnapshot(today) {
   let totalUnits = 0;
   let occupied = 0;
   let blocked = 0;
+  const roomCount = rooms.length;
   const categoryMap = new Map();
 
   for (const room of rooms) {
@@ -160,6 +161,7 @@ async function loadRoomSnapshot(today) {
     });
 
   return {
+    roomCount,
     totalUnits,
     occupied,
     blocked,
@@ -483,6 +485,7 @@ async function overview(query = {}, admin) {
     bookingSummary,
     rooms: rooms
       ? {
+        roomCount: rooms.roomCount,
         totalUnits: rooms.totalUnits,
         available: rooms.available,
         occupied: rooms.occupied,

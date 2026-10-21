@@ -644,6 +644,15 @@ async function updateBookingStatus(id, { status, note }, req) {
     }
   }
   emitBooking("booking.updated", updated);
+  // Emit inventory.updated for statuses that change room occupancy so dashboards refresh availability
+  const INVENTORY_AFFECTING = ["CHECKED_IN", "CHECKED_OUT", "CANCELLED", "NO_SHOW", "CONFIRMED"];
+  if (INVENTORY_AFFECTING.includes(status)) {
+    try {
+      realtime.publish("inventory.updated", { bookingId: id, status });
+    } catch {
+      // ignore
+    }
+  }
   return updated;
 }
 

@@ -331,12 +331,13 @@ export default function AdminDashboard() {
       {data?.rooms ? (
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <SparkMetric
-            label="Total rooms"
-            value={data.rooms.totalUnits}
+            label="Room types"
+            value={data.rooms.roomCount ?? data.rooms.totalUnits}
             color={chart.sparkTotal}
             icon={BedDouble}
             series={sparkSeries(data, "total")}
             href={canRooms ? "/admin/rooms" : undefined}
+            hint={`${data.rooms.totalUnits} total inventory units`}
           />
           <SparkMetric
             label="Available"
@@ -739,7 +740,7 @@ function MiniMetric({ label, value, tone = "ink", href }) {
   return <div className={className}>{body}</div>;
 }
 
-function SparkMetric({ label, value, color, icon: Icon, series = [], href }) {
+function SparkMetric({ label, value, color, icon: Icon, series = [], href, hint }) {
   const points = sparkPoints(series);
   const body = (
     <>
@@ -748,6 +749,7 @@ function SparkMetric({ label, value, color, icon: Icon, series = [], href }) {
         <Icon className="size-4 text-muted" />
       </div>
       <p className="mt-2 font-display text-2xl text-ink">{value}</p>
+      {hint ? <p className="mt-1 text-xs text-muted">{hint}</p> : null}
       <svg viewBox="0 0 120 28" className="mt-3 h-7 w-full" aria-hidden>
         {points ? (
           <polyline

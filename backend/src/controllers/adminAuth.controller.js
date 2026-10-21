@@ -38,8 +38,8 @@ function me(req, res) {
 }
 
 async function forgotPassword(req, res) {
-  await adminAuthService.requestPasswordReset(req.body.email, req);
-  return sendSuccess(res, { accepted: true }, "If the account exists, the reset request has been accepted.");
+  const result = await adminAuthService.requestPasswordReset(req.body.email, req);
+  return sendSuccess(res, { accepted: true, ...(result || {}) }, "If the account exists, the reset request has been accepted.");
 }
 
 async function resetPassword(req, res) {

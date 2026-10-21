@@ -138,15 +138,21 @@ async function requestPasswordReset(email, request) {
 
   const resetUrl = new URL(env.passwordResetUrl);
   resetUrl.searchParams.set("token", rawToken);
-  console.log(`[PASSWORD RESET] Generated reset link for ${email}: ${resetUrl.toString()}`);
+  let deliveryStatus = null;
   try {
     const delivery = await emailService.sendPasswordResetEmail({ to: email, resetUrl: resetUrl.toString() });
+    deliveryStatus = delivery;
     if (delivery && !delivery.delivered) {
       console.warn(`[PASSWORD RESET] Email delivery was not completed (${delivery.reason}). Direct reset link: ${resetUrl.toString()}`);
     }
   } catch (err) {
     console.error(`[PASSWORD RESET] Email delivery error: ${err.message}. Direct reset link: ${resetUrl.toString()}`);
   }
+
+  return {
+    accepted: true,
+    ...(!env.isProduction || !deliveryStatus?.delivered ? { devResetUrl: resetUrl.toString() } : {}),
+  };
 }
 
 async function resetPassword({ token, password, request }) {

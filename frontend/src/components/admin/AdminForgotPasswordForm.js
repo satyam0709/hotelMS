@@ -11,17 +11,22 @@ export default function AdminForgotPasswordForm() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [devResetUrl, setDevResetUrl] = useState("");
   const [isPending, startTransition] = useTransition();
 
   function onSubmit(event) {
     event.preventDefault();
     setError("");
     setMessage("");
+    setDevResetUrl("");
 
     startTransition(async () => {
       try {
-        await adminForgotPassword(email.trim());
+        const res = await adminForgotPassword(email.trim());
         setMessage("If an account exists for that email, a reset link has been sent.");
+        if (res?.devResetUrl) {
+          setDevResetUrl(res.devResetUrl);
+        }
       } catch (err) {
         setError(err instanceof ApiError ? err.message : "Unable to request a reset.");
       }
@@ -50,6 +55,19 @@ export default function AdminForgotPasswordForm() {
       ) : null}
       {message ? (
         <p className="text-sm text-accent" role="status">{message}</p>
+      ) : null}
+      {devResetUrl ? (
+        <div className="rounded-xl border border-accent/40 bg-accent-soft/20 p-3 text-xs text-ink space-y-1">
+          <p className="font-semibold text-accent">Direct reset link (Development / Local):</p>
+          <a
+            href={devResetUrl}
+            className="block text-accent hover:underline break-all"
+            target="_blank"
+            rel="noreferrer"
+          >
+            {devResetUrl}
+          </a>
+        </div>
       ) : null}
       <Button type="submit" variant="bronze" className="w-full rounded-xl" disabled={isPending}>
         {isPending ? "Sending…" : "Send reset link"}

@@ -86,7 +86,7 @@ async function overview(query = {}) {
     buildOccupancySeries(from, to),
     buildRevenueSeries(from, to),
     prisma.room.aggregate({
-      where: { deletedAt: null, status: "ACTIVE" },
+      where: { deletedAt: null, isActive: true },
       _sum: { totalInventory: true },
     }),
   ]);

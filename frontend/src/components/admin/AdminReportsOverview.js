@@ -53,8 +53,8 @@ export default function AdminReportsOverview() {
     setError("");
     try {
       setData(await getReportsOverview({ from, to }));
-    } catch {
-      if (!silent) setError("Unable to load reports overview.");
+    } catch (err) {
+      if (!silent) setError(err instanceof ApiError ? err.message : "Unable to load reports overview.");
     } finally {
       if (!silent) setLoading(false);
     }
