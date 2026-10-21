@@ -137,8 +137,9 @@ export default function AdminDashboard() {
       const payload = await getDashboardOverview({ from, to });
       setData(payload);
       setLastSynced(new Date());
-    } catch {
-      setError("Unable to load operations dashboard. Confirm you are signed in and the API is running.");
+    } catch (err) {
+      console.error("Dashboard overview fetch error:", err);
+      setError(err?.message || "Unable to load operations dashboard. Confirm you are signed in and the API is running.");
     } finally {
       setLoading(false);
       setRefreshing(false);
