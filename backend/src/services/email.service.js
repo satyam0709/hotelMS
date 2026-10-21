@@ -129,6 +129,7 @@ function createEmailService(config, mailer = nodemailer) {
             host: runtime.smtpHost,
             port: runtime.smtpPort,
             secure: runtime.smtpSecure,
+            family: 4,
           };
           if (runtime.smtpUser) {
             transportOptions.auth = { user: runtime.smtpUser, pass: runtime.smtpPassword };

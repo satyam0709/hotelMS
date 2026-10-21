@@ -58,7 +58,7 @@ export async function apiFetch(path, {
   timeoutMs,
 } = {}) {
   const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
-  const effectiveTimeout = timeoutMs ?? (isFormData ? 60000 : 10000);
+  const effectiveTimeout = timeoutMs ?? (isFormData ? 60000 : 30000);
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), effectiveTimeout);
   if (signal) {

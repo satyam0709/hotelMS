@@ -184,25 +184,27 @@ async function loadTrafficByDay(from, to) {
 
 async function loadWeeklyTrend(from, to) {
   const dates = eachDate(from, to);
-  const rows = [];
-  for (const day of dates) {
-    const snapshot = await loadRoomSnapshot(day);
-    const paidAgg = await prisma.payment.aggregate({
-      where: {
-        status: { in: ["PAID", "PARTIALLY_REFUNDED", "REFUNDED"] },
-        paidAt: { gte: startOfDay(day), lte: endOfDay(day) },
-      },
-      _sum: { amount: true },
-    });
-    rows.push({
-      date: day,
-      occupancyPercent: snapshot.occupancyPercent,
-      revenue: money(paidAgg._sum.amount),
-      occupied: snapshot.occupied,
-      available: snapshot.available,
-    });
-  }
-  return rows;
+  return Promise.all(
+    dates.map(async (day) => {
+      const [snapshot, paidAgg] = await Promise.all([
+        loadRoomSnapshot(day),
+        prisma.payment.aggregate({
+          where: {
+            status: { in: ["PAID", "PARTIALLY_REFUNDED", "REFUNDED"] },
+            paidAt: { gte: startOfDay(day), lte: endOfDay(day) },
+          },
+          _sum: { amount: true },
+        }),
+      ]);
+      return {
+        date: day,
+        occupancyPercent: snapshot.occupancyPercent,
+        revenue: money(paidAgg._sum.amount),
+        occupied: snapshot.occupied,
+        available: snapshot.available,
+      };
+    }),
+  );
 }
 
 async function overview(query = {}, admin) {
