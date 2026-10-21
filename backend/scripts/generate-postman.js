@@ -119,6 +119,17 @@ const collection = {
           message: "Hello from Postman",
         },
       }),
+      req("Create restaurant reservation", "POST", "/api/restaurant/reservations", {
+        body: {
+          guestName: "Guest Name",
+          email: "guest@example.com",
+          phone: "+911234567890",
+          reservationDate: "2026-11-05",
+          mealType: "DINNER",
+          partySize: 2,
+          specialRequests: "Window table please",
+        },
+      }),
     ]),
     folder("Public Accommodation", [
       req("Room categories", "GET", "/api/room-categories", { query: listQ }),
@@ -492,6 +503,19 @@ const collection = {
         body: { price: 900 },
       }),
       req("Delete menu item", "DELETE", "/api/admin/restaurant/menu-items/{{id}}", { auth: true }),
+      req("List restaurant reservations", "GET", "/api/admin/restaurant/reservations", {
+        auth: true,
+        query: [
+          ...listQ,
+          { key: "status", value: "REQUESTED", disabled: true },
+          { key: "date", value: "2026-11-05", disabled: true },
+        ],
+      }),
+      req("Get restaurant reservation", "GET", "/api/admin/restaurant/reservations/{{id}}", { auth: true }),
+      req("Update restaurant reservation status", "PATCH", "/api/admin/restaurant/reservations/{{id}}/status", {
+        auth: true,
+        body: { status: "CONFIRMED" },
+      }),
     ]),
     folder("Admin FAQs", [
       req("List FAQ categories", "GET", "/api/admin/faq/categories", { auth: true, query: listQ }),
