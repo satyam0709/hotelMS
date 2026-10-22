@@ -107,6 +107,11 @@ test("email service delivers reset messages through configured SMTP", async () =
     port: 587,
     secure: false,
     family: 4,
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 15000,
+    pool: true,
+    maxConnections: 3,
     auth: { user: "smtp-user", pass: "smtp-password" },
   });
   assert.equal(sentMessage.to, "admin@example.invalid");

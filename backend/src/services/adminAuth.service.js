@@ -159,15 +159,22 @@ async function requestPasswordReset(email, request) {
   }
   resetUrl.searchParams.set("token", rawToken);
   let deliveryStatus = null;
-  try {
-    const delivery = await emailService.sendPasswordResetEmail({ to: email, resetUrl: resetUrl.toString() });
-    deliveryStatus = delivery;
-    if (delivery && !delivery.delivered) {
-      console.warn(`[PASSWORD RESET] Email delivery was not completed (${delivery.reason}). Direct reset link: ${resetUrl.toString()}`);
-    }
-  } catch (err) {
-    console.error(`[PASSWORD RESET] Email delivery error: ${err.message}. Direct reset link: ${resetUrl.toString()}`);
-  }
+  const sendPromise = emailService.sendPasswordResetEmail({ to: email, resetUrl: resetUrl.toString() })
+    .then((delivery) => {
+      deliveryStatus = delivery;
+      if (delivery && !delivery.delivered) {
+        console.warn(`[PASSWORD RESET] Email delivery was not completed (${delivery.reason}). Direct reset link: ${resetUrl.toString()}`);
+      }
+      return delivery;
+    })
+    .catch((err) => {
+      console.error(`[PASSWORD RESET] Email delivery error: ${err.message}. Direct reset link: ${resetUrl.toString()}`);
+      return { delivered: false, reason: err.message };
+    });
+
+  // Await email delivery for up to 8s so fast SMTP still returns status, but never freeze the client request
+  const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve({ delivered: false, reason: "background" }), 8000));
+  deliveryStatus = await Promise.race([sendPromise, timeoutPromise]);
 
   return {
     accepted: true,

@@ -130,6 +130,11 @@ function createEmailService(config, mailer = nodemailer) {
             port: runtime.smtpPort,
             secure: runtime.smtpSecure,
             family: 4,
+            connectionTimeout: config.smtpTimeoutMs || 15000,
+            greetingTimeout: config.smtpTimeoutMs || 15000,
+            socketTimeout: config.smtpTimeoutMs || 15000,
+            pool: true,
+            maxConnections: 3,
           };
           if (runtime.smtpUser) {
             transportOptions.auth = { user: runtime.smtpUser, pass: runtime.smtpPassword };

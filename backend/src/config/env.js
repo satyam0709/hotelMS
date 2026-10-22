@@ -70,6 +70,7 @@ const smtpUser = process.env.SMTP_USER || "";
 const smtpPassword = process.env.SMTP_PASSWORD || process.env.SMTP_PASS || "";
 const emailFrom = process.env.EMAIL_FROM || process.env.SMTP_FROM || "";
 const smtpSecure = parseBoolean("SMTP_SECURE", smtpPort === 465);
+const smtpTimeoutMs = Math.max(1000, Number(process.env.SMTP_TIMEOUT_MS || 15000));
 const hasSmtpSettings = Boolean(smtpHost || process.env.SMTP_PORT || smtpUser || smtpPassword || emailFrom);
 if (hasSmtpSettings && (!smtpHost || !Number.isInteger(smtpPort) || smtpPort < 1 || smtpPort > 65535 || !emailFrom)) {
   throw new Error("SMTP_HOST, a valid SMTP_PORT, and EMAIL_FROM are required when SMTP is configured.");
@@ -149,6 +150,7 @@ module.exports = {
   smtpPassword,
   smtpPort,
   smtpSecure,
+  smtpTimeoutMs,
   smtpUser,
   turnstileSecretKey,
 };
