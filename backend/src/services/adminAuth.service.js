@@ -136,7 +136,27 @@ async function requestPasswordReset(email, request) {
 
   if (!admin) return;
 
-  const resetUrl = new URL(env.passwordResetUrl);
+  let resetUrl;
+  const requestOrigin = request?.get ? (request.get("origin") || "") : "";
+  const requestReferer = request?.get ? (request.get("referer") || "") : "";
+  let matchedOrigin = null;
+
+  for (const origin of env.frontendOrigins) {
+    if (requestOrigin && (requestOrigin === origin || requestOrigin.startsWith(origin))) {
+      matchedOrigin = origin;
+      break;
+    }
+    if (requestReferer && requestReferer.startsWith(origin)) {
+      matchedOrigin = origin;
+      break;
+    }
+  }
+
+  if (matchedOrigin) {
+    resetUrl = new URL(`${matchedOrigin}/admin/reset-password`);
+  } else {
+    resetUrl = new URL(env.passwordResetUrl);
+  }
   resetUrl.searchParams.set("token", rawToken);
   let deliveryStatus = null;
   try {

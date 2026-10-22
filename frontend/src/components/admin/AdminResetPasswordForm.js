@@ -82,6 +82,11 @@ export default function AdminResetPasswordForm() {
           className="mt-2"
         />
       </div>
+      {!token ? (
+        <p className="rounded-lg bg-red-50 p-2.5 text-xs text-red-600" role="alert">
+          Reset token is missing from this link. Please request a new password reset link.
+        </p>
+      ) : null}
       {error ? (
         <p className="text-sm text-red-600" role="alert">{error}</p>
       ) : null}
