@@ -12,11 +12,13 @@ const idParams = validateParams(validator.idParams);
 const slugParams = validateParams(validator.slugParams);
 const listQuery = validateQuery(validator.listQuery);
 
-publicRouter.get("/room-categories", listQuery, controller.listPublicRoomCategories);
-publicRouter.get("/room-categories/:slug", slugParams, controller.getPublicRoomCategory);
-publicRouter.get("/amenities", listQuery, controller.listPublicAmenities);
-publicRouter.get("/rooms", validateQuery(validator.roomListQuery), controller.listPublicRooms);
-publicRouter.get("/rooms/:slug", slugParams, controller.getPublicRoom);
+const { apiCache } = require("../middleware/cache.middleware");
+
+publicRouter.get("/room-categories", apiCache(120), listQuery, controller.listPublicRoomCategories);
+publicRouter.get("/room-categories/:slug", apiCache(120), slugParams, controller.getPublicRoomCategory);
+publicRouter.get("/amenities", apiCache(120), listQuery, controller.listPublicAmenities);
+publicRouter.get("/rooms", apiCache(30), validateQuery(validator.roomListQuery), controller.listPublicRooms);
+publicRouter.get("/rooms/:slug", apiCache(30), slugParams, controller.getPublicRoom);
 
 adminRouter.use(requireAdminAuth);
 

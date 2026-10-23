@@ -14,27 +14,29 @@ const idParams = validateParams(validator.idParams);
 const slugParams = validateParams(validator.slugParams);
 const listQuery = validateQuery(validator.listQuery);
 
-publicRouter.get("/settings", controller.getPublicSettings);
+const { apiCache } = require("../middleware/cache.middleware");
+
+publicRouter.get("/settings", apiCache(120), controller.getPublicSettings);
 publicRouter.get("/search", validateQuery(validator.searchQuery), controller.searchPublic);
-publicRouter.get("/navigation", controller.getPublicNavigation);
-publicRouter.get("/pages", listQuery, controller.getPublicPages);
-publicRouter.get("/pages/:slug", slugParams, controller.getPublicPage);
-publicRouter.get("/banners", controller.getPublicBanners);
-publicRouter.get("/packages", listQuery, controller.getPublicPackages);
-publicRouter.get("/packages/:slug", slugParams, controller.getPublicPackage);
-publicRouter.get("/gallery", controller.getPublicGallery);
-publicRouter.get("/policies/:slug", slugParams, controller.getPublicPolicy);
-publicRouter.get("/facilities", listQuery, controller.getPublicFacilities);
-publicRouter.get("/facilities/:slug", slugParams, controller.getPublicFacility);
-publicRouter.get("/restaurant", controller.getRestaurant);
-publicRouter.get("/events", controller.getPublicEvents);
-publicRouter.get("/events/:slug", slugParams, controller.getPublicEvent);
-publicRouter.get("/attractions", listQuery, controller.getPublicAttractions);
-publicRouter.get("/attractions/:slug", slugParams, controller.getPublicAttraction);
-publicRouter.get("/faqs", controller.getPublicFaqs);
-publicRouter.get("/testimonials", controller.getPublicTestimonials);
-publicRouter.get("/blogs", listQuery, controller.getPublicBlogs);
-publicRouter.get("/blogs/:slug", slugParams, controller.getPublicBlog);
+publicRouter.get("/navigation", apiCache(120), controller.getPublicNavigation);
+publicRouter.get("/pages", apiCache(60), listQuery, controller.getPublicPages);
+publicRouter.get("/pages/:slug", apiCache(60), slugParams, controller.getPublicPage);
+publicRouter.get("/banners", apiCache(120), controller.getPublicBanners);
+publicRouter.get("/packages", apiCache(60), listQuery, controller.getPublicPackages);
+publicRouter.get("/packages/:slug", apiCache(60), slugParams, controller.getPublicPackage);
+publicRouter.get("/gallery", apiCache(120), controller.getPublicGallery);
+publicRouter.get("/policies/:slug", apiCache(120), slugParams, controller.getPublicPolicy);
+publicRouter.get("/facilities", apiCache(60), listQuery, controller.getPublicFacilities);
+publicRouter.get("/facilities/:slug", apiCache(60), slugParams, controller.getPublicFacility);
+publicRouter.get("/restaurant", apiCache(60), controller.getRestaurant);
+publicRouter.get("/events", apiCache(60), controller.getPublicEvents);
+publicRouter.get("/events/:slug", apiCache(60), slugParams, controller.getPublicEvent);
+publicRouter.get("/attractions", apiCache(60), listQuery, controller.getPublicAttractions);
+publicRouter.get("/attractions/:slug", apiCache(60), slugParams, controller.getPublicAttraction);
+publicRouter.get("/faqs", apiCache(120), controller.getPublicFaqs);
+publicRouter.get("/testimonials", apiCache(120), controller.getPublicTestimonials);
+publicRouter.get("/blogs", apiCache(60), listQuery, controller.getPublicBlogs);
+publicRouter.get("/blogs/:slug", apiCache(60), slugParams, controller.getPublicBlog);
 publicRouter.post(
   "/newsletter/subscribe",
   publicWriteLimiter,

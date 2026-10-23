@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import { adminChangePassword } from "@/lib/api/admin-auth";
+import { adminChangePassword, adminLogout } from "@/lib/api/admin-auth";
 import { ApiError } from "@/lib/api/client";
 
 export default function AdminChangePasswordForm() {
+  const router = useRouter();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -34,7 +36,16 @@ export default function AdminChangePasswordForm() {
         setCurrentPassword("");
         setNewPassword("");
         setConfirm("");
-        setMessage("Password updated.");
+        setMessage("Password updated! Logging you out in 3 seconds — please sign in with your new password.");
+        // Log out after 3 seconds so the new password is confirmed on next login
+        setTimeout(async () => {
+          try {
+            await adminLogout();
+          } catch {
+            // ignore logout errors
+          }
+          router.replace("/admin/login");
+        }, 3000);
       } catch (err) {
         setError(err instanceof ApiError ? err.message : "Unable to change password.");
       }
@@ -49,7 +60,7 @@ export default function AdminChangePasswordForm() {
       <div>
         <h2 className="font-display text-xl text-ink">Change password</h2>
         <p className="mt-1 text-sm text-muted">
-          Update the password for your signed-in admin account.
+          Update the password for your signed-in admin account. You will be logged out automatically after changing it.
         </p>
       </div>
       <Input
@@ -79,7 +90,7 @@ export default function AdminChangePasswordForm() {
         onChange={(event) => setConfirm(event.target.value)}
       />
       {error ? <p className="text-sm text-red-600" role="alert">{error}</p> : null}
-      {message ? <p className="text-sm text-accent" role="status">{message}</p> : null}
+      {message ? <p className="text-sm text-green-600 font-medium" role="status">{message}</p> : null}
       <Button type="submit" disabled={isPending}>
         {isPending ? "Saving…" : "Update password"}
       </Button>

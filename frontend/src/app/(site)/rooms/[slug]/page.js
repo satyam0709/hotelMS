@@ -199,12 +199,12 @@ export default async function RoomDetailPage({ params }) {
             action={<Button href="/rooms" variant="secondary">All rooms</Button>}
           />
 
-          <Stagger className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <Stagger className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {(related.length
               ? related
               : demoRooms.filter((item) => item.slug !== room.slug)
             ).map((item, index) => (
-              <StaggerItem key={item.id}>
+              <StaggerItem key={item.id} className="h-full">
                 <RoomCard room={item} fallbackIndex={index} />
               </StaggerItem>
             ))}

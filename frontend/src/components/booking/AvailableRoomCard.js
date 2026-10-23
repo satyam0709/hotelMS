@@ -40,8 +40,8 @@ export default function AvailableRoomCard({
       }
       whileTap={cardTap}
     >
-      <div className="grid md:grid-cols-[14rem_minmax(0,1fr)]">
-        <div className="relative aspect-[4/3] bg-accent-soft md:aspect-auto md:min-h-full">
+      <div className="grid md:grid-cols-[16rem_minmax(0,1fr)] lg:grid-cols-[19rem_minmax(0,1fr)]">
+        <div className="relative aspect-[16/10] bg-accent-soft md:aspect-auto md:min-h-full overflow-hidden">
           {imageSrc ? (
             <Image
               src={imageSrc}

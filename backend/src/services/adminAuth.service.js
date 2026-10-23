@@ -176,9 +176,11 @@ async function requestPasswordReset(email, request) {
   const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve({ delivered: false, reason: "background" }), 8000));
   deliveryStatus = await Promise.race([sendPromise, timeoutPromise]);
 
+  // Only expose devResetUrl if email delivery actually failed (helpful in dev/local when SMTP is not configured)
+  const emailFailed = !deliveryStatus?.delivered;
   return {
     accepted: true,
-    ...(!env.isProduction || !deliveryStatus?.delivered ? { devResetUrl: resetUrl.toString() } : {}),
+    ...(emailFailed && !env.isProduction ? { devResetUrl: resetUrl.toString() } : {}),
   };
 }
 

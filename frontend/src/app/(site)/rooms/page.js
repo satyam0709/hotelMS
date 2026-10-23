@@ -69,7 +69,7 @@ export default async function RoomsPage({ searchParams }) {
       </section>
 
       <Container>
-        <div className="grid gap-8 lg:grid-cols-[18rem_minmax(0,1fr)] xl:grid-cols-[20rem_minmax(0,1fr)]">
+        <div className="grid gap-8 lg:grid-cols-[16.5rem_minmax(0,1fr)] xl:grid-cols-[18rem_minmax(0,1fr)]">
           <aside className="lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start">
             <RoomsFilters
               key={buildQueryString({
@@ -87,10 +87,10 @@ export default async function RoomsPage({ searchParams }) {
             />
           </aside>
 
-          <div>
-            <Stagger className="grid gap-5 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3">
+          <div className="min-w-0">
+            <Stagger className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
               {rooms.map((room, index) => (
-                <StaggerItem key={room.id}>
+                <StaggerItem key={room.id} className="h-full">
                   <RoomCard room={room} fallbackIndex={index} />
                 </StaggerItem>
               ))}
