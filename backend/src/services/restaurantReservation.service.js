@@ -115,8 +115,19 @@ async function createPublicReservation(payload) {
     notification = { delivered: false, reason: "delivery-failed" };
   }
 
-  return { reservation, notification };
-}
+    try {
+      require("../realtime/hub").publish("restaurant.reservation.created", {
+        reservationId: reservation.id,
+        guestName: reservation.guestName,
+        status: reservation.status,
+        reservationDate: reservation.reservationDate,
+        reservationTime: reservation.reservationTime,
+        guests: reservation.guestCount,
+      });
+    } catch {}
+
+    return { reservation, notification };
+  }
 
 function listWhere(query = {}) {
   const where = {};
@@ -158,6 +169,13 @@ async function getAdminReservation(id) {
   });
   if (!reservation) fail(404, "Restaurant reservation not found.", "NOT_FOUND");
   return reservation;
+}
+
+async function getAdminReservationPdf(res, id) {
+  const reservation = await getAdminReservation(id);
+  const exportEngine = require("../utils/exportEngine");
+  const brandName = reservation.restaurant?.name || "ExoStay Luxury Resort";
+  return exportEngine.buildRestaurantReservationPdfStream(res, reservation, brandName);
 }
 
 const allowedTransitions = {
@@ -225,12 +243,22 @@ async function updateAdminReservationStatus(id, payload, req) {
       notification = { delivered: false, reason: "delivery-failed" };
     }
   }
+
+  try {
+    require("../realtime/hub").publish("restaurant.reservation.updated", {
+      reservationId: id,
+      status: payload.status,
+      adminRemarks: payload.adminRemarks,
+    });
+  } catch {}
+
   return { reservation: result.reservation, notification };
 }
 
 module.exports = {
   createPublicReservation,
   getAdminReservation,
+  getAdminReservationPdf,
   listAdminReservations,
   updateAdminReservationStatus,
 };

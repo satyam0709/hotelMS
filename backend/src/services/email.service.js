@@ -308,7 +308,29 @@ function createEmailService(config, mailer = nodemailer) {
     const runtime = await resolveRuntime();
     if (!runtime.inquiryEnabled) return { delivered: false, reason: "inquiry-emails-disabled" };
     if (!reservation?.guestEmail) return { delivered: false, reason: "guest-email-not-provided" };
-    const message = createGuestRestaurantReservationStatusEmail(reservation);
+
+    let qrDataUri = "";
+    try {
+      const QRCode = require("qrcode");
+      const qrPayload = JSON.stringify({
+        type: "RESTAURANT_RESERVATION",
+        id: reservation.id,
+        name: reservation.guestName,
+        date: reservation.reservationDate ? new Date(reservation.reservationDate).toISOString().slice(0, 10) : "",
+        time: reservation.reservationTime,
+        guests: reservation.guestCount,
+        status: reservation.status,
+      });
+      qrDataUri = await QRCode.toDataURL(qrPayload, {
+        width: 250,
+        margin: 1,
+        color: { dark: "#111827", light: "#ffffff" },
+      });
+    } catch (e) {
+      console.error("[emailService] Failed to generate QR code for reservation email:", e?.message);
+    }
+
+    const message = createGuestRestaurantReservationStatusEmail(reservation, qrDataUri);
     return deliver(reservation.guestEmail, message, {
       templateKey: "restaurant-reservation-status",
       relatedType: "RestaurantReservation",

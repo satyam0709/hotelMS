@@ -30,6 +30,13 @@ adminRouter.get(
   validateParams(validator.idParams),
   controller.getAdminReservation
 );
+adminRouter.get(
+  "/restaurant/reservations/:id/pdf",
+  requireAdminAuth,
+  requirePermission("restaurant.read"),
+  validateParams(validator.idParams),
+  controller.getAdminReservationPdf
+);
 adminRouter.patch(
   "/restaurant/reservations/:id/status",
   requireAdminAuth,

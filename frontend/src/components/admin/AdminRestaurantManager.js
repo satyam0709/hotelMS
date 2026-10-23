@@ -24,6 +24,8 @@ import { emptyToNull, linesToList, listToLines, slugify, toOptionalNumber } from
 import { ApiError } from "@/lib/api/client";
 import { hasPermission } from "@/lib/admin/permissions";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
+import useAdminRealtime from "@/hooks/useAdminRealtime";
+import RestaurantReservationModal from "@/components/admin/RestaurantReservationModal";
 import { cn } from "@/lib/utils";
 
 const PROFILE_EMPTY = {
@@ -66,6 +68,7 @@ export default function AdminRestaurantManager() {
   const [reservationsLoading, setReservationsLoading] = useState(false);
   const [reservationError, setReservationError] = useState("");
   const [reservationActionId, setReservationActionId] = useState("");
+  const [selectedReservation, setSelectedReservation] = useState(null);
 
   const load = useCallback(async () => {
     await Promise.resolve();
@@ -126,18 +129,41 @@ export default function AdminRestaurantManager() {
     }
   }, [reservationFrom, reservationPage, reservationStatus, reservationTo]);
 
+  // Subscribe to real-time events for instant table reservation updates
+  useAdminRealtime((event) => {
+    if (
+      event.type === "restaurant.reservation.created" ||
+      event.type === "restaurant.reservation.updated"
+    ) {
+      loadReservations();
+      // If modal is open for this reservation, update its active data
+      if (selectedReservation && event.reservationId === selectedReservation.id) {
+        setSelectedReservation((prev) =>
+          prev ? { ...prev, status: event.status || prev.status, adminRemarks: event.adminRemarks ?? prev.adminRemarks } : null
+        );
+      }
+    }
+  });
+
   useEffect(() => {
     if (tab === "reservations") loadReservations();
   }, [loadReservations, tab]);
 
-  async function changeReservationStatus(reservation, status) {
+  async function changeReservationStatus(reservation, status, adminRemarks = undefined) {
     setReservationActionId(reservation.id);
     setReservationError("");
     try {
-      await updateAdminRestaurantReservationStatus(reservation.id, { status });
+      const payload = { status };
+      if (adminRemarks !== undefined) payload.adminRemarks = adminRemarks;
+      const res = await updateAdminRestaurantReservationStatus(reservation.id, payload);
       await loadReservations();
+      if (selectedReservation && selectedReservation.id === reservation.id) {
+        setSelectedReservation(res?.data?.reservation || { ...reservation, status, adminRemarks });
+      }
+      return res;
     } catch (err) {
       setReservationError(err instanceof ApiError ? err.message : "Unable to update reservation.");
+      throw err;
     } finally {
       setReservationActionId("");
     }
@@ -145,7 +171,7 @@ export default function AdminRestaurantManager() {
 
   function reservationActions(status) {
     if (status === "REQUESTED") {
-      return [["CONFIRMED", "Approve"], ["DECLINED", "Decline"], ["CANCELLED", "Cancel"]];
+      return [["CONFIRMED", "Approve (Yes)"], ["DECLINED", "Decline (No)"], ["CANCELLED", "Cancel"]];
     }
     if (status === "CONFIRMED") {
       return [["CANCELLED", "Cancel"], ["COMPLETED", "Complete"], ["NO_SHOW", "No-show"]];
@@ -339,21 +365,63 @@ export default function AdminRestaurantManager() {
           {!reservationsLoading && !reservationError && reservations.length === 0 ? <p className="rounded-2xl border border-line bg-elevated p-6 text-sm text-muted">No table reservations match these filters.</p> : null}
           <div className="space-y-3">
             {reservations.map((reservation) => (
-              <article key={reservation.id} className="rounded-2xl border border-line bg-elevated p-5 shadow-soft">
+              <article key={reservation.id} className="rounded-2xl border border-line bg-elevated p-5 shadow-soft transition-all hover:border-accent/40">
                 <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <h3 className="font-semibold text-ink">{reservation.guestName} <span className="font-normal text-muted">· {reservation.guestCount} guests</span></h3>
-                    <p className="mt-1 text-sm text-muted">{reservation.guestEmail || "No email"}{reservation.guestPhone ? ` · ${reservation.guestPhone}` : ""}</p>
-                    <p className="mt-2 text-sm text-ink">{String(reservation.reservationDate).slice(0, 10)} · {reservation.reservationTime} · {reservation.mealType}</p>
-                    {reservation.dietaryRequests ? <p className="mt-2 text-sm text-muted">Notes: {reservation.dietaryRequests}</p> : null}
-                    {reservation.adminRemarks ? <p className="mt-1 text-sm text-muted">Staff notes: {reservation.adminRemarks}</p> : null}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-ink text-base">{reservation.guestName}</h3>
+                      <span className="text-xs text-muted">· {reservation.guestCount} guests</span>
+                    </div>
+                    <p className="mt-1 text-sm text-muted">
+                      {reservation.guestEmail || "No email"}
+                      {reservation.guestPhone ? ` · ${reservation.guestPhone}` : ""}
+                    </p>
+                    <p className="mt-2 text-sm text-ink font-medium">
+                      📅 {String(reservation.reservationDate).slice(0, 10)} · ⏰ {reservation.reservationTime} · 🍽️ {reservation.mealType}
+                    </p>
+                    {reservation.dietaryRequests ? (
+                      <p className="mt-2 text-xs text-amber-700 dark:text-amber-300 bg-amber-500/10 p-2 rounded-lg">
+                        <strong>Requests:</strong> {reservation.dietaryRequests}
+                      </p>
+                    ) : null}
+                    {reservation.adminRemarks ? (
+                      <p className="mt-1 text-xs text-muted">Staff notes: {reservation.adminRemarks}</p>
+                    ) : null}
                   </div>
-                  <span className="rounded-full border border-line px-3 py-1 text-xs font-semibold text-ink">{reservation.status.replace("_", " ")}</span>
+                  <div className="flex flex-col items-end gap-2">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-bold ${
+                        reservation.status === "CONFIRMED"
+                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
+                          : reservation.status === "DECLINED" || reservation.status === "CANCELLED"
+                          ? "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300"
+                          : "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
+                      }`}
+                    >
+                      {reservation.status.replace("_", " ")}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      className="text-xs shadow-xs"
+                      onClick={() => setSelectedReservation(reservation)}
+                    >
+                      View Details & Respond
+                    </Button>
+                  </div>
                 </div>
+
                 {canUpdate && reservationActions(reservation.status).length ? (
-                  <div className="mt-4 flex flex-wrap gap-2">
+                  <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line/60 pt-3">
+                    <span className="text-xs text-muted mr-1 font-medium">Quick actions:</span>
                     {reservationActions(reservation.status).map(([status, label]) => (
-                      <Button key={status} size="sm" variant={status === "DECLINED" || status === "CANCELLED" || status === "NO_SHOW" ? "danger" : "secondary"} disabled={reservationActionId === reservation.id} onClick={() => changeReservationStatus(reservation, status)}>
+                      <Button
+                        key={status}
+                        size="sm"
+                        variant={status === "DECLINED" || status === "CANCELLED" || status === "NO_SHOW" ? "danger" : "secondary"}
+                        disabled={reservationActionId === reservation.id}
+                        onClick={() => changeReservationStatus(reservation, status)}
+                      >
                         {reservationActionId === reservation.id ? "Saving…" : label}
                       </Button>
                     ))}
@@ -372,6 +440,16 @@ export default function AdminRestaurantManager() {
             </div>
           ) : null}
         </section>
+      ) : null}
+
+      {/* Interactive Reservation Inspection, QR Pass, Email & WhatsApp Decision Modal */}
+      {selectedReservation ? (
+        <RestaurantReservationModal
+          reservation={selectedReservation}
+          onClose={() => setSelectedReservation(null)}
+          onUpdateStatus={changeReservationStatus}
+          actionLoading={Boolean(reservationActionId)}
+        />
       ) : null}
     </div>
   );

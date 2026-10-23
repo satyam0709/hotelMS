@@ -51,3 +51,8 @@ export async function listAdminRestaurantReservations(query = {}) {
 export async function updateAdminRestaurantReservationStatus(id, payload) {
   return apiPatch(`/admin/restaurant/reservations/${id}/status`, payload);
 }
+
+export function getAdminReservationPdfUrl(id) {
+  const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  return `${base}/api/admin/restaurant/reservations/${id}/pdf`;
+}

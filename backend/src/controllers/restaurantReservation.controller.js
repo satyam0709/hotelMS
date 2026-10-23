@@ -17,6 +17,10 @@ async function getAdminReservation(req, res) {
   return sendSuccess(res, await service.getAdminReservation(params(req).id));
 }
 
+async function getAdminReservationPdf(req, res) {
+  return service.getAdminReservationPdf(res, params(req).id);
+}
+
 async function updateAdminReservationStatus(req, res) {
   const result = await service.updateAdminReservationStatus(params(req).id, req.body, req);
   return sendSuccess(res, result, "Reservation status updated.");
@@ -25,6 +29,7 @@ async function updateAdminReservationStatus(req, res) {
 module.exports = {
   createPublicReservation,
   getAdminReservation,
+  getAdminReservationPdf,
   listAdminReservations,
   updateAdminReservationStatus,
 };

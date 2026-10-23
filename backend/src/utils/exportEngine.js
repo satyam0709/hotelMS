@@ -267,8 +267,142 @@ function buildInvoicePdfStream(res, invoice, brandName = "ExoStay Luxury Resort"
   doc.end();
 }
 
+/**
+ * Builds a reservation confirmation invoice/receipt PDF with QR code
+ */
+async function buildRestaurantReservationPdfStream(res, reservation, brandName = "ExoStay Luxury Resort") {
+  const QRCode = require("qrcode");
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="TableReservation-${reservation.id}.pdf"`);
+  res.setHeader("Cache-Control", "no-store");
+
+  const doc = new PDFDocument({ size: "A4", margin: 40 });
+  doc.pipe(res);
+
+  const dateStr = reservation.reservationDate
+    ? new Date(reservation.reservationDate).toISOString().slice(0, 10)
+    : "-";
+
+  // Title & Header
+  doc.fontSize(22).font("Helvetica-Bold").fillColor("#111827").text("DINING RESERVATION PASS & INVOICE", 40, 40);
+  doc.fontSize(10).font("Helvetica-Bold").fillColor("#D97706").text(brandName.toUpperCase(), 40, 68);
+
+  doc.fontSize(9).font("Helvetica").fillColor("#4B5563");
+  doc.text(`Ref ID: ${reservation.id.slice(0, 12).toUpperCase()}`, 350, 40, { align: "right", width: 200 });
+  doc.text(`Date Issued: ${formatDate(new Date())}`, 350, 54, { align: "right", width: 200 });
+  doc.text(`Status: ${String(reservation.status || "CONFIRMED").toUpperCase()}`, 350, 68, { align: "right", width: 200 });
+
+  doc.strokeColor("#E5E7EB").lineWidth(1).moveTo(40, 90).lineTo(555, 90).stroke();
+
+  // Guest details card & Reservation details card
+  let y = 105;
+  doc.rect(40, y, 245, 90).fill("#F9FAFB").stroke("#E5E7EB");
+  doc.rect(310, y, 245, 90).fill("#F9FAFB").stroke("#E5E7EB");
+
+  // Guest Box
+  doc.fillColor("#6B7280").fontSize(8).font("Helvetica-Bold").text("GUEST DETAILS", 50, y + 8);
+  doc.fillColor("#111827").fontSize(11).font("Helvetica-Bold").text(reservation.guestName || "Guest", 50, y + 22);
+  doc.fillColor("#4B5563").fontSize(9).font("Helvetica");
+  doc.text(`Email: ${reservation.guestEmail || "N/A"}`, 50, y + 40);
+  doc.text(`Phone: ${reservation.guestPhone || "N/A"}`, 50, y + 55);
+
+  // Reservation Box
+  doc.fillColor("#6B7280").fontSize(8).font("Helvetica-Bold").text("RESERVATION SUMMARY", 320, y + 8);
+  doc.fillColor("#111827").fontSize(10).font("Helvetica-Bold").text(
+    `${reservation.mealType || "DINNER"} - ${dateStr} at ${reservation.reservationTime || "-"}`,
+    320,
+    y + 22
+  );
+  doc.fillColor("#4B5563").fontSize(9).font("Helvetica");
+  doc.text(`Guests: ${reservation.guestCount} Person(s)`, 320, y + 40);
+  doc.text(`Venue: ${reservation.restaurantName || "Fine Dining Restaurant"}`, 320, y + 55);
+  doc.text(`Dietary/Notes: ${reservation.dietaryRequests || "None"}`, 320, y + 70, { width: 225 });
+
+  // Status Badge Block
+  y = 215;
+  const isApproved = reservation.status === "CONFIRMED";
+  const badgeColor = isApproved ? "#059669" : "#DC2626";
+  const badgeBg = isApproved ? "#ECFDF5" : "#FEF2F2";
+  doc.rect(40, y, 515, 36).fill(badgeBg).stroke(badgeColor);
+  doc.fillColor(badgeColor).fontSize(11).font("Helvetica-Bold").text(
+    isApproved
+      ? "TABLE STATUS: CONFIRMED & RESERVED"
+      : `TABLE STATUS: ${String(reservation.status || "DECLINED").toUpperCase()}`,
+    55,
+    y + 11
+  );
+
+  // Details breakdown
+  y = 270;
+  doc.rect(40, y, 515, 22).fill("#1F2937");
+  doc.fillColor("#FFFFFF").fontSize(9).font("Helvetica-Bold");
+  doc.text("SERVICE DESCRIPTION", 55, y + 6);
+  doc.text("GUESTS", 360, y + 6, { align: "center", width: 50 });
+  doc.text("STATUS", 440, y + 6, { align: "right", width: 100 });
+
+  y += 22;
+  doc.rect(40, y, 515, 30).fill("#F9FAFB").stroke("#E5E7EB");
+  doc.fillColor("#111827").font("Helvetica").fontSize(9);
+  doc.text(`Table Reservation (${reservation.mealType || "Dining"})`, 55, y + 10);
+  doc.text(String(reservation.guestCount), 360, y + 10, { align: "center", width: 50 });
+  doc.fillColor(badgeColor).font("Helvetica-Bold");
+  doc.text(String(reservation.status || "CONFIRMED"), 440, y + 10, { align: "right", width: 100 });
+
+  y += 50;
+
+  // QR Code Generation
+  const qrData = JSON.stringify({
+    type: "RESTAURANT_RESERVATION",
+    id: reservation.id,
+    name: reservation.guestName,
+    date: dateStr,
+    time: reservation.reservationTime,
+    guests: reservation.guestCount,
+    status: reservation.status,
+  });
+
+  try {
+    const qrBuffer = await QRCode.toBuffer(qrData, {
+      type: "png",
+      width: 130,
+      margin: 1,
+      color: { dark: "#111827", light: "#ffffff" },
+    });
+
+    doc.rect(40, y, 515, 155).fill("#FAFAFA").stroke("#E5E7EB");
+    doc.image(qrBuffer, 60, y + 12, { width: 130, height: 130 });
+
+    doc.fillColor("#111827").fontSize(12).font("Helvetica-Bold").text("Digital Table Verification Pass", 210, y + 20);
+    doc.fillColor("#4B5563").fontSize(9).font("Helvetica").text(
+      "Scan this QR code upon arrival at the restaurant reception to immediately verify your reservation.",
+      210,
+      y + 40,
+      { width: 330, lineGap: 3 }
+    );
+
+    if (reservation.adminRemarks) {
+      doc.fillColor("#0F766E").fontSize(9).font("Helvetica-Bold").text("Restaurant Note:", 210, y + 90);
+      doc.fillColor("#334155").font("Helvetica").text(reservation.adminRemarks, 210, y + 105, { width: 330 });
+    }
+  } catch (qrErr) {
+    console.error("QR Code generation error in PDF:", qrErr);
+  }
+
+  // Footer
+  doc.rect(40, 740, 515, 30).fill("#F3F4F6");
+  doc.fontSize(8).font("Helvetica").fillColor("#374151");
+  doc.text(
+    `For any changes, please contact the restaurant desk or guest support. Thank you for choosing ${brandName}.`,
+    50,
+    750
+  );
+
+  doc.end();
+}
+
 module.exports = {
   buildInvoicePdfStream,
+  buildRestaurantReservationPdfStream,
   createPdfReport,
   formatCurrency,
   formatDate,
