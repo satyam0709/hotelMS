@@ -575,10 +575,12 @@ export default function SphereGallery3D(props = {}) {
   };
 
   const linksRef = React.useRef([]);
-  linksRef.current = Array.from(
-    { length: branches },
-    (_, i) => items[i % items.length]?.link || ""
-  );
+  React.useEffect(() => {
+    linksRef.current = Array.from(
+      { length: branches },
+      (_, i) => items[i % items.length]?.link || ""
+    );
+  }, [branches, items]);
 
   const mediaRef = React.useRef([]);
   const graveyardRef = React.useRef([]);
@@ -978,9 +980,33 @@ export default function SphereGallery3D(props = {}) {
 
     let raf = 0;
     let prev = performance.now();
+    let isVisible = true;
+
+    const io = new IntersectionObserver(([entry]) => {
+      const visible = Boolean(entry?.isIntersecting);
+      if (visible !== isVisible) {
+        isVisible = visible;
+        if (visible) {
+          prev = performance.now();
+        }
+      }
+    }, { threshold: 0.05 });
+    io.observe(host);
+
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        isVisible = false;
+      } else {
+        isVisible = true;
+        prev = performance.now();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     const frame = () => {
       raf = requestAnimationFrame(frame);
+
+      if (!isVisible) return;
 
       const now = performance.now();
       const dt = Math.min(0.05, (now - prev) / 1000);
@@ -1283,6 +1309,8 @@ export default function SphereGallery3D(props = {}) {
 
     return () => {
       cancelAnimationFrame(raf);
+      io.disconnect();
+      document.removeEventListener("visibilitychange", onVisibilityChange);
       ro.disconnect();
       canvas.removeEventListener("pointerdown", onPointerDown);
       canvas.removeEventListener("pointerleave", onLeave);

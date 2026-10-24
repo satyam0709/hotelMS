@@ -251,7 +251,23 @@ export default function LuxuryInteractiveHero({ banners = [], settings = {} }) {
     };
     window.addEventListener("pointermove", onMouseMove, { passive: true });
 
+    let isHeroVisible = true;
+    const heroObserver = new IntersectionObserver(([entry]) => {
+      isHeroVisible = Boolean(entry?.isIntersecting);
+    }, { threshold: 0.05 });
+    if (containerRef.current) {
+      heroObserver.observe(containerRef.current);
+    }
+
+    const onVisibilityChange = () => {
+      isHeroVisible = !document.hidden;
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
     const render = () => {
+      animId = requestAnimationFrame(render);
+      if (!isHeroVisible) return;
+
       ctx.clearRect(0, 0, width, height);
 
       for (let i = 0; i < particles.length; i++) {
@@ -289,14 +305,14 @@ export default function LuxuryInteractiveHero({ banners = [], settings = {} }) {
         ctx.fill();
         ctx.shadowBlur = 0;
       }
-
-      animId = requestAnimationFrame(render);
     };
 
     render();
 
     return () => {
       cancelAnimationFrame(animId);
+      heroObserver.disconnect();
+      document.removeEventListener("visibilitychange", onVisibilityChange);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("pointermove", onMouseMove);
     };

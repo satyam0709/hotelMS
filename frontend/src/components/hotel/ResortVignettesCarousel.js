@@ -664,10 +664,33 @@ class MagazineScene {
   start() {
     this.attach();
     this.lastT = performance.now();
+    this.isVisible = true;
+
+    this.io = new IntersectionObserver(([entry]) => {
+      const visible = Boolean(entry?.isIntersecting);
+      if (visible !== this.isVisible) {
+        this.isVisible = visible;
+        if (visible) this.lastT = performance.now();
+      }
+    }, { threshold: 0.05 });
+    this.io.observe(this.container);
+
+    this.onVisibilityChange = () => {
+      if (document.hidden) {
+        this.isVisible = false;
+      } else {
+        this.isVisible = true;
+        this.lastT = performance.now();
+      }
+    };
+    document.addEventListener("visibilitychange", this.onVisibilityChange);
+
     const loop = () => {
       if (this.disposed) return;
       this.frameId = requestAnimationFrame(loop);
-      this.step();
+      if (this.isVisible) {
+        this.step();
+      }
     };
     this.frameId = requestAnimationFrame(loop);
   }
@@ -718,6 +741,10 @@ class MagazineScene {
   dispose() {
     this.disposed = true;
     cancelAnimationFrame(this.frameId);
+    this.io?.disconnect();
+    if (this.onVisibilityChange) {
+      document.removeEventListener("visibilitychange", this.onVisibilityChange);
+    }
     this.detach();
     this.geometry.dispose();
     this.material.dispose();
