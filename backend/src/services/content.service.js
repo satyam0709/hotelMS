@@ -541,8 +541,10 @@ async function getPublicFacilities(query = {}) {
   const where = { deletedAt: null, isActive: true };
   if (query.category) where.category = query.category;
   if (query.slug) where.slug = query.slug;
+  const take = query.limit ? Math.min(Math.max(Number(query.limit) || 20, 1), 100) : undefined;
   return prisma.facility.findMany({
     where, orderBy: { displayOrder: "asc" },
+    ...(take ? { take } : {}),
     select: {
       id: true, name: true, slug: true, category: true, description: true, operatingHours: true,
       additionalInfo: true, icon: true, displayOrder: true,
@@ -686,8 +688,10 @@ async function getPublicAttractions(query = {}) {
   const where = { deletedAt: null, isActive: true };
   const search = searchText(query);
   if (search) where.OR = ["name", "description"].map((field) => ({ [field]: { contains: search } }));
+  const take = query.limit ? Math.min(Math.max(Number(query.limit) || 20, 1), 100) : undefined;
   return prisma.attraction.findMany({
     where, orderBy: { displayOrder: "asc" },
+    ...(take ? { take } : {}),
     select: { id: true, name: true, slug: true, description: true, distance: true, mapUrl: true, travelInfo: true, displayOrder: true, media: mediaSelection },
   });
 }
@@ -720,6 +724,52 @@ async function getPublicTestimonials() {
 
 async function setTestimonialApproval(id, approvalStatus, req) {
   return updateResource("testimonials", id, { approvalStatus }, req, "approval");
+}
+
+async function optionalPublicPage(slug) {
+  try {
+    return await getPublicPage(slug);
+  } catch (error) {
+    if (error?.statusCode === 404) return null;
+    throw error;
+  }
+}
+
+async function getPublicHomeBundle() {
+  const accommodation = require("./accommodation.service");
+  const [
+    settings,
+    homePage,
+    aboutPage,
+    rooms,
+    facilities,
+    testimonials,
+    attractions,
+    banners,
+    blogs,
+  ] = await Promise.all([
+    getPublicSettings(),
+    optionalPublicPage("home"),
+    optionalPublicPage("about"),
+    accommodation.listPublicRooms({ limit: 12, page: 1 }),
+    getPublicFacilities({ limit: 12 }),
+    getPublicTestimonials(),
+    getPublicAttractions({ limit: 6 }),
+    getPublicBanners(),
+    getPublicBlogs({ limit: 6 }),
+  ]);
+
+  return {
+    settings,
+    homePage,
+    aboutPage,
+    rooms,
+    facilities,
+    testimonials: Array.isArray(testimonials) ? testimonials.slice(0, 8) : testimonials,
+    attractions,
+    banners,
+    blogs,
+  };
 }
 
 async function subscribe(email, captchaToken) {
@@ -1031,6 +1081,7 @@ const service = {
   getPublicFacility,
   getPublicFacilities,
   getPublicFaqs,
+  getPublicHomeBundle,
   getPublicNavigation,
   getPublicPage,
   getPublicPolicy,

@@ -1,16 +1,21 @@
+import { cache } from "react";
 import { apiGet, apiPost } from "@/lib/api/client";
 
-export async function getSettings() {
-  return apiGet("/settings", { next: { revalidate: 60 } });
-}
+export const getSettings = cache(async function getSettings() {
+  return apiGet("/settings", { next: { revalidate: 120 } });
+});
 
-export async function getNavigation() {
-  return apiGet("/navigation", { next: { revalidate: 60 } });
-}
+export const getNavigation = cache(async function getNavigation() {
+  return apiGet("/navigation", { next: { revalidate: 120 } });
+});
 
-export async function getBanners() {
-  return apiGet("/banners", { next: { revalidate: 30 } });
-}
+export const getBanners = cache(async function getBanners() {
+  return apiGet("/banners", { next: { revalidate: 60 } });
+});
+
+export const getHome = cache(async function getHome() {
+  return apiGet("/home", { next: { revalidate: 60 } });
+});
 
 export async function getPackages(query = {}) {
   return apiGet("/packages", { query, next: { revalidate: 60 } });
@@ -24,9 +29,9 @@ export async function getGallery() {
   return apiGet("/gallery", { next: { revalidate: 60 } });
 }
 
-export async function getPublicPage(slug) {
+export const getPublicPage = cache(async function getPublicPage(slug) {
   return apiGet(`/pages/${slug}`, { next: { revalidate: 60 } });
-}
+});
 
 export async function getFacilities(query = {}) {
   return apiGet("/facilities", { query, next: { revalidate: 60 } });

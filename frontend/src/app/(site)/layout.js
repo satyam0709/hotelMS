@@ -8,7 +8,7 @@ import { demoContactSettings } from "@/lib/demo-content";
 import { siteConfig } from "@/lib/config";
 import { splitNavigation } from "@/lib/utils";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export async function generateMetadata() {
   try {

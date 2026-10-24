@@ -58,7 +58,8 @@ export async function apiFetch(path, {
   timeoutMs,
 } = {}) {
   const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
-  const effectiveTimeout = timeoutMs ?? (isFormData ? 60000 : 30000);
+  const isPublicGet = method === "GET" && !String(path).includes("/admin");
+  const effectiveTimeout = timeoutMs ?? (isFormData ? 60000 : isPublicGet ? 8000 : 30000);
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), effectiveTimeout);
   if (signal) {
@@ -80,7 +81,7 @@ export async function apiFetch(path, {
     },
     body: isFormData ? body : body ? JSON.stringify(body) : undefined,
     signal: controller.signal,
-    credentials: "include",
+    credentials: isPublicGet ? "omit" : "include",
   };
 
   if (next) {

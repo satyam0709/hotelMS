@@ -5,10 +5,11 @@
  */
 const cacheStore = new Map();
 
+const MAX_CACHE_ENTRIES = 250;
+
 function apiCache(ttlSeconds = 60) {
   return function cacheMiddleware(req, res, next) {
-    // Only cache GET requests without authorization headers
-    if (req.method !== "GET" || req.headers.authorization || req.headers.cookie?.includes("token")) {
+    if (req.method !== "GET" || req.headers.authorization) {
       return next();
     }
 
@@ -21,10 +22,13 @@ function apiCache(ttlSeconds = 60) {
       return res.status(cached.status).json(cached.body);
     }
 
-    // Intercept json
     const originalJson = res.json.bind(res);
     res.json = (body) => {
       if (res.statusCode >= 200 && res.statusCode < 300) {
+        if (cacheStore.size >= MAX_CACHE_ENTRIES) {
+          const oldest = cacheStore.keys().next().value;
+          if (oldest) cacheStore.delete(oldest);
+        }
         cacheStore.set(key, {
           status: res.statusCode,
           body,
@@ -40,8 +44,16 @@ function apiCache(ttlSeconds = 60) {
   };
 }
 
+function invalidateApiCacheOnWrite(req, res, next) {
+  if (req.method === "GET" || req.method === "HEAD" || req.method === "OPTIONS") return next();
+  res.on("finish", () => {
+    if (res.statusCode >= 200 && res.statusCode < 400) clearApiCache();
+  });
+  next();
+}
+
 function clearApiCache() {
   cacheStore.clear();
 }
 
-module.exports = { apiCache, clearApiCache };
+module.exports = { apiCache, clearApiCache, invalidateApiCacheOnWrite };

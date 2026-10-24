@@ -17,7 +17,7 @@ import { getRoom } from "@/lib/api/rooms";
 import { demoRooms, findDemoRoom } from "@/lib/demo-content";
 import { formatCurrency, roomGalleryItems } from "@/lib/utils";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export async function generateStaticParams() {
   return [

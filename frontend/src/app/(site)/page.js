@@ -11,16 +11,7 @@ import SignatureExperiences from "@/components/hotel/SignatureExperiences";
 import SpecialOffersStrip from "@/components/hotel/SpecialOffersStrip";
 import TestimonialsGrid from "@/components/hotel/TestimonialsGrid";
 import NewsletterSection from "@/components/hotel/NewsletterSection";
-import {
-  getAttractions,
-  getBanners,
-  getBlogs,
-  getFacilities,
-  getPublicPage,
-  getSettings,
-  getTestimonials,
-} from "@/lib/api/content";
-import { getRooms } from "@/lib/api/rooms";
+import { getHome } from "@/lib/api/content";
 import { buildPublicGalleryItems } from "@/lib/gallery-items";
 import { buildHomeSectionVisibility } from "@/lib/home-sections";
 import {
@@ -35,41 +26,21 @@ import {
   getDemoAboutPage,
 } from "@/lib/demo-content";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
-async function settledValue(promise, fallback) {
-  const result = await Promise.allSettled([promise]);
-  return result[0].status === "fulfilled" ? result[0].value : fallback;
+async function loadHomeBundle() {
+  try {
+    return await getHome();
+  } catch {
+    return {};
+  }
 }
 
 export default async function HomePage() {
-  const [
-    settings,
-    homePage,
-    aboutPage,
-    roomsResponse,
-    facilities,
-    testimonials,
-    attractions,
-    banners,
-    blogs,
-    galleryRooms,
-    galleryFacilities,
-  ] = await Promise.all([
-    settledValue(getSettings(), {}),
-    settledValue(getPublicPage("home"), null),
-    settledValue(getPublicPage("about"), null),
-    settledValue(getRooms({ isFeatured: "true", limit: 6 }), { items: [] }),
-    settledValue(getFacilities({ limit: 8 }), []),
-    settledValue(getTestimonials(), []),
-    settledValue(getAttractions({ limit: 6 }), []),
-    settledValue(getBanners(), []),
-    settledValue(getBlogs({ limit: 6 }), []),
-    settledValue(getRooms({ limit: 12 }), { items: [] }),
-    settledValue(getFacilities({ limit: 12 }), []),
-  ]);
-  const show = buildHomeSectionVisibility(homePage);
+  const bundle = await loadHomeBundle();
+  const show = buildHomeSectionVisibility(bundle.homePage);
 
+  const roomsResponse = bundle.rooms || { items: [] };
   const featuredRooms = coalesceList(
     Array.isArray(roomsResponse?.items)
       ? roomsResponse.items
@@ -80,46 +51,37 @@ export default async function HomePage() {
   );
 
   const facilityItems = coalesceList(
-    Array.isArray(facilities?.items)
-      ? facilities.items
-      : Array.isArray(facilities)
-        ? facilities
+    Array.isArray(bundle.facilities?.items)
+      ? bundle.facilities.items
+      : Array.isArray(bundle.facilities)
+        ? bundle.facilities
         : [],
     demoFacilities,
   );
 
   const attractionItems = coalesceList(
-    Array.isArray(attractions?.items)
-      ? attractions.items
-      : Array.isArray(attractions)
-        ? attractions
+    Array.isArray(bundle.attractions?.items)
+      ? bundle.attractions.items
+      : Array.isArray(bundle.attractions)
+        ? bundle.attractions
         : [],
     demoAttractions,
   );
 
-  const bannerItems = coalesceList(Array.isArray(banners) ? banners : [], demoBanners);
-  const blogPosts = coalesceList(Array.isArray(blogs) ? blogs : [], demoBlogPosts);
+  const bannerItems = coalesceList(Array.isArray(bundle.banners) ? bundle.banners : [], demoBanners);
+  const blogPosts = coalesceList(Array.isArray(bundle.blogs) ? bundle.blogs : [], demoBlogPosts);
   const testimonialItems = coalesceList(
-    Array.isArray(testimonials) ? testimonials : [],
+    Array.isArray(bundle.testimonials) ? bundle.testimonials : [],
     demoTestimonials,
   );
-  const aboutPageContent = aboutPage || getDemoAboutPage();
-  const siteSettings = { ...demoContactSettings, ...(settings || {}) };
+  const aboutPageContent = bundle.aboutPage || getDemoAboutPage();
+  const siteSettings = { ...demoContactSettings, ...(bundle.settings || {}) };
   if (!siteSettings.websiteName || /hotel\s*l?ms/i.test(siteSettings.websiteName)) {
     siteSettings.websiteName = "ExoStay - Hotel/Resort";
   }
-  const galleryRoomItems = Array.isArray(galleryRooms?.items)
-    ? galleryRooms.items
-    : Array.isArray(galleryRooms)
-      ? galleryRooms
-      : [];
-  const galleryFacilityItems = Array.isArray(galleryFacilities?.items)
-    ? galleryFacilities.items
-    : Array.isArray(galleryFacilities)
-      ? galleryFacilities
-      : [];
+
   const galleryPreviewItems = buildPublicGalleryItems(
-    { rooms: galleryRoomItems, facilities: galleryFacilityItems },
+    { rooms: featuredRooms, facilities: facilityItems },
     12
   );
 
@@ -147,7 +109,7 @@ export default async function HomePage() {
       />
       {show.hero ? <LuxuryInteractiveHero banners={bannerItems} settings={siteSettings} /> : null}
       {show.about ? <AboutPreview page={aboutPageContent} settings={siteSettings} /> : null}
-      {show.rooms ? <FeaturedRooms rooms={featuredRooms} /> : null}
+      {show.rooms ? <FeaturedRooms rooms={featuredRooms.slice(0, 6)} /> : null}
       {show.gallery ? <HomeGalleryVignettes items={galleryPreviewItems} /> : null}
       <HomePaymentSection brandName={siteSettings.websiteName} />
       <HomeMapSection settings={siteSettings} />

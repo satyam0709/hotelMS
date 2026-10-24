@@ -8,6 +8,7 @@ const reply = (operation, args = () => []) => async (req, res) =>
   sendSuccess(res, await service[operation](...args(req)));
 
 const getPublicSettings = reply("getPublicSettings");
+const getPublicHome = reply("getPublicHomeBundle");
 const searchPublic = async (req, res) =>
   sendSuccess(res, await searchService.searchPublic(query(req)));
 const getAdminSettings = reply("getAdminSettings");
@@ -97,6 +98,7 @@ module.exports = {
   getPublicBlog,
   getPublicBlogs,
   getPublicGallery,
+  getPublicHome,
   getPublicPackage,
   getPublicPackages,
   getPublicEvent,

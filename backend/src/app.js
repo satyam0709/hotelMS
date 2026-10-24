@@ -63,7 +63,10 @@ app.get("/api/health", (req, res) => {
   sendSuccess(res, { status: "ok" });
 });
 
+const { invalidateApiCacheOnWrite } = require("./middleware/cache.middleware");
+
 app.use("/api/admin", requireTrustedOrigin);
+app.use("/api/admin", invalidateApiCacheOnWrite);
 app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin", adminUsersRoutes);
 app.use("/api/admin", activityRoutes);

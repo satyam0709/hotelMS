@@ -17,6 +17,7 @@ const listQuery = validateQuery(validator.listQuery);
 const { apiCache } = require("../middleware/cache.middleware");
 
 publicRouter.get("/settings", apiCache(120), controller.getPublicSettings);
+publicRouter.get("/home", apiCache(60), controller.getPublicHome);
 publicRouter.get("/search", validateQuery(validator.searchQuery), controller.searchPublic);
 publicRouter.get("/navigation", apiCache(120), controller.getPublicNavigation);
 publicRouter.get("/pages", apiCache(60), listQuery, controller.getPublicPages);
