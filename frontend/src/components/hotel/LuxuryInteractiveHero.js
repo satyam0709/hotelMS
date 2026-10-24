@@ -19,7 +19,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import BookingSearch from "@/components/hotel/BookingSearch";
-import SphereGallery3D from "@/components/hotel/SphereGallery3D";
+import HeroSphereLazy from "@/components/hotel/HeroSphereLazy";
 import { siteConfig } from "@/lib/config";
 import { mediaAlt, mediaUrl } from "@/lib/utils";
 
@@ -525,17 +525,7 @@ export default function LuxuryInteractiveHero({ banners = [], settings = {} }) {
               />
               {/* Sphere Gallery 3D WebGL Canvas */}
               <div className="relative w-full h-full -translate-y-10 lg:-translate-y-14">
-                <SphereGallery3D
-                  images={HOTEL_SPHERE_ITEMS}
-                  branches={30}
-                  scale={78}
-                  size={32}
-                  speed={16}
-                  hover={240}
-                  rounded={20}
-                  core={{ coreSize: 22, coreColor: "#92cd0088", lineColor: "#ffcf7955" }}
-                  className="w-full h-full"
-                />
+                <HeroSphereLazy images={HOTEL_SPHERE_ITEMS} />
               </div>
               {/* Floating Interaction Hint */}
               <div className="absolute bottom-2 flex items-center gap-2 rounded-full border border-white/20 bg-black/50 px-3.5 py-1.5 text-[11px] font-medium text-white/90 backdrop-blur-md shadow-lg pointer-events-none">

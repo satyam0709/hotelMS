@@ -1,11 +1,23 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import Container from "@/components/ui/Container";
-import ResortVignettesCarousel from "@/components/hotel/ResortVignettesCarousel";
 import { demoGalleryItems } from "@/lib/demo-content";
 import SectionHeader from "@/components/ui/SectionHeader";
 import { cn } from "@/lib/utils";
+
+const ResortVignettesCarousel = dynamic(
+  () => import("@/components/hotel/ResortVignettesCarousel"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="mt-4 sm:mt-6 h-[440px] sm:h-[520px] lg:h-[600px] w-full rounded-2xl border border-line/40 bg-elevated/40 animate-pulse flex items-center justify-center text-xs tracking-wider uppercase text-muted">
+        Loading interactive gallery...
+      </div>
+    ),
+  }
+);
 
 const FILTERS = [
   { id: "all", label: "All" },
