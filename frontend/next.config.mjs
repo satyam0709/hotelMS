@@ -2,11 +2,17 @@
 const nextConfig = {
   compress: true,
   poweredByHeader: false,
+  reactStrictMode: true,
+  // Restore scroll position on back/forward navigation
+  experimental: {
+    optimizePackageImports: ["lucide-react", "motion", "three"],
+    scrollRestoration: true,
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [32, 48, 64, 96, 128, 256],
-    minimumCacheTTL: 60 * 60 * 24 * 7,
+    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
     remotePatterns: [
       {
         protocol: "https",
@@ -26,8 +32,19 @@ const nextConfig = {
       },
     ],
   },
-  experimental: {
-    optimizePackageImports: ["lucide-react", "motion", "three"],
+  // Long-lived cache for public assets
+  async headers() {
+    return [
+      {
+        source: "/assets/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=604800, stale-while-revalidate=86400",
+          },
+        ],
+      },
+    ];
   },
 };
 

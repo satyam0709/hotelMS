@@ -123,19 +123,24 @@ function createEmailService(config, mailer = nodemailer) {
 
     try {
       if (runtime.smtpHost) {
-        const nextKey = `${runtime.smtpHost}:${runtime.smtpPort}:${runtime.smtpUser}:${runtime.fromEmail}:${config.smtpSecure}:${process.env.SMTP_FORCE_IPV4}`;
+        const nextKey = `${runtime.smtpHost}:${runtime.smtpPort}:${runtime.smtpUser}:${runtime.fromEmail}:${runtime.smtpSecure}:${process.env.SMTP_FORCE_IPV4}`;
         if (!transporter || transporterKey !== nextKey) {
+          // Always force IPv4 when SMTP_FORCE_IPV4 is set — Render's IPv6 routing
+          // cannot reach smtp.gmail.com:465, causing "Connection timeout" errors.
           const forceIpv4 = process.env.SMTP_FORCE_IPV4 === "1" || process.env.SMTP_FORCE_IPV4 === "true";
+          const timeoutMs = Number(process.env.SMTP_TIMEOUT_MS) || config.smtpTimeoutMs || 30000;
           const transportOptions = {
             host: runtime.smtpHost,
             port: runtime.smtpPort,
             secure: runtime.smtpSecure,
-            ...(forceIpv4 || forceIpv4 === undefined ? { family: 4 } : {}),
-            connectionTimeout: config.smtpTimeoutMs || 15000,
-            greetingTimeout: config.smtpTimeoutMs || 15000,
-            socketTimeout: config.smtpTimeoutMs || 15000,
-            pool: true,
-            maxConnections: 3,
+            // family: 4 forces Node.js net.connect to resolve only A records (IPv4)
+            ...(forceIpv4 ? { family: 4 } : {}),
+            connectionTimeout: timeoutMs,
+            greetingTimeout: timeoutMs,
+            socketTimeout: timeoutMs,
+            // Do NOT use pool — pooled connections on Render go stale
+            // after IPv6 route flaps and can't reconnect without recreating the transporter.
+            pool: false,
             ...(process.env.SMTP_IGNORE_TLS_ERRORS === "true" ? { tls: { rejectUnauthorized: false } } : {}),
           };
           if (runtime.smtpUser) {

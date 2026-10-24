@@ -3,25 +3,39 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "motion/react";
 import {
   ArrowRight,
   Award,
   ChevronLeft,
   ChevronRight,
-  Compass,
   Play,
   Sparkles,
   Star,
   Waves,
-  ShieldCheck,
   X,
   CheckCircle2,
 } from "lucide-react";
 import BookingSearch from "@/components/hotel/BookingSearch";
-import SphereGallery3D from "@/components/hotel/SphereGallery3D";
 import { siteConfig } from "@/lib/config";
 import { mediaAlt, mediaUrl } from "@/lib/utils";
+
+// Lazy-load the heavy WebGL sphere so it doesn't block the hero's LCP.
+// SphereGallery3D uses requestIdleCallback internally; we also defer the
+// dynamic import to avoid including the WebGL bundle in the initial chunk.
+const SphereGallery3D = dynamic(
+  () => import("@/components/hotel/SphereGallery3D"),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="h-full w-full rounded-full bg-[radial-gradient(circle_at_center,rgba(146,205,0,0.16),rgba(255,207,121,0.08)_42%,transparent_70%)]"
+        aria-hidden="true"
+      />
+    ),
+  }
+);
 
 const HOTEL_SPHERE_ITEMS = [
   { image: "/assets/hero-1-opt.jpg", link: "/rooms" },
