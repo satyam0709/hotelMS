@@ -1,6 +1,7 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const nodemailer = require("nodemailer");
+const { sendViaHttp } = require("./httpMailer");
 const env = require("../config/env");
 const prisma = require("../prisma/client");
 const { createPasswordResetEmail } = require("../templates/passwordResetEmail");
@@ -122,6 +123,30 @@ function createEmailService(config, mailer = nodemailer) {
     }
 
     try {
+      const provider = (process.env.EMAIL_PROVIDER || "").toLowerCase();
+      if (provider && process.env.EMAIL_API_KEY) {
+        await sendViaHttp({
+          provider,
+          apiKey: process.env.EMAIL_API_KEY,
+          from: runtime.fromEmail || process.env.EMAIL_FROM,
+          to,
+          subject: message.subject,
+          text: message.text,
+          html: message.html,
+        });
+        await writeEmailLog({ ...meta, recipient: to, subject: message.subject, status: "SENT" });
+        try {
+          require("../realtime/hub").publish("email.log", {
+            recipient: to,
+            subject: message.subject,
+            status: "SENT",
+            channel: provider,
+            at: new Date().toISOString(),
+          });
+        } catch {}
+        return { delivered: true, channel: provider };
+      }
+
       if (runtime.smtpHost) {
         const nextKey = `${runtime.smtpHost}:${runtime.smtpPort}:${runtime.smtpUser}:${runtime.fromEmail}:${runtime.smtpSecure}:${process.env.SMTP_FORCE_IPV4}`;
         if (!transporter || transporterKey !== nextKey) {
@@ -164,7 +189,7 @@ function createEmailService(config, mailer = nodemailer) {
             status: "SENT",
             at: new Date().toISOString(),
           });
-        } catch {}
+        } catch { }
         return { delivered: true, channel: "smtp" };
       }
 
@@ -192,7 +217,7 @@ function createEmailService(config, mailer = nodemailer) {
           channel: "outbox",
           at: new Date().toISOString(),
         });
-      } catch {}
+      } catch { }
       return { delivered: true, channel: "outbox" };
     } catch (error) {
       await writeEmailLog({
@@ -210,7 +235,7 @@ function createEmailService(config, mailer = nodemailer) {
           errorMessage: error?.message || "email-send-failed",
           at: new Date().toISOString(),
         });
-      } catch {}
+      } catch { }
       if (config.isProduction) throw error;
       return { delivered: false, reason: error?.message || "email-send-failed" };
     }

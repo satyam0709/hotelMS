@@ -18,7 +18,7 @@ const server = app.listen(PORT, () => {
 
 const jobs = [
   startExpireHoldsJob(),
-  startEmailRetryJob(),
+  // startEmailRetryJob(), // Temporarily disabled: prevents leaking retry error text to recipients
   startCheckInReminderJob(),
 ];
 

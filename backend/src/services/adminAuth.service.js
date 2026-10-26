@@ -163,12 +163,14 @@ async function requestPasswordReset(email, request) {
     .then((delivery) => {
       deliveryStatus = delivery;
       if (delivery && !delivery.delivered) {
-        console.warn(`[PASSWORD RESET] Email delivery was not completed (${delivery.reason}). Direct reset link: ${resetUrl.toString()}`);
+        const linkLog = env.isProduction ? "" : ` Direct reset link: ${resetUrl.toString()}`;
+        console.warn(`[PASSWORD RESET] Email delivery was not completed (${delivery.reason}).${linkLog}`);
       }
       return delivery;
     })
     .catch((err) => {
-      console.error(`[PASSWORD RESET] Email delivery error: ${err.message}. Direct reset link: ${resetUrl.toString()}`);
+      const linkLog = env.isProduction ? "" : ` Direct reset link: ${resetUrl.toString()}`;
+      console.error(`[PASSWORD RESET] Email delivery error: ${err.message}.${linkLog}`);
       return { delivered: false, reason: err.message };
     });
 
