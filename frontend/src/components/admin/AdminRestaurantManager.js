@@ -97,8 +97,8 @@ export default function AdminRestaurantManager() {
       setCategories(cats.items);
       setMenuItems(items.items);
       setItemForm((prev) => ({ ...prev, categoryId: prev.categoryId || cats.items[0]?.id || "" }));
-    } catch {
-      setLoadError("Unable to load restaurant data.");
+    } catch (err) {
+      setLoadError(err?.message || "Unable to load restaurant data.");
     } finally {
       setLoading(false);
     }
@@ -270,7 +270,7 @@ export default function AdminRestaurantManager() {
       </div>
 
       {loading ? <LoadingState label="Loading restaurant" /> : null}
-      {loadError ? <ErrorState title="Restaurant unavailable" description={loadError} /> : null}
+      {loadError && tab !== "reservations" ? <ErrorState title="Restaurant unavailable" description={loadError} /> : null}
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
       {message ? <p className="text-sm text-accent">{message}</p> : null}
 
@@ -340,7 +340,7 @@ export default function AdminRestaurantManager() {
         </div>
       ) : null}
 
-      {!loading && !loadError && tab === "reservations" ? (
+      {!loading && tab === "reservations" ? (
         <section className="space-y-5">
           <div>
             <h2 className="font-display text-2xl text-ink">Table reservations</h2>
