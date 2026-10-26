@@ -884,8 +884,8 @@ export default function ResortVignettesCarousel({ items = [] }) {
   }
 
   return (
-    <div className="mt-4 sm:mt-6 space-y-5">
-      <div className="h-[440px] w-full sm:h-[520px] lg:h-[600px]">
+    <div className="mt-2 sm:mt-3 space-y-3">
+      <div className="h-[400px] w-full sm:h-[420px] lg:h-[440px]">
         <MagazineFlip
           images={unique}
           background="transparent"
