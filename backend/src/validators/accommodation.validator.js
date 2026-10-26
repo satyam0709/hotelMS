@@ -152,6 +152,7 @@ const availabilityUpsert = z.object({ days: z.array(availabilityDay).min(1).max(
   });
 const roomRecordQuery = z.object({
   ...listQuery.shape,
+  limit: z.coerce.number().int().min(1).max(370).default(20),
   from: dateOnly.optional(),
   to: dateOnly.optional(),
 }).strict().refine((value) => !value.from || !value.to || value.from <= value.to, {

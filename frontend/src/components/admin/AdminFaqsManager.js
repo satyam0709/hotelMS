@@ -47,7 +47,7 @@ export default function AdminFaqsManager() {
     try {
       const [cats, rows] = await Promise.all([
         listAdminFaqCategories({ limit: 100 }),
-        listAdminFaqs({ limit: 200 }),
+        listAdminFaqs({ limit: 100 }),
       ]);
       setCategories(cats.items);
       setFaqs(rows.items);

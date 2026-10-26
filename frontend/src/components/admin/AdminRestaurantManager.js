@@ -78,7 +78,7 @@ export default function AdminRestaurantManager() {
       const [restaurant, cats, items] = await Promise.all([
         getAdminRestaurant(),
         listAdminMenuCategories({ limit: 100 }),
-        listAdminMenuItems({ limit: 200 }),
+        listAdminMenuItems({ limit: 100 }),
       ]);
       if (restaurant) {
         setProfile({

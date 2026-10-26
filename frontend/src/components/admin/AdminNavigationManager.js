@@ -43,7 +43,7 @@ export default function AdminNavigationManager() {
     setLoading(true);
     setLoadError("");
     try {
-      const data = await listAdminNavigation({ limit: 200, location: tab });
+      const data = await listAdminNavigation({ limit: 100, location: tab });
       setItems(data.items);
     } catch {
       setLoadError("Unable to load navigation.");

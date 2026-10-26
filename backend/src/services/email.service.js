@@ -123,11 +123,39 @@ function createEmailService(config, mailer = nodemailer) {
     }
 
     try {
-      const provider = (process.env.EMAIL_PROVIDER || "").toLowerCase();
-      if (provider && process.env.EMAIL_API_KEY) {
+      if (!config.isProduction && (config.devEmailOutboxPath || !runtime.smtpHost)) {
+        await fs.mkdir(path.dirname(config.devEmailOutboxPath), { recursive: true });
+        await fs.appendFile(
+          config.devEmailOutboxPath,
+          `${JSON.stringify({ to, ...message, createdAt: new Date().toISOString() })}\n`,
+          { encoding: "utf8", mode: 0o600 }
+        );
+        await writeEmailLog({
+          ...meta,
+          recipient: to,
+          subject: message.subject,
+          status: "SENT",
+        });
+        try {
+          require("../realtime/hub").publish("email.log", {
+            recipient: to,
+            subject: message.subject,
+            status: "SENT",
+            channel: "outbox",
+            at: new Date().toISOString(),
+          });
+        } catch {}
+        return { delivered: true, channel: "outbox" };
+      }
+
+      const provider = useDatabaseConfig
+        ? (process.env.EMAIL_PROVIDER || "").toLowerCase()
+        : (config.emailProvider || "").toLowerCase();
+      const apiKey = useDatabaseConfig ? process.env.EMAIL_API_KEY : config.emailApiKey;
+      if (provider && apiKey && provider !== "smtp") {
         await sendViaHttp({
           provider,
-          apiKey: process.env.EMAIL_API_KEY,
+          apiKey,
           from: runtime.fromEmail || process.env.EMAIL_FROM,
           to,
           subject: message.subject,
@@ -150,22 +178,20 @@ function createEmailService(config, mailer = nodemailer) {
       if (runtime.smtpHost) {
         const nextKey = `${runtime.smtpHost}:${runtime.smtpPort}:${runtime.smtpUser}:${runtime.fromEmail}:${runtime.smtpSecure}:${process.env.SMTP_FORCE_IPV4}`;
         if (!transporter || transporterKey !== nextKey) {
-          // Always force IPv4 when SMTP_FORCE_IPV4 is set — Render's IPv6 routing
-          // cannot reach smtp.gmail.com:465, causing "Connection timeout" errors.
           const forceIpv4 = process.env.SMTP_FORCE_IPV4 === "1" || process.env.SMTP_FORCE_IPV4 === "true";
-          const timeoutMs = Number(process.env.SMTP_TIMEOUT_MS) || config.smtpTimeoutMs || 30000;
+          const timeoutMs = config.smtpTimeoutMs || (useDatabaseConfig ? (Number(process.env.SMTP_TIMEOUT_MS) || 15000) : 15000);
+          const pool = config.pool !== undefined ? config.pool : (process.env.SMTP_POOL !== undefined ? process.env.SMTP_POOL === "true" : true);
+          const maxConnections = config.maxConnections || Number(process.env.SMTP_MAX_CONNECTIONS) || 3;
           const transportOptions = {
             host: runtime.smtpHost,
             port: runtime.smtpPort,
             secure: runtime.smtpSecure,
-            // family: 4 forces Node.js net.connect to resolve only A records (IPv4)
-            ...(forceIpv4 ? { family: 4 } : {}),
+            ...(forceIpv4 || forceIpv4 === undefined ? { family: 4 } : {}),
             connectionTimeout: timeoutMs,
             greetingTimeout: timeoutMs,
             socketTimeout: timeoutMs,
-            // Do NOT use pool — pooled connections on Render go stale
-            // after IPv6 route flaps and can't reconnect without recreating the transporter.
-            pool: false,
+            pool,
+            ...(pool ? { maxConnections } : {}),
             ...(process.env.SMTP_IGNORE_TLS_ERRORS === "true" ? { tls: { rejectUnauthorized: false } } : {}),
           };
           if (runtime.smtpUser) {
