@@ -4,6 +4,10 @@ export async function createBooking(payload) {
   return apiPost("/bookings", payload, { timeoutMs: 60000 });
 }
 
+export async function quoteBooking(payload) {
+  return apiPost("/bookings/quote", payload, { timeoutMs: 15000 });
+}
+
 export async function getBooking(bookingRef, { email, phone } = {}) {
   return apiGet(`/bookings/${bookingRef}`, {
     query: { email, phone },

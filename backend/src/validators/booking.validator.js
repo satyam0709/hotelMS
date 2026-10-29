@@ -70,6 +70,14 @@ function withStayRules(schema, { requireFutureCheckIn = false } = {}) {
   return result;
 }
 
+const quoteBookingObject = z.object({
+  checkIn: dateOnly,
+  checkOut: dateOnly,
+  rooms: z.array(bookingRoomInput).min(1).max(10),
+  couponCode: z.string().trim().min(1).max(80).optional(),
+}).strict();
+
+const quoteBooking = withStayRules(quoteBookingObject, { requireFutureCheckIn: false });
 const publicCreateBooking = withStayRules(bookingCreateObject, { requireFutureCheckIn: true });
 const adminCreateBooking = withStayRules(
   bookingCreateObject.extend({
@@ -144,5 +152,6 @@ module.exports = {
   listQuery,
   publicCreateBooking,
   publicLookupQuery,
+  quoteBooking,
   updateStatus,
 };

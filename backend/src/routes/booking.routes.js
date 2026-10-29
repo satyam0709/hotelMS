@@ -16,6 +16,12 @@ publicRouter.post(
   validateBody(validator.publicCreateBooking),
   controller.createPublicBooking
 );
+publicRouter.post(
+  "/bookings/quote",
+  publicWriteLimiter,
+  validateBody(validator.quoteBooking),
+  controller.quotePublicBooking
+);
 publicRouter.get(
   "/bookings/:bookingRef",
   strictPublicLimiter,

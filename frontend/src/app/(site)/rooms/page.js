@@ -11,7 +11,7 @@ import {
   getRooms,
   normalizeRoomFilters,
 } from "@/lib/api/rooms";
-import { coalesceList, demoRooms } from "@/lib/demo-content";
+import { demoRooms } from "@/lib/demo-content";
 import { asListItems, buildQueryString } from "@/lib/utils";
 
 export const metadata = {
@@ -29,10 +29,26 @@ export default async function RoomsPage({ searchParams }) {
     getAmenities({ limit: 50 }),
   ]);
 
-  const roomsResponse = roomsResult.status === "fulfilled" ? roomsResult.value : { items: [], pagination: {} };
+  const apiDown = roomsResult.status === "rejected";
+  const roomsResponse = apiDown ? { items: [], pagination: {} } : roomsResult.value;
   const apiRooms = asListItems(roomsResponse);
-  const rooms = coalesceList(apiRooms, demoRooms);
-  const usingDemoRooms = !apiRooms.length;
+
+  // Determine whether any search/filter is active so we can distinguish "0 results for a search"
+  // from "no rooms published at all" and "API unreachable".
+  const hasActiveFilters = Boolean(
+    filters.search ||
+    filters.category ||
+    filters.guestCount ||
+    filters.minPrice ||
+    filters.maxPrice ||
+    (Array.isArray(filters.amenityIds) && filters.amenityIds.length)
+  );
+
+  // Show demo rooms only when the API is completely unreachable AND no search is active.
+  // When the API is up but a search returned 0 results, we show an empty state instead.
+  const usingDemoRooms = apiDown && !hasActiveFilters;
+  const rooms = usingDemoRooms ? demoRooms : apiRooms;
+
   const pagination = usingDemoRooms
     ? { page: 1, pages: 1, total: rooms.length }
     : (roomsResponse?.pagination || {});
@@ -83,20 +99,50 @@ export default async function RoomsPage({ searchParams }) {
               categories={categories}
               amenities={amenities}
               initialValues={filters}
-              total={usingDemoRooms ? undefined : total}
+              total={apiDown ? undefined : total}
             />
           </aside>
 
           <div className="min-w-0">
-            <Stagger className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-              {rooms.map((room, index) => (
-                <StaggerItem key={room.id} className="h-full">
-                  <RoomCard room={room} fallbackIndex={index} />
-                </StaggerItem>
-              ))}
-            </Stagger>
+            {rooms.length === 0 ? (
+              <div className="flex min-h-[24rem] flex-col items-center justify-center gap-6 rounded-2xl border border-line bg-elevated px-6 py-16 text-center">
+                {hasActiveFilters ? (
+                  <>
+                    <div className="flex size-16 items-center justify-center rounded-full border border-line bg-surface">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="size-7 text-muted" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                    </div>
+                    <div className="max-w-xs">
+                      <h2 className="font-display text-xl text-ink">No rooms found</h2>
+                      <p className="mt-2 text-sm text-muted">
+                        No rooms match your current filters. Try adjusting your search criteria or clearing all filters.
+                      </p>
+                    </div>
+                    <Button href="/rooms" variant="secondary" size="sm">
+                      Clear all filters
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <div className="max-w-xs">
+                      <h2 className="font-display text-xl text-ink">No rooms available</h2>
+                      <p className="mt-2 text-sm text-muted">
+                        Our room listing is being set up. Please check back soon.
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <Stagger className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                {rooms.map((room, index) => (
+                  <StaggerItem key={room.id} className="h-full">
+                    <RoomCard room={room} fallbackIndex={index} />
+                  </StaggerItem>
+                ))}
+              </Stagger>
+            )}
 
-            {!usingDemoRooms && pages > 1 ? (
+            {!apiDown && rooms.length > 0 && pages > 1 ? (
               <div className="mt-10 flex items-center justify-between gap-4 border-t border-line pt-6">
                 <p className="text-sm text-muted">
                   Page {page} of {pages}

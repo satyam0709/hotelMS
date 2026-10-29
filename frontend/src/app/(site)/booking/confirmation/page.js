@@ -54,6 +54,14 @@ export default async function BookingConfirmationPage({ searchParams }) {
       : "Unable to load this booking.";
   }
 
+  const isCancelled = booking?.status === "CANCELLED";
+  const isExpired = booking?.status === "EXPIRED";
+  const statusLabel = isCancelled
+    ? "Cancelled booking"
+    : isExpired
+      ? "Expired booking"
+      : "Confirmation";
+
   return (
     <div className="pb-20">
       <section className="section-pad pb-8">
@@ -64,7 +72,7 @@ export default async function BookingConfirmationPage({ searchParams }) {
                 Booking
               </Link>
               <span className="mx-2 text-line">/</span>
-              <span className="text-ink">Confirmation</span>
+              <span className="text-ink">{statusLabel}</span>
             </nav>
           </FadeIn>
         </Container>

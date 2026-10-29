@@ -800,6 +800,7 @@ function buildInvoice(booking) {
     paymentStatus: booking.paymentStatus,
     paymentMethod: booking.paymentMethod,
     currency: booking.currency,
+    expiresAt: booking.expiresAt || null,
     guest: booking.guest,
     stay: {
       checkIn: booking.checkInDate,
@@ -821,6 +822,7 @@ function buildInvoice(booking) {
 }
 
 async function getPublicInvoice(bookingRef, lookup) {
+  await bookingService.expireStaleHolds();
   if (!lookup?.email || !lookup?.phone) fail(404, "Booking not found.", "NOT_FOUND");
   const booking = await prisma.booking.findFirst({
     where: {
@@ -839,6 +841,7 @@ async function getPublicInvoice(bookingRef, lookup) {
       paymentStatus: true,
       paymentMethod: true,
       currency: true,
+      expiresAt: true,
       checkInDate: true,
       checkOutDate: true,
       adults: true,

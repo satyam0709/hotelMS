@@ -10,27 +10,68 @@ import NewsletterForm from "@/components/site/NewsletterForm";
 import { containerVariants, itemVariants } from "@/lib/motion/presets";
 import { mediaAlt, mediaUrl } from "@/lib/utils";
 
+function FacebookIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
+    </svg>
+  );
+}
+
+function InstagramIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+    </svg>
+  );
+}
+
+function TwitterXIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  );
+}
+
+function YouTubeIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+    </svg>
+  );
+}
+
 const SOCIAL_NETWORKS = [
   {
     key: "facebook",
     label: "Facebook",
     href: "https://facebook.com/",
-    icon: "/assets/fb-icon.webp",
+    Icon: FacebookIcon,
     match: /facebook|fb|\bf\b/i,
   },
   {
     key: "instagram",
     label: "Instagram",
     href: "https://instagram.com/",
-    icon: "/assets/insta-icon.webp",
+    Icon: InstagramIcon,
     match: /instagram|insta|\bi\b/i,
   },
   {
     key: "twitter",
-    label: "Twitter",
+    label: "X (Twitter)",
     href: "https://twitter.com/",
-    icon: "/assets/twitter-icon-sm.webp",
+    Icon: TwitterXIcon,
     match: /twitter|x\.com|\bx\b/i,
+  },
+  {
+    key: "youtube",
+    label: "YouTube",
+    href: "https://youtube.com/",
+    Icon: YouTubeIcon,
+    match: /youtube|yt/i,
   },
 ];
 
@@ -69,27 +110,23 @@ function SocialButtons({ socials }) {
   const items = resolveSocials(socials);
 
   return (
-    <div className="mt-5 flex flex-wrap items-center gap-3.5">
-      {items.map((item) => (
-        <a
-          key={item.key}
-          href={item.href}
-          target="_blank"
-          rel="noreferrer"
-          aria-label={item.label}
-          title={item.label}
-          className="group relative block size-12 overflow-hidden rounded-full shadow-[0_10px_24px_rgba(26,32,24,0.1)] ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(45,106,79,0.22)] hover:ring-2 hover:ring-brand-green/50"
-        >
-          <Image
-            src={item.icon}
-            alt={item.label}
-            width={48}
-            height={48}
-            className="size-full object-cover transition-transform duration-300 group-hover:scale-110"
-            unoptimized
-          />
-        </a>
-      ))}
+    <div className="mt-5 flex flex-wrap items-center gap-3">
+      {items.map((item) => {
+        const Icon = item.Icon;
+        return (
+          <a
+            key={item.key}
+            href={item.href}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={item.label}
+            title={item.label}
+            className="group flex size-10 items-center justify-center rounded-full border border-line bg-surface text-ink/70 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-green hover:bg-brand-green hover:text-white hover:shadow-md"
+          >
+            <Icon className="size-4.5 transition-transform duration-200 group-hover:scale-110" />
+          </a>
+        );
+      })}
     </div>
   );
 }
@@ -104,7 +141,7 @@ export default function FooterContent({
   copyright,
 }) {
   const logo = settings?.footerLogoMedia || settings?.headerLogoMedia || settings?.logoMedia;
-  const logoSrc = mediaUrl(logo);
+  const logoSrc = mediaUrl(logo) || "/assets/logo.jpg";
 
   return (
     <motion.footer
@@ -117,18 +154,17 @@ export default function FooterContent({
       <Container className="section-pad">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 xl:gap-8">
           <motion.div variants={itemVariants} className="sm:col-span-2 lg:col-span-1 xl:col-span-1">
-            <Link href="/" className="inline-flex items-center gap-3">
-              {logoSrc ? (
+            <Link href="/" className="inline-flex items-center gap-3 group">
+              <div className="relative flex h-10 w-auto items-center">
                 <Image
                   src={logoSrc}
-                  alt={mediaAlt(logo, brand)}
-                  width={120}
-                  height={40}
-                  className="h-10 w-auto max-w-[140px] object-contain object-left"
+                  alt={mediaAlt(logo, `${brand} Logo`)}
+                  width={150}
+                  height={44}
+                  className="h-9 md:h-10 w-auto max-w-[160px] object-contain object-left transition-transform group-hover:scale-[1.02]"
+                  priority={false}
                 />
-              ) : (
-                <span className="font-display text-2xl text-ink md:text-3xl">{brand}</span>
-              )}
+              </div>
             </Link>
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted">
               A calm retreat for unhurried mornings and thoughtful stays.
@@ -198,7 +234,21 @@ export default function FooterContent({
       <div className="border-t border-line/80 bg-[#eeede8]">
         <Container className="flex flex-col gap-2 py-5 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
           <p>{copyright}</p>
-          <p>Crafted for calm, considered hospitality.</p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <p>Crafted for calm, considered hospitality.</p>
+            <span className="hidden text-line sm:inline">•</span>
+            <p>
+              Design &amp; Developed by{" "}
+              <a
+                href="https://rndtechnosoft.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-ink transition-colors hover:text-brand-green"
+              >
+                RnD Technosoft
+              </a>
+            </p>
+          </div>
         </Container>
       </div>
     </motion.footer>

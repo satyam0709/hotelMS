@@ -358,7 +358,7 @@ async function seedCoreContent() {
     });
   }
 
-  await prisma.facility.upsert({
+  const poolFacility = await prisma.facility.upsert({
     where: { slug: "infinity-pool" },
     update: { name: "Infinity Pool", isActive: true, deletedAt: null },
     create: {
@@ -369,6 +369,34 @@ async function seedCoreContent() {
       isActive: true,
     },
   });
+
+  const poolMediaExists = await prisma.facilityMedia.findFirst({
+    where: { facilityId: poolFacility.id },
+  });
+  if (!poolMediaExists) {
+    let poolAsset = await prisma.mediaAsset.findFirst({
+      where: { url: { contains: "Hero" }, deletedAt: null },
+    });
+    if (!poolAsset) {
+      poolAsset = await prisma.mediaAsset.create({
+        data: {
+          url: "/assets/Hero%201.jpg",
+          secureUrl: "/assets/Hero%201.jpg",
+          altText: "Infinity Pool overlooking resort grounds",
+          caption: "Infinity Pool",
+          resourceType: "IMAGE",
+          isActive: true,
+        },
+      });
+    }
+    await prisma.facilityMedia.create({
+      data: {
+        facilityId: poolFacility.id,
+        mediaId: poolAsset.id,
+        displayOrder: 0,
+      },
+    });
+  }
 
   const bannerCount = await prisma.banner.count({ where: { deletedAt: null } });
   if (bannerCount === 0) {

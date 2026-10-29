@@ -178,21 +178,29 @@ function createEmailService(config, mailer = nodemailer) {
       if (runtime.smtpHost) {
         const nextKey = `${runtime.smtpHost}:${runtime.smtpPort}:${runtime.smtpUser}:${runtime.fromEmail}:${runtime.smtpSecure}:${process.env.SMTP_FORCE_IPV4}`;
         if (!transporter || transporterKey !== nextKey) {
-          const forceIpv4 = process.env.SMTP_FORCE_IPV4 === "1" || process.env.SMTP_FORCE_IPV4 === "true";
-          const timeoutMs = config.smtpTimeoutMs || (useDatabaseConfig ? (Number(process.env.SMTP_TIMEOUT_MS) || 15000) : 15000);
-          const pool = config.pool !== undefined ? config.pool : (process.env.SMTP_POOL !== undefined ? process.env.SMTP_POOL === "true" : true);
-          const maxConnections = config.maxConnections || Number(process.env.SMTP_MAX_CONNECTIONS) || 3;
+          const forceIpv4 = useDatabaseConfig
+            ? (process.env.SMTP_FORCE_IPV4 === "1" || process.env.SMTP_FORCE_IPV4 === "true")
+            : (config.smtpForceIpv4 !== undefined ? config.smtpForceIpv4 : true);
+          const timeoutMs = useDatabaseConfig
+            ? (config.smtpTimeoutMs || Number(process.env.SMTP_TIMEOUT_MS) || 15000)
+            : (config.smtpTimeoutMs || 15000);
+          const pool = useDatabaseConfig
+            ? (process.env.SMTP_POOL !== undefined ? process.env.SMTP_POOL === "true" : true)
+            : (config.pool !== undefined ? config.pool : true);
+          const maxConnections = useDatabaseConfig
+            ? (Number(process.env.SMTP_MAX_CONNECTIONS) || 3)
+            : (config.maxConnections || 3);
           const transportOptions = {
             host: runtime.smtpHost,
             port: runtime.smtpPort,
             secure: runtime.smtpSecure,
-            ...(forceIpv4 || forceIpv4 === undefined ? { family: 4 } : {}),
+            ...(forceIpv4 ? { family: 4 } : {}),
             connectionTimeout: timeoutMs,
             greetingTimeout: timeoutMs,
             socketTimeout: timeoutMs,
             pool,
             ...(pool ? { maxConnections } : {}),
-            ...(process.env.SMTP_IGNORE_TLS_ERRORS === "true" ? { tls: { rejectUnauthorized: false } } : {}),
+            ...(useDatabaseConfig && process.env.SMTP_IGNORE_TLS_ERRORS === "true" ? { tls: { rejectUnauthorized: false } } : {}),
           };
           if (runtime.smtpUser) {
             transportOptions.auth = { user: runtime.smtpUser, pass: runtime.smtpPassword };

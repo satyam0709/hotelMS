@@ -11,6 +11,7 @@ import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { ApiError } from "@/lib/api/client";
 import { getFacilities, getFacility } from "@/lib/api/content";
 import { demoFacilities, findDemoFacility } from "@/lib/demo-content";
+import { fallbackAsset } from "@/lib/site-assets";
 import { asListItems, mediaAlt, mediaUrl } from "@/lib/utils";
 
 async function loadFacility(slug) {
@@ -36,11 +37,19 @@ export default async function FacilityDetailPage({ params }) {
   const facility = (await loadFacility(slug)) || findDemoFacility(slug);
   if (!facility) notFound();
 
-  const mediaItems = Array.isArray(facility.media)
-    ? facility.media.map((item) => item?.media).filter(Boolean)
+  const demo = findDemoFacility(slug);
+  const fallbackFacilityMedia = Array.isArray(demo?.media)
+    ? demo.media.map((item) => item?.media).filter(Boolean)
     : [];
+
+  const mediaItems = Array.isArray(facility.media) && facility.media.length
+    ? facility.media.map((item) => item?.media).filter(Boolean)
+    : fallbackFacilityMedia;
   const hero = mediaItems[0] || null;
-  const heroSrc = mediaUrl(hero);
+  // Use demo fallback media if CMS media resolves empty (no valid nested media)
+  const effectiveHero = hero || (fallbackFacilityMedia[0] || null);
+  const heroSrc = mediaUrl(effectiveHero) || fallbackAsset("hero", 0).src;
+  const heroAlt = effectiveHero ? mediaAlt(effectiveHero, facility.name) : `${facility.name} at ExoStay`;
 
   const relatedResult = await Promise.allSettled([getFacilities()]);
   const related = relatedResult[0].status === "fulfilled"
@@ -85,7 +94,7 @@ export default async function FacilityDetailPage({ params }) {
                 {heroSrc ? (
                   <Image
                     src={heroSrc}
-                    alt={mediaAlt(hero, facility.name)}
+                    alt={heroAlt}
                     fill
                     priority
                     className="object-cover"

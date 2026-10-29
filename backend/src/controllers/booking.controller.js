@@ -8,6 +8,10 @@ async function createPublicBooking(req, res) {
   return sendSuccess(res, await service.createPublicBooking(req.body, req), "Booking created.");
 }
 
+async function quotePublicBooking(req, res) {
+  return sendSuccess(res, await service.quoteBooking(req.body), "Booking quote generated.");
+}
+
 async function getPublicBooking(req, res) {
   return sendSuccess(res, await service.getPublicBooking(params(req).bookingRef, query(req)));
 }
@@ -47,6 +51,7 @@ module.exports = {
   getAdminBooking,
   getPublicBooking,
   listAdminBookings,
+  quotePublicBooking,
   requestGuestCancellation,
   updateBookingStatus,
 };

@@ -443,6 +443,7 @@ test("public invoice returns booking amounts for verified guest", async () => {
   assert.equal(response.status, 200);
   assert.equal(body.data.invoiceNumber, "INV-HMS-PAY-1");
   assert.equal(body.data.amounts.totalAmount, "448.00");
+  assert.equal(body.data.expiresAt, null);
 });
 
 test("admin invoice endpoint enforces auth, permissions, 404, and records audit on success", async () => {

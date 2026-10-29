@@ -462,3 +462,48 @@ test("quoteRoomStay rejects unavailable inventory before booking create", async 
     (error) => error instanceof AppError && error.statusCode === 409
   );
 });
+
+test("POST /api/bookings/quote calculates stay subtotal, coupon discount, taxes, and total", async () => {
+  stub(prisma.room, "findFirst", async () => roomRecord());
+  stub(prisma.roomAvailability, "findMany", async () => []);
+  stub(prisma.roomBlock, "findMany", async () => []);
+  stub(prisma.bookingRoom, "findMany", async () => []);
+  stub(prisma.roomRate, "findMany", async () => []);
+  stub(prisma.coupon, "findFirst", async () => ({
+    id: "coupon-1",
+    code: "FLAT500",
+    discountType: "FIXED",
+    discountValue: 100,
+    maxDiscountAmount: null,
+    minBookingAmount: 200,
+    validFrom: null,
+    validTo: null,
+    usageLimit: 100,
+    usedCount: 2,
+    isActive: true,
+    deletedAt: null,
+  }));
+
+  const response = await request("/api/bookings/quote", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      checkIn: futureDate(1),
+      checkOut: futureDate(3),
+      rooms: [{ roomId: "room-1", quantity: 1, adults: 2, children: 0, extraBeds: 0 }],
+      couponCode: "FLAT500",
+    }),
+  });
+
+  const payload = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(payload.success, true);
+  // 2 nights @ 200 = 400
+  assert.equal(payload.data.subtotal, 400);
+  // discount 100
+  assert.equal(payload.data.discountAmount, 100);
+  assert.equal(payload.data.coupon.code, "FLAT500");
+  // taxable = 300, 12% GST = 36, total = 336
+  assert.equal(payload.data.taxAmount, 36);
+  assert.equal(payload.data.totalAmount, 336);
+});

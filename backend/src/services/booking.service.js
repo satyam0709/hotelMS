@@ -419,6 +419,57 @@ async function buildQuotes(client, payload) {
   return quotes;
 }
 
+async function quoteBooking(payload) {
+  const quotes = await buildQuotes(prisma, payload);
+  const subtotal = MONEY(quotes.reduce((sum, item) => sum + item.priceSubtotal, 0));
+  const extraBedAmount = MONEY(quotes.reduce((sum, item) => sum + item.extraBedAmount, 0));
+  const coupon = payload.couponCode
+    ? await resolveCoupon(prisma, payload.couponCode, subtotal, payload.checkIn)
+    : null;
+  const { discountAmount, couponId } = applyCoupon(subtotal, coupon);
+  const taxable = MONEY(Math.max(0, subtotal - discountAmount + extraBedAmount));
+
+  let remainingDiscount = discountAmount;
+  const roomRows = quotes.map((item, index) => {
+    const share = subtotal > 0 ? item.priceSubtotal / subtotal : 0;
+    let roomDiscount = index === quotes.length - 1
+      ? remainingDiscount
+      : MONEY(discountAmount * share);
+    remainingDiscount = MONEY(remainingDiscount - roomDiscount);
+    const roomTaxable = MONEY(Math.max(0, item.priceSubtotal - roomDiscount + item.extraBedAmount));
+    const taxAmount = computeTaxAmount(roomTaxable, item.room.taxRate);
+    return {
+      roomId: item.roomId,
+      roomName: item.room.name,
+      quantity: item.quantity,
+      priceSubtotal: item.priceSubtotal,
+      extraBedAmount: item.extraBedAmount,
+      discountAmount: roomDiscount,
+      taxAmount,
+      totalAmount: MONEY(roomTaxable + taxAmount),
+    };
+  });
+
+  const taxAmount = MONEY(roomRows.reduce((sum, item) => sum + item.taxAmount, 0));
+  const totalAmount = MONEY(taxable + taxAmount);
+
+  return {
+    subtotal,
+    extraBedAmount,
+    discountAmount,
+    coupon: coupon ? {
+      id: coupon.id,
+      code: coupon.code,
+      discountType: coupon.discountType,
+      discountValue: coupon.discountValue,
+      maxDiscountAmount: coupon.maxDiscountAmount,
+    } : null,
+    taxAmount,
+    totalAmount,
+    rooms: roomRows,
+  };
+}
+
 function initialStatuses(paymentMethod, confirmImmediately = false) {
   if (confirmImmediately) {
     return {
@@ -978,6 +1029,7 @@ module.exports = {
   getAdminBooking,
   getPublicBooking,
   listAdminBookings,
+  quoteBooking,
   requestGuestCancellation,
   transitionBooking,
   updateBookingStatus,

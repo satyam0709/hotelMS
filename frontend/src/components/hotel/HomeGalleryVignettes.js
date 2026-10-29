@@ -110,8 +110,8 @@ export default function HomeGalleryVignettes({ items = [] }) {
                 className={cn(
                   "rounded-md border px-3 py-1.5 text-xs font-semibold tracking-wide transition-colors",
                   filter === tab.id
-                    ? "border-ink bg-ink text-white"
-                    : "border-line bg-elevated text-muted hover:border-ink/30 hover:text-ink",
+                    ? "border-accent bg-accent text-white shadow-sm"
+                    : "border-line bg-elevated text-muted hover:border-accent/40 hover:text-ink",
                 )}
               >
                 {tab.label}

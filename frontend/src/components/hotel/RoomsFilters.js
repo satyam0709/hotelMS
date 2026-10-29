@@ -39,24 +39,87 @@ export default function RoomsFilters({
     return count;
   }, [search, category, guestCount, minPrice, maxPrice, selectedAmenities]);
 
-  function applyFilters(event) {
-    event?.preventDefault?.();
-    const minVal = minPrice !== "" && Number(minPrice) > 0 ? Number(minPrice) : undefined;
-    const maxVal = maxPrice !== "" && Number(maxPrice) > 0 ? Number(maxPrice) : undefined;
+  function navigateWithFilters(overrides = {}) {
+    const nextSearch = overrides.search !== undefined ? overrides.search : search;
+    const nextCategory = overrides.category !== undefined ? overrides.category : category;
+    const nextGuestCount = overrides.guestCount !== undefined ? overrides.guestCount : guestCount;
+    const nextMinPrice = overrides.minPrice !== undefined ? overrides.minPrice : minPrice;
+    const nextMaxPrice = overrides.maxPrice !== undefined ? overrides.maxPrice : maxPrice;
+    const nextAmenities = overrides.amenityIds !== undefined ? overrides.amenityIds : selectedAmenities;
+
+    const minVal = nextMinPrice !== "" && Number(nextMinPrice) > 0 ? Number(nextMinPrice) : undefined;
+    const maxVal = nextMaxPrice !== "" && Number(nextMaxPrice) > 0 ? Number(nextMaxPrice) : undefined;
     const query = buildQueryString({
-      search: search.trim() || undefined,
-      category: category || undefined,
-      guestCount: guestCount && Number(guestCount) > 0 ? Number(guestCount) : undefined,
+      search: nextSearch.trim() || undefined,
+      category: nextCategory || undefined,
+      guestCount: nextGuestCount && Number(nextGuestCount) > 0 ? Number(nextGuestCount) : undefined,
       minPrice: minVal,
       maxPrice: maxVal,
-      amenityIds: selectedAmenities,
+      amenityIds: nextAmenities,
     });
     startTransition(() => {
       router.push(`/rooms${query}`);
     });
   }
 
+  function applyFilters(event) {
+    event?.preventDefault?.();
+    navigateWithFilters();
+  }
+
+  function handleCategoryChange(e) {
+    const val = e.target.value;
+    setCategory(val);
+    navigateWithFilters({ category: val });
+  }
+
+  function toggleAmenity(id) {
+    const nextAmenities = selectedAmenities.includes(id)
+      ? selectedAmenities.filter((item) => item !== id)
+      : [...selectedAmenities, id];
+    setSelectedAmenities(nextAmenities);
+    navigateWithFilters({ amenityIds: nextAmenities });
+  }
+
+  function handleSearchChange(e) {
+    const val = e.target.value;
+    setSearch(val);
+    triggerDebouncedSearch({ search: val });
+  }
+
+  function handleGuestChange(e) {
+    const val = e.target.value;
+    setGuestCount(val);
+    triggerDebouncedSearch({ guestCount: val });
+  }
+
+  function handleMinPriceChange(e) {
+    const val = e.target.value;
+    setMinPrice(val);
+    triggerDebouncedSearch({ minPrice: val });
+  }
+
+  function handleMaxPriceChange(e) {
+    const val = e.target.value;
+    setMaxPrice(val);
+    triggerDebouncedSearch({ maxPrice: val });
+  }
+
+  function triggerDebouncedSearch(overrides) {
+    if (typeof window !== "undefined") {
+      if (window.__roomFilterTimer) {
+        clearTimeout(window.__roomFilterTimer);
+      }
+      window.__roomFilterTimer = setTimeout(() => {
+        navigateWithFilters(overrides);
+      }, 400);
+    }
+  }
+
   function clearFilters() {
+    if (typeof window !== "undefined" && window.__roomFilterTimer) {
+      clearTimeout(window.__roomFilterTimer);
+    }
     setSearch("");
     setCategory("");
     setGuestCount("");
@@ -66,12 +129,6 @@ export default function RoomsFilters({
     startTransition(() => {
       router.push("/rooms");
     });
-  }
-
-  function toggleAmenity(id) {
-    setSelectedAmenities((current) =>
-      current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
-    );
   }
 
   return (
@@ -112,7 +169,7 @@ export default function RoomsFilters({
           name="search"
           placeholder="Room name or keyword…"
           value={search}
-          onChange={(event) => setSearch(event.target.value)}
+          onChange={handleSearchChange}
         />
 
         <label className="flex w-full flex-col gap-1.5">
@@ -122,7 +179,7 @@ export default function RoomsFilters({
           <select
             name="category"
             value={category}
-            onChange={(event) => setCategory(event.target.value)}
+            onChange={handleCategoryChange}
             className="h-12 w-full rounded-xl border border-line bg-elevated px-4 text-sm text-ink outline-none transition-[border-color,box-shadow] focus:border-accent focus:shadow-[0_0_0_3px_var(--focus-ring)]"
           >
             <option value="">All categories</option>
@@ -142,7 +199,7 @@ export default function RoomsFilters({
           max={30}
           placeholder="Any"
           value={guestCount}
-          onChange={(event) => setGuestCount(event.target.value)}
+          onChange={handleGuestChange}
         />
 
         <div className="grid grid-cols-2 gap-3">
@@ -153,7 +210,7 @@ export default function RoomsFilters({
             min={0}
             placeholder="0"
             value={minPrice}
-            onChange={(event) => setMinPrice(event.target.value)}
+            onChange={handleMinPriceChange}
           />
           <Input
             label="Max price"
@@ -162,7 +219,7 @@ export default function RoomsFilters({
             min={0}
             placeholder="Any"
             value={maxPrice}
-            onChange={(event) => setMaxPrice(event.target.value)}
+            onChange={handleMaxPriceChange}
           />
         </div>
 

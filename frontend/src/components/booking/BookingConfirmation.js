@@ -113,19 +113,39 @@ export default function BookingConfirmation({
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(16rem,0.8fr)]">
       <div className="rounded-[1.75rem] border border-line bg-elevated p-6 shadow-soft md:p-8">
-        <p className="text-xs font-semibold tracking-[0.18em] text-accent uppercase">
-          Booking confirmation
+        <p className={`text-xs font-semibold tracking-[0.18em] uppercase ${
+          current.status === "CANCELLED"
+            ? "text-rose-600"
+            : current.status === "EXPIRED"
+              ? "text-amber-600"
+              : "text-accent"
+        }`}>
+          {current.status === "CANCELLED"
+            ? "Booking cancelled"
+            : current.status === "EXPIRED"
+              ? "Hold expired"
+              : "Booking confirmation"}
         </p>
         <h1 className="mt-3 font-display text-4xl text-ink md:text-5xl">
-          {current.status === "CONFIRMED" ? "You're reserved" : "Booking received"}
+          {current.status === "CONFIRMED"
+            ? "You're reserved"
+            : current.status === "CANCELLED"
+              ? "Reservation cancelled"
+              : current.status === "EXPIRED"
+                ? "Hold has expired"
+                : "Booking received"}
         </h1>
         <p className="mt-3 text-base text-muted">
           Reference <span className="font-semibold text-ink">{current.bookingRef}</span>
-          {pendingPayment && canPayOnline
-            ? " — complete payment to confirm your hold."
-            : current.guest?.email
-              ? " — a confirmation email will be sent when the stay is confirmed."
-              : "."}
+          {current.status === "CANCELLED"
+            ? " — this booking has been cancelled and inventory released."
+            : current.status === "EXPIRED"
+              ? " — the temporary inventory hold expired before payment was completed."
+              : pendingPayment && canPayOnline
+                ? " — complete payment to confirm your hold."
+                : current.guest?.email
+                  ? " — a confirmation email will be sent when the stay is confirmed."
+                  : "."}
         </p>
 
         <dl className="mt-8 grid gap-4 sm:grid-cols-2">

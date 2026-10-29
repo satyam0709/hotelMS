@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion } from "motion/react";
 import Button from "@/components/ui/Button";
 import FormFeedback from "@/components/ui/FormFeedback";
@@ -10,6 +10,7 @@ import { ApiError } from "@/lib/api/client";
 import {
   createBooking,
   createPaymentOrder,
+  quoteBooking,
   verifyPayment,
 } from "@/lib/api/booking";
 import { openRazorpayCheckout } from "@/lib/razorpay";
@@ -55,30 +56,144 @@ export default function GuestCheckoutForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  const [quote, setQuote] = useState(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [couponFeedback, setCouponFeedback] = useState(null);
+
   const extraBedsAllowed = Boolean(selectedRoom?.extraBedAllowed);
   const extraBedCharge = Number(selectedRoom?.extraBedCharge || 0);
   const maxExtraBeds = 5;
+
+  // Dynamically quote booking whenever room, dates, extra beds, or coupon change
+  useEffect(() => {
+    if (!selectedRoom?.id || !search?.checkIn || !search?.checkOut) {
+      setQuote(null);
+      setCouponFeedback(null);
+      return;
+    }
+
+    let active = true;
+    const trimmedCoupon = couponCode.trim();
+    setQuoteLoading(true);
+
+    const timer = setTimeout(() => {
+      quoteBooking({
+        checkIn: search.checkIn,
+        checkOut: search.checkOut,
+        rooms: [
+          {
+            roomId: selectedRoom.id,
+            quantity: Number(search.rooms) || 1,
+            adults: Number(search.adults) || 1,
+            children: Number(search.children) || 0,
+            extraBeds: extraBedsAllowed ? Math.max(0, Number(extraBeds) || 0) : 0,
+          },
+        ],
+        couponCode: trimmedCoupon || undefined,
+      })
+        .then((data) => {
+          if (!active) return;
+          setQuote(data);
+          if (trimmedCoupon) {
+            setCouponFeedback({
+              type: "success",
+              message: data.discountAmount > 0
+                ? `Coupon "${trimmedCoupon.toUpperCase()}" applied: ${formatCurrency(data.discountAmount)} off.`
+                : `Coupon "${trimmedCoupon.toUpperCase()}" applied.`,
+            });
+          } else {
+            setCouponFeedback(null);
+          }
+        })
+        .catch((err) => {
+          if (!active) return;
+          if (trimmedCoupon) {
+            setCouponFeedback({
+              type: "error",
+              message: err instanceof ApiError ? err.message : err?.message || "Invalid coupon code.",
+            });
+          } else {
+            setCouponFeedback(null);
+          }
+          // Fall back to quote without coupon if coupon was invalid
+          if (trimmedCoupon) {
+            quoteBooking({
+              checkIn: search.checkIn,
+              checkOut: search.checkOut,
+              rooms: [
+                {
+                  roomId: selectedRoom.id,
+                  quantity: Number(search.rooms) || 1,
+                  adults: Number(search.adults) || 1,
+                  children: Number(search.children) || 0,
+                  extraBeds: extraBedsAllowed ? Math.max(0, Number(extraBeds) || 0) : 0,
+                },
+              ],
+            })
+              .then((baseData) => {
+                if (active) setQuote(baseData);
+              })
+              .catch(() => {
+                if (active) setQuote(null);
+              });
+          } else {
+            setQuote(null);
+          }
+        })
+        .finally(() => {
+          if (active) setQuoteLoading(false);
+        });
+    }, trimmedCoupon ? 400 : 0);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [
+    selectedRoom?.id,
+    search?.checkIn,
+    search?.checkOut,
+    search?.rooms,
+    search?.adults,
+    search?.children,
+    extraBeds,
+    extraBedsAllowed,
+    couponCode,
+  ]);
 
   const staySummary = useMemo(() => {
     if (!selectedRoom || !search) return null;
     const nights = Number(selectedRoom.nights) || 0;
     const quantity = selectedRoom.quantity || search.rooms || 1;
     const beds = extraBedsAllowed ? Math.max(0, Number(extraBeds) || 0) : 0;
-    const extraBedEstimate = beds > 0 && extraBedCharge > 0
-      ? Number((extraBedCharge * beds * nights * quantity).toFixed(2))
-      : 0;
+    const extraBedEstimate = quote?.extraBedAmount != null
+      ? quote.extraBedAmount
+      : beds > 0 && extraBedCharge > 0
+        ? Number((extraBedCharge * beds * nights * quantity).toFixed(2))
+        : 0;
+    const baseSubtotal = quote?.subtotal != null ? quote.subtotal : Number(selectedRoom.subtotal || 0);
+    const discountAmount = quote?.discountAmount || 0;
+    const taxAmount = quote?.taxAmount || 0;
+    const totalAmount = quote?.totalAmount != null
+      ? quote.totalAmount
+      : baseSubtotal + extraBedEstimate;
+
     return {
       roomName: selectedRoom.name,
       checkIn: formatDateLabel(search.checkIn),
       checkOut: formatDateLabel(search.checkOut),
       nights,
-      subtotal: selectedRoom.subtotal,
+      subtotal: baseSubtotal,
       quantity,
       extraBeds: beds,
       extraBedEstimate,
       extraBedCharge,
+      discountAmount,
+      taxAmount,
+      totalAmount,
+      coupon: quote?.coupon || null,
     };
-  }, [selectedRoom, search, extraBeds, extraBedsAllowed, extraBedCharge]);
+  }, [selectedRoom, search, extraBeds, extraBedsAllowed, extraBedCharge, quote]);
 
   async function handleOnlinePayment(booking) {
     const order = await createPaymentOrder({
@@ -233,14 +348,26 @@ export default function GuestCheckoutForm({
             onChange={(event) => setPhone(event.target.value)}
             placeholder="+91…"
           />
-          <Input
-            label="Coupon code"
-            name="couponCode"
-            value={couponCode}
-            onChange={(event) => setCouponCode(event.target.value)}
-            placeholder="Optional"
-            className="sm:col-span-2"
-          />
+          <div className="sm:col-span-2">
+            <Input
+              label="Coupon code"
+              name="couponCode"
+              value={couponCode}
+              onChange={(event) => setCouponCode(event.target.value.toUpperCase())}
+              placeholder="e.g. FLAT500"
+            />
+            {quoteLoading ? (
+              <p className="mt-1 text-xs text-muted animate-pulse">Calculating discount…</p>
+            ) : couponFeedback ? (
+              <p
+                className={`mt-1 text-xs font-medium ${
+                  couponFeedback.type === "success" ? "text-emerald-600" : "text-danger"
+                }`}
+              >
+                {couponFeedback.message}
+              </p>
+            ) : null}
+          </div>
           {extraBedsAllowed ? (
             <div className="sm:col-span-2">
               <label htmlFor="extraBeds" className="text-xs font-medium tracking-[0.08em] text-muted uppercase">
@@ -341,9 +468,14 @@ export default function GuestCheckoutForm({
       </div>
 
       <aside className="h-fit rounded-[1.75rem] border border-line bg-elevated p-5 shadow-soft lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]">
-        <p className="text-xs font-semibold tracking-[0.18em] text-accent uppercase">
-          Stay summary
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold tracking-[0.18em] text-accent uppercase">
+            Stay summary
+          </p>
+          {quoteLoading ? (
+            <span className="text-xs text-muted animate-pulse">Updating…</span>
+          ) : null}
+        </div>
         {staySummary ? (
           <div className="mt-4 space-y-3 text-sm">
             <div>
@@ -374,16 +506,34 @@ export default function GuestCheckoutForm({
                   <span className="text-ink">{formatCurrency(staySummary.extraBedEstimate)}</span>
                 </p>
               ) : null}
-              <p className="flex justify-between gap-3 border-t border-line pt-3 text-base font-semibold text-ink">
+              <p className="flex justify-between gap-3 border-t border-line pt-3 text-sm">
                 <span>Room subtotal</span>
+                <span className="text-ink font-medium">
+                  {formatCurrency(staySummary.subtotal + staySummary.extraBedEstimate)}
+                </span>
+              </p>
+              {staySummary.discountAmount > 0 ? (
+                <p className="flex justify-between gap-3 text-emerald-600 font-medium">
+                  <span>Coupon discount ({staySummary.coupon?.code || couponCode.trim().toUpperCase()})</span>
+                  <span>-{formatCurrency(staySummary.discountAmount)}</span>
+                </p>
+              ) : null}
+              {staySummary.taxAmount > 0 ? (
+                <p className="flex justify-between gap-3 text-xs">
+                  <span>Estimated taxes & GST</span>
+                  <span className="text-ink">{formatCurrency(staySummary.taxAmount)}</span>
+                </p>
+              ) : null}
+              <p className="flex justify-between gap-3 border-t border-line pt-3 text-base font-semibold text-ink">
+                <span>Estimated total</span>
                 <span>
-                  {formatCurrency(
-                    Number(staySummary.subtotal || 0) + Number(staySummary.extraBedEstimate || 0),
-                  )}
+                  {formatCurrency(staySummary.totalAmount)}
                 </span>
               </p>
               <p className="text-xs text-muted">
-                Taxes and discounts are calculated when the booking is created.
+                {staySummary.discountAmount > 0
+                  ? "Coupon discount has been previewed and applied."
+                  : "Discounts and taxes update automatically when a valid coupon is entered."}
               </p>
             </div>
           </div>

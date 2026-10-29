@@ -5,6 +5,7 @@ import Container from "@/components/ui/Container";
 import EmptyState from "@/components/ui/EmptyState";
 import ErrorState from "@/components/ui/ErrorState";
 import FadeIn from "@/components/motion/FadeIn";
+import InvoicePaymentAction from "@/components/booking/InvoicePaymentAction";
 import { ApiError } from "@/lib/api/client";
 import { getInvoice } from "@/lib/api/booking";
 import { getSettings } from "@/lib/api/content";
@@ -152,12 +153,25 @@ export default async function BookingInvoicePage({ searchParams }) {
             Payment status: {invoice.paymentStatus} · {invoice.paymentMethod?.replaceAll("_", " ")}
           </p>
 
-          <div className="mt-8 flex flex-wrap gap-3 print:hidden">
+          <div className="mt-8 flex flex-wrap items-center gap-3 print:hidden">
+            <InvoicePaymentAction
+              invoice={invoice}
+              lookup={{ email, phone }}
+              brandName={brand}
+            />
             <Button
-              href={`/booking/confirmation?bookingRef=${encodeURIComponent(bookingRef)}${email ? `&email=${encodeURIComponent(email)}` : ""}${phone ? `&phone=${encodeURIComponent(phone)}` : ""}`}
+              href={
+                invoice?.status === "CANCELLED" || invoice?.status === "EXPIRED"
+                  ? `/booking/lookup`
+                  : `/booking/confirmation?bookingRef=${encodeURIComponent(bookingRef)}${email ? `&email=${encodeURIComponent(email)}` : ""}${phone ? `&phone=${encodeURIComponent(phone)}` : ""}`
+              }
               variant="secondary"
             >
-              Back to booking
+              {invoice?.status === "CANCELLED"
+                ? "Find another booking"
+                : invoice?.status === "EXPIRED"
+                  ? "Find another booking"
+                  : "Back to booking"}
             </Button>
             <PrintButton label="Print invoice" />
           </div>
