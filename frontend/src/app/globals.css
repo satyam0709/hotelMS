@@ -40,6 +40,8 @@
 @theme inline {
   --color-background: var(--bg);
   --color-foreground: var(--ink);
+  --color-ink: var(--ink);
+  --color-surface: var(--bg-elevated);
   --color-elevated: var(--bg-elevated);
   --color-muted: var(--ink-muted);
   --color-line: var(--line);

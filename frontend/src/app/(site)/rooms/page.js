@@ -71,22 +71,40 @@ export default async function RoomsPage({ searchParams }) {
     : null;
 
   return (
-    <div className="pb-20">
-      <section className="section-pad pb-10">
+    <div className="pb-12 md:pb-16">
+      {/* Hero Header Section - Clean & Balanced */}
+      <section className="pt-8 pb-6 md:pt-12 md:pb-8">
         <Container>
           <FadeIn>
-            <SectionHeader
-              eyebrow="Accommodation"
-              title="Rooms shaped for slower days"
-              description="Browse our rooms by category, guests, and amenities — then open a room for details, gallery, and live availability."
-            />
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 border-b border-line/60 pb-6">
+              <div className="max-w-2xl">
+                <p className="text-[11px] font-semibold tracking-[0.22em] text-accent uppercase mb-2">
+                  Accommodation
+                </p>
+                <h1 className="font-display text-2xl sm:text-3xl md:text-4xl text-ink font-bold tracking-tight leading-snug">
+                  Rooms shaped for slower days
+                </h1>
+                <p className="mt-2 text-xs sm:text-sm text-muted leading-relaxed max-w-xl">
+                  Browse our rooms by category, guests, and amenities — then open a room for details, gallery, and live availability.
+                </p>
+              </div>
+
+              {/* Total counter & badge */}
+              <div className="flex items-center gap-2 self-start md:self-end">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-sand-soft px-3 py-1 text-xs font-medium text-ink border border-line/70">
+                  <span className="size-2 rounded-full bg-accent" />
+                  {total} {total === 1 ? "room available" : "rooms available"}
+                </span>
+              </div>
+            </div>
           </FadeIn>
         </Container>
       </section>
 
+      {/* Main Content: Filter Sidebar + Room Cards Grid */}
       <Container>
-        <div className="grid gap-8 lg:grid-cols-[16.5rem_minmax(0,1fr)] xl:grid-cols-[18rem_minmax(0,1fr)]">
-          <aside className="lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start">
+        <div className="grid gap-6 lg:grid-cols-[18rem_minmax(0,1fr)] xl:grid-cols-[19.5rem_minmax(0,1fr)] items-start">
+          <aside className="lg:sticky lg:top-[calc(var(--header-h)+1rem)] lg:self-start">
             <RoomsFilters
               key={buildQueryString({
                 search: filters.search,
@@ -105,15 +123,15 @@ export default async function RoomsPage({ searchParams }) {
 
           <div className="min-w-0">
             {rooms.length === 0 ? (
-              <div className="flex min-h-[24rem] flex-col items-center justify-center gap-6 rounded-2xl border border-line bg-elevated px-6 py-16 text-center">
+              <div className="flex min-h-[22rem] flex-col items-center justify-center gap-5 rounded-2xl border border-line bg-elevated px-6 py-14 text-center">
                 {hasActiveFilters ? (
                   <>
-                    <div className="flex size-16 items-center justify-center rounded-full border border-line bg-surface">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="size-7 text-muted" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                    <div className="flex size-14 items-center justify-center rounded-full border border-line bg-surface">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="size-6 text-muted" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
                     </div>
                     <div className="max-w-xs">
-                      <h2 className="font-display text-xl text-ink">No rooms found</h2>
-                      <p className="mt-2 text-sm text-muted">
+                      <h2 className="font-display text-lg text-ink font-semibold">No rooms found</h2>
+                      <p className="mt-1.5 text-xs text-muted">
                         No rooms match your current filters. Try adjusting your search criteria or clearing all filters.
                       </p>
                     </div>
@@ -124,8 +142,8 @@ export default async function RoomsPage({ searchParams }) {
                 ) : (
                   <>
                     <div className="max-w-xs">
-                      <h2 className="font-display text-xl text-ink">No rooms available</h2>
-                      <p className="mt-2 text-sm text-muted">
+                      <h2 className="font-display text-lg text-ink font-semibold">No rooms available</h2>
+                      <p className="mt-1.5 text-xs text-muted">
                         Our room listing is being set up. Please check back soon.
                       </p>
                     </div>
@@ -133,13 +151,29 @@ export default async function RoomsPage({ searchParams }) {
                 )}
               </div>
             ) : (
-              <Stagger className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-                {rooms.map((room, index) => (
-                  <StaggerItem key={room.id} className="h-full">
-                    <RoomCard room={room} fallbackIndex={index} />
-                  </StaggerItem>
-                ))}
-              </Stagger>
+              <div className="space-y-4">
+                {/* Result header line: count and sort */}
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line/60 bg-elevated/70 px-4 py-2.5 backdrop-blur-xs">
+                  <p className="text-xs font-medium text-ink">
+                    <span className="font-bold text-accent">{rooms.length}</span> {rooms.length === 1 ? "room available" : "rooms available"} matching your criteria
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-muted">
+                    <span className="font-medium text-ink">Sort by:</span>
+                    <span className="rounded-lg bg-sand-soft/60 px-2.5 py-1 text-xs font-semibold text-ink border border-line/60">
+                      Recommended
+                    </span>
+                  </div>
+                </div>
+
+                {/* Vertical stack of horizontal cards */}
+                <Stagger className="space-y-4">
+                  {rooms.map((room, index) => (
+                    <StaggerItem key={room.id} className="w-full">
+                      <RoomCard room={room} fallbackIndex={index} layout="row" />
+                    </StaggerItem>
+                  ))}
+                </Stagger>
+              </div>
             )}
 
             {!apiDown && rooms.length > 0 && pages > 1 ? (

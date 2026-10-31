@@ -231,116 +231,165 @@ export default function HomePaymentSection({ brandName }) {
     } finally {
       setLoading(false);
     }
-  }
-
-  return (
-    <section className="py-16 md:py-20 bg-[linear-gradient(160deg,#f4f2ec_0%,#fffdf9_50%,#f0f3e8_100%)]">
+  }  return (
+    <section className="py-16 md:py-24 bg-[linear-gradient(160deg,#f4f2ec_0%,#fffdf9_50%,#f0f3e8_100%)] border-y border-line/60">
       <Container>
-        {/* Header */}
-        <div className="mx-auto max-w-xl text-center">
-          <p className="text-xs font-semibold tracking-[0.22em] text-accent uppercase">
-            Secure payments
-          </p>
-          <h2 className="mt-3 font-display text-4xl text-ink md:text-5xl">
-            Complete your booking payment
-          </h2>
-          <p className="mt-4 text-base text-muted">
-            Already have a booking? Enter your reference to look it up and pay securely via Razorpay.
-          </p>
-        </div>
+        <div className="grid gap-10 lg:grid-cols-12 lg:gap-12 items-center">
+          {/* Left Column: Content, Context & Security Assurance */}
+          <div className="lg:col-span-6 flex flex-col justify-center">
+            <div className="inline-flex items-center gap-2 rounded-full bg-sand-soft px-3 py-1 text-xs font-semibold tracking-[0.16em] text-accent uppercase w-fit border border-line/60">
+              <Shield className="size-3.5 text-accent" />
+              <span>Secure Reservation Desk</span>
+            </div>
 
-        {/* Form card */}
-        <div className="mx-auto mt-10 max-w-lg">
-          <div className="rounded-[1.75rem] border border-line bg-elevated p-6 shadow-soft md:p-8">
-            <div className="mb-5 flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-full bg-accent/10">
-                <CreditCard className="size-5 text-accent" />
+            <h2 className="mt-4 font-display text-3xl sm:text-4xl lg:text-5xl text-ink font-bold tracking-tight leading-tight">
+              Complete your booking payment
+            </h2>
+
+            <p className="mt-4 text-sm sm:text-base text-muted leading-relaxed max-w-lg">
+              Already have a reservation? Enter your booking reference to check live status, view booking details, and complete your payment securely via Razorpay.
+            </p>
+
+            {/* Feature highlights list */}
+            <div className="mt-8 space-y-4 max-w-md">
+              <div className="flex items-start gap-3.5">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+                  <Zap className="size-4.5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-ink">Instant Confirmation</h4>
+                  <p className="mt-0.5 text-xs text-muted leading-relaxed">
+                    Live verification and immediate digital receipt sent directly to your email and phone.
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="font-semibold text-ink">Pay for your booking</p>
-                <p className="text-xs text-muted">Look up any pending reservation instantly</p>
+
+              <div className="flex items-start gap-3.5">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+                  <Lock className="size-4.5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-ink">256-Bit Bank Grade Encryption</h4>
+                  <p className="mt-0.5 text-xs text-muted leading-relaxed">
+                    All transactions are tokenized and processed via certified PCI-DSS compliant gateways.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3.5">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+                  <CreditCard className="size-4.5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-ink">Flexible Payment Options</h4>
+                  <p className="mt-0.5 text-xs text-muted leading-relaxed">
+                    Supports UPI, Credit/Debit cards, NetBanking, and international card payments.
+                  </p>
+                </div>
               </div>
             </div>
 
-            <form onSubmit={handleLookup} className="space-y-4" noValidate>
-              <div>
-                <label htmlFor="pay-booking-ref" className="block text-xs font-semibold tracking-[0.12em] text-muted uppercase mb-1.5">
-                  Booking reference *
-                </label>
-                <input
-                  id="pay-booking-ref"
-                  type="text"
-                  value={bookingRef}
-                  onChange={(e) => setBookingRef(e.target.value)}
-                  placeholder="e.g. BK-2024-0001"
-                  className="w-full rounded-xl border border-line bg-canvas px-4 py-3 text-sm font-mono text-ink placeholder:text-muted/60 outline-none transition-colors focus:border-accent"
-                  autoComplete="off"
-                  spellCheck={false}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="pay-email" className="block text-xs font-semibold tracking-[0.12em] text-muted uppercase mb-1.5">
-                  Email address
-                </label>
-                <input
-                  id="pay-email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  className="w-full rounded-xl border border-line bg-canvas px-4 py-3 text-sm text-ink placeholder:text-muted/60 outline-none transition-colors focus:border-accent"
-                  autoComplete="email"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="pay-phone" className="block text-xs font-semibold tracking-[0.12em] text-muted uppercase mb-1.5">
-                  Phone number <span className="text-muted/60 normal-case font-normal">(if email not used)</span>
-                </label>
-                <input
-                  id="pay-phone"
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+91 98765 43210"
-                  className="w-full rounded-xl border border-line bg-canvas px-4 py-3 text-sm text-ink placeholder:text-muted/60 outline-none transition-colors focus:border-accent"
-                  autoComplete="tel"
-                />
-              </div>
-
-              {error && (
-                <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                  <AlertCircle className="mt-0.5 size-4 shrink-0" />
-                  {error}
-                </div>
-              )}
-
-              <Button type="submit" className="w-full" size="lg" disabled={loading}>
-                <Search className="size-4" />
-                {loading ? "Looking up booking" : "Find my booking"}
-              </Button>
-            </form>
-
-            <p className="mt-4 text-center text-xs text-muted">
-              Don't have a booking yet?{" "}
-              <a href="/booking" className="font-semibold text-accent hover:underline">
-                Book a room
-              </a>
-            </p>
+            {/* Additional trust points badge strip */}
+            <div className="mt-8 pt-6 border-t border-line/60">
+              <TrustBadges />
+            </div>
           </div>
 
-          {booking && (
-            <BookingCard
-              key={searchKey}
-              booking={booking}
-              lookup={{ email: email.trim(), phone: phone.trim() }}
-              brandName={brandName}
-            />
-          )}
-        </div>
+          {/* Right Column: Interactive Lookup & Payment Form Card */}
+          <div className="lg:col-span-6 w-full max-w-lg lg:max-w-none mx-auto">
+            <div className="rounded-[1.75rem] border border-line/80 bg-elevated p-6 sm:p-8 shadow-soft backdrop-blur-sm">
+              <div className="mb-6 flex items-center gap-3.5 border-b border-line/60 pb-4">
+                <div className="flex size-11 items-center justify-center rounded-2xl bg-accent/10 border border-accent/20">
+                  <CreditCard className="size-5.5 text-accent" />
+                </div>
+                <div>
+                  <p className="font-display text-lg font-bold text-ink">Pay for your booking</p>
+                  <p className="text-xs text-muted">Look up any pending reservation instantly</p>
+                </div>
+              </div>
 
-        <TrustBadges />
+              <form onSubmit={handleLookup} className="space-y-4" noValidate>
+                <div>
+                  <label htmlFor="pay-booking-ref" className="block text-xs font-semibold tracking-[0.12em] text-muted uppercase mb-1.5">
+                    Booking reference *
+                  </label>
+                  <input
+                    id="pay-booking-ref"
+                    type="text"
+                    value={bookingRef}
+                    onChange={(e) => setBookingRef(e.target.value)}
+                    placeholder="e.g. BK-2024-0001"
+                    className="w-full rounded-xl border border-line bg-canvas px-4 py-3 text-sm font-mono text-ink placeholder:text-muted/60 outline-none transition-all duration-200 focus:border-accent focus:shadow-[0_0_0_3px_var(--focus-ring)]"
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="pay-email" className="block text-xs font-semibold tracking-[0.12em] text-muted uppercase mb-1.5">
+                    Email address
+                  </label>
+                  <input
+                    id="pay-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    className="w-full rounded-xl border border-line bg-canvas px-4 py-3 text-sm text-ink placeholder:text-muted/60 outline-none transition-all duration-200 focus:border-accent focus:shadow-[0_0_0_3px_var(--focus-ring)]"
+                    autoComplete="email"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="pay-phone" className="block text-xs font-semibold tracking-[0.12em] text-muted uppercase mb-1.5">
+                    Phone number <span className="text-muted/60 normal-case font-normal">(if email not used)</span>
+                  </label>
+                  <input
+                    id="pay-phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+91 98765 43210"
+                    className="w-full rounded-xl border border-line bg-canvas px-4 py-3 text-sm text-ink placeholder:text-muted/60 outline-none transition-all duration-200 focus:border-accent focus:shadow-[0_0_0_3px_var(--focus-ring)]"
+                    autoComplete="tel"
+                  />
+                </div>
+
+                {error && (
+                  <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    <AlertCircle className="mt-0.5 size-4 shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                <Button type="submit" className="w-full h-12 rounded-xl font-semibold shadow-soft" size="lg" disabled={loading}>
+                  <Search className="size-4" />
+                  {loading ? "Looking up booking…" : "Find my booking"}
+                </Button>
+              </form>
+
+              <div className="mt-5 rounded-xl bg-sand-soft/40 p-3 text-center border border-line/60">
+                <p className="text-xs text-muted">
+                  Don't have a booking yet?{" "}
+                  <a href="/booking" className="font-semibold text-accent hover:underline">
+                    Reserve a room
+                  </a>
+                </p>
+              </div>
+            </div>
+
+            {booking && (
+              <div className="mt-6">
+                <BookingCard
+                  key={searchKey}
+                  booking={booking}
+                  lookup={{ email: email.trim(), phone: phone.trim() }}
+                  brandName={brandName}
+                />
+              </div>
+            )}
+          </div>
+        </div>
       </Container>
     </section>
   );

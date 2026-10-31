@@ -29,16 +29,16 @@ export default function BookingContactFab({
 
   return (
     <div
-      className="fixed right-4 bottom-4 z-40 flex flex-col items-end gap-3 md:right-6 md:bottom-6"
+      className="fixed right-3 bottom-3 z-40 flex flex-col items-end gap-2.5 sm:right-5 sm:bottom-5 pointer-events-none"
       aria-label="Quick booking contact"
     >
       {callDigits ? (
         <a
           href={`tel:${callDigits}`}
           aria-label="Call to book"
-          className="inline-flex size-14 items-center justify-center rounded-full border border-line bg-elevated text-ink shadow-soft transition-transform hover:scale-105 hover:border-accent hover:text-accent"
+          className="pointer-events-auto inline-flex size-11 sm:size-12 items-center justify-center rounded-full border border-line bg-elevated/95 text-ink shadow-[0_8px_24px_rgba(26,46,10,0.14)] backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:border-accent hover:text-accent hover:shadow-[0_12px_28px_rgba(44,103,0,0.22)] active:scale-95"
         >
-          <Phone className="size-6" strokeWidth={2} />
+          <Phone className="size-5" strokeWidth={2} />
         </a>
       ) : null}
       {waHref ? (
@@ -47,9 +47,9 @@ export default function BookingContactFab({
           target="_blank"
           rel="noreferrer"
           aria-label="WhatsApp booking enquiry"
-          className="inline-flex size-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-soft transition-transform hover:scale-105"
+          className="pointer-events-auto inline-flex size-11 sm:size-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_8px_24px_rgba(37,211,102,0.3)] backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:bg-[#20ba5a] hover:shadow-[0_12px_28px_rgba(37,211,102,0.4)] active:scale-95"
         >
-          <MessageCircle className="size-6" />
+          <MessageCircle className="size-5 sm:size-5.5" />
         </a>
       ) : null}
     </div>

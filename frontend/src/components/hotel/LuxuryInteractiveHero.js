@@ -86,7 +86,7 @@ const CURATED_SLIDES = [
       "Natural timbers, floor-to-ceiling garden horizons, marble soaking baths, and thoughtful turn-down rituals designed for deep restoration.",
     ctaText: "Discover Room Types",
     ctaLink: "/rooms",
-    secondaryCta: "Check Rates",
+    secondaryCta: "Book Your Stay",
     secondaryLink: "/booking",
     vignetteTitle: "Garden & Terrace Suites",
     vignetteKicker: "Living",
@@ -339,7 +339,7 @@ export default function LuxuryInteractiveHero({ banners = [], settings = {} }) {
         onPointerMove={handlePointerMove}
         onPointerLeave={handlePointerLeave}
         onMouseEnter={() => setIsPaused(true)}
-        className="relative isolate min-h-[100svh] w-full overflow-hidden bg-[#0a130f] text-white flex flex-col justify-between"
+        className="relative isolate min-h-[100svh] w-full overflow-hidden bg-[#0a130f] text-white flex flex-col"
         aria-label="ExoStay Luxury Hotel & Resort"
       >
         {/* Dynamic 3D Parallax Photo Backdrop */}
@@ -405,13 +405,13 @@ export default function LuxuryInteractiveHero({ banners = [], settings = {} }) {
         />
 
         {/* Top Navbar Clearance Spacing */}
-        <div className="pt-24 sm:pt-28 md:pt-30" />
+        <div className="pt-16 sm:pt-20 md:pt-22" />
 
         {/* Hero Main Content Stage */}
-        <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-3 sm:py-5 flex-1 flex flex-col justify-center">
+        <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-2 sm:py-3 flex-1 flex flex-col">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
             {/* Left Column: Kinetic Headlines & Actions */}
-            <div className="lg:col-span-6 space-y-4 sm:space-y-5">
+            <div className="lg:col-span-6 space-y-3 sm:space-y-4">
               {/* OriginKit Style Live Brand Badges */}
               <motion.div
                 initial={{ opacity: 0, y: 18 }}
@@ -447,7 +447,7 @@ export default function LuxuryInteractiveHero({ banners = [], settings = {} }) {
                   transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
                   className="space-y-3 sm:space-y-3.5"
                 >
-                  <h1 className="font-display text-3xl sm:text-5xl md:text-5xl lg:text-[3.9rem] font-bold tracking-tight text-white leading-[1.08] max-w-3xl drop-shadow-xl">
+                  <h1 className="font-display text-2xl sm:text-4xl md:text-4xl lg:text-[3.4rem] font-bold tracking-tight text-white leading-[1.08] max-w-3xl drop-shadow-xl">
                     {current.titlePrefix}
                     {current.accentWord ? (
                       <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-white via-[#ffe6a3] to-[#92cd00] animate-gold-shimmer">
@@ -457,7 +457,7 @@ export default function LuxuryInteractiveHero({ banners = [], settings = {} }) {
                     {current.titleSuffix}
                   </h1>
 
-                  <p className="max-w-xl text-sm sm:text-base md:text-lg text-white/85 font-light leading-relaxed">
+                  <p className="max-w-xl text-sm sm:text-sm md:text-base text-white/85 font-light leading-relaxed">
                     {current.subtitle}
                   </p>
                 </motion.div>
@@ -546,7 +546,7 @@ export default function LuxuryInteractiveHero({ banners = [], settings = {} }) {
             </div>
 
             {/* Right Column: OriginKit Sphere Gallery 3D */}
-            <div className="lg:col-span-6 hidden md:flex flex-col items-center justify-center relative w-full h-[520px] lg:h-[620px] xl:h-[680px] -mt-16 lg:-mt-20">
+            <div className="lg:col-span-6 hidden md:flex flex-col items-center justify-center relative w-full h-[340px] lg:h-[400px] xl:h-[440px] -mt-6 lg:-mt-10">
               {/* Ambient Backlight Glow */}
               <div
                 className="absolute inset-0 pointer-events-none rounded-full blur-3xl opacity-40"
@@ -589,30 +589,30 @@ export default function LuxuryInteractiveHero({ banners = [], settings = {} }) {
               />
             ))}
           </div>
-        </div>
 
-        {/* Bottom Area: Social Proof Strip & Integrated Glassmorphic Booking Search Bar */}
-        <div className="relative z-20 pb-5 sm:pb-7 pt-2">
-          <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 space-y-3.5">
-            {/* Trust Distinctions */}
-            <div className="hidden sm:flex flex-wrap items-center justify-between gap-4 text-xs font-medium text-white/80 border-t border-white/10 pt-3">
-              <div className="flex flex-wrap items-center gap-6">
-                {TRUST_DISTINCTIONS.map(({ icon: Icon, label }) => (
-                  <div key={label} className="inline-flex items-center gap-2">
-                    <Icon className="size-3.5 text-[#ffcf79]" aria-hidden />
-                    <span>{label}</span>
-                  </div>
-                ))}
+          {/* Integrated Glassmorphic Booking Search Bar — within main content flow */}
+          <div className="relative z-20 mt-auto pb-4 sm:pb-5 pt-2">
+            <div className="space-y-2.5">
+              {/* Trust Distinctions */}
+              <div className="hidden sm:flex flex-wrap items-center justify-between gap-4 text-xs font-medium text-white/80 border-t border-white/10 pt-2.5">
+                <div className="flex flex-wrap items-center gap-5">
+                  {TRUST_DISTINCTIONS.map(({ icon: Icon, label }) => (
+                    <div key={label} className="inline-flex items-center gap-2">
+                      <Icon className="size-3.5 text-[#ffcf79]" aria-hidden />
+                      <span>{label}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="inline-flex items-center gap-2 text-[#92cd00] font-semibold text-xs">
+                  <CheckCircle2 className="size-3.5" />
+                  <span>Zero Hidden Fees · Complimentary Cancellation</span>
+                </div>
               </div>
-              <div className="inline-flex items-center gap-2 text-[#92cd00] font-semibold text-xs">
-                <CheckCircle2 className="size-3.5" />
-                <span>Zero Hidden Fees · Complimentary Cancellation</span>
-              </div>
-            </div>
 
-            {/* Floating Glassmorphic Booking Search Widget */}
-            <div className="relative rounded-2xl md:rounded-[2.2rem] border border-white/40 bg-white/95 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.45)] backdrop-blur-2xl p-4 sm:p-5 md:px-6 md:py-4 transition-all">
-              <BookingSearch variant="hero" />
+              {/* Floating Glassmorphic Booking Search Widget */}
+              <div className="relative rounded-2xl md:rounded-[2.2rem] border border-white/40 bg-white/95 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.45)] backdrop-blur-2xl p-4 sm:p-5 md:px-6 md:py-4 transition-all">
+                <BookingSearch variant="hero" />
+              </div>
             </div>
           </div>
         </div>

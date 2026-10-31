@@ -151,46 +151,47 @@ export default function FooterContent({
       viewport={{ once: true, amount: 0.12 }}
       variants={containerVariants}
     >
-      <Container className="section-pad">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 xl:gap-8">
-          <motion.div variants={itemVariants} className="sm:col-span-2 lg:col-span-1 xl:col-span-1">
+      <Container className="py-10 md:py-12">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8 items-start">
+          {/* Brand Column */}
+          <motion.div variants={itemVariants} className="sm:col-span-2 lg:col-span-4 flex flex-col items-start">
             <Link href="/" className="inline-flex items-center gap-3 group">
-              <div className="relative flex h-10 w-auto items-center">
+              <div className="relative flex h-9 w-auto items-center">
                 <Image
                   src={logoSrc}
                   alt={mediaAlt(logo, `${brand} Logo`)}
-                  width={150}
-                  height={44}
-                  className="h-9 md:h-10 w-auto max-w-[160px] object-contain object-left transition-transform group-hover:scale-[1.02]"
+                  width={140}
+                  height={38}
+                  className="h-8 md:h-9 w-auto max-w-[150px] object-contain object-left transition-transform group-hover:scale-[1.02]"
                   priority={false}
                 />
               </div>
             </Link>
-            <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted">
+            <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted font-normal">
               A calm retreat for unhurried mornings and thoughtful stays.
             </p>
 
-            <div className="mt-6 space-y-4">
+            <div className="mt-5 space-y-3">
               {settings?.phone ? (
                 <div>
-                  <p className="text-sm font-semibold text-ink">Call us</p>
+                  <p className="text-xs font-semibold tracking-wider text-ink uppercase">Call us</p>
                   <a
                     href={`tel:${settings.phone}`}
-                    className="mt-1 flex items-center gap-2 text-sm text-ink/80 hover:text-brand-green"
+                    className="mt-0.5 inline-flex items-center gap-2 text-sm text-ink/80 transition-colors hover:text-brand-green"
                   >
-                    <Phone className="size-4 shrink-0" />
+                    <Phone className="size-3.5 shrink-0 text-brand-green" />
                     {settings.phone}
                   </a>
                 </div>
               ) : null}
               {settings?.email ? (
                 <div>
-                  <p className="text-sm font-semibold text-ink">Email</p>
+                  <p className="text-xs font-semibold tracking-wider text-ink uppercase">Email</p>
                   <a
                     href={`mailto:${settings.email}`}
-                    className="mt-1 flex items-center gap-2 text-sm text-ink/80 hover:text-brand-green"
+                    className="mt-0.5 inline-flex items-center gap-2 text-sm text-ink/80 transition-colors hover:text-brand-green"
                   >
-                    <Mail className="size-4 shrink-0" />
+                    <Mail className="size-3.5 shrink-0 text-brand-green" />
                     {settings.email}
                   </a>
                 </div>
@@ -198,35 +199,36 @@ export default function FooterContent({
             </div>
           </motion.div>
 
-          <motion.div variants={itemVariants}>
-            <h2 className="text-sm font-semibold text-ink">Quick links</h2>
+          {/* Quick Links Column */}
+          <motion.div variants={itemVariants} className="lg:col-span-2">
+            <h2 className="text-xs font-semibold tracking-wider text-ink uppercase">Quick links</h2>
             <FooterLinkList items={quickLinks} />
           </motion.div>
 
-          <motion.div variants={itemVariants}>
-            <h2 className="text-sm font-semibold text-ink">Packages</h2>
+          {/* Packages Column */}
+          <motion.div variants={itemVariants} className="lg:col-span-2">
+            <h2 className="text-xs font-semibold tracking-wider text-ink uppercase">Packages</h2>
             <FooterLinkList items={packageLinks} />
           </motion.div>
 
-          <motion.div variants={itemVariants}>
-            <h2 className="text-sm font-semibold text-ink">Support</h2>
+          {/* Support Column */}
+          <motion.div variants={itemVariants} className="lg:col-span-2">
+            <h2 className="text-xs font-semibold tracking-wider text-ink uppercase">Support</h2>
             <FooterLinkList items={supportLinks} />
           </motion.div>
 
-          <motion.div variants={itemVariants} className="sm:col-span-2 lg:col-span-1 xl:col-span-1">
-            <h2 className="text-sm font-semibold text-ink">Connect with us</h2>
-            <p className="mt-2 text-sm leading-relaxed text-muted">
-              Follow along for seasonal stays and resort moments.
-            </p>
+          {/* Connect / Newsletter Column */}
+          <motion.div variants={itemVariants} className="sm:col-span-2 lg:col-span-2 flex flex-col">
+            <h2 className="text-xs font-semibold tracking-wider text-ink uppercase">Connect</h2>
             <SocialButtons socials={socials} />
 
-            <h2 className="mt-8 text-sm font-semibold text-ink">
+            <h2 className="mt-6 text-xs font-semibold tracking-wider text-ink uppercase">
               Newsletter
             </h2>
-            <p className="mt-2 text-sm leading-relaxed text-muted">
+            <p className="mt-1.5 text-xs leading-relaxed text-muted">
               Seasonal offers and stay inspiration.
             </p>
-            <NewsletterForm className="mt-4" layout="stack" />
+            <NewsletterForm className="mt-3" layout="stack" />
           </motion.div>
         </div>
       </Container>

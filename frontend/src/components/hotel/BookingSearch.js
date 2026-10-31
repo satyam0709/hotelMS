@@ -76,7 +76,7 @@ export default function BookingSearch({ variant = "default" }) {
           onChange={(event) => setCheckIn(event.target.value)}
           inputClassName={
             isHero
-              ? "border-[#dcd9ce] bg-[#faf9f5] hover:bg-white text-ink md:h-11 md:rounded-full [color-scheme:light] font-medium transition-colors focus:bg-white focus:border-[#2c6700]"
+              ? "border-[#dcd9ce] bg-[#faf9f5] hover:bg-white text-ink text-[#1a2e0a] md:h-11 md:rounded-full [color-scheme:light] font-medium transition-colors focus:bg-white focus:border-[#2c6700]"
               : undefined
           }
         />
@@ -89,7 +89,7 @@ export default function BookingSearch({ variant = "default" }) {
           onChange={(event) => setCheckOut(event.target.value)}
           inputClassName={
             isHero
-              ? "border-[#dcd9ce] bg-[#faf9f5] hover:bg-white text-ink md:h-11 md:rounded-full [color-scheme:light] font-medium transition-colors focus:bg-white focus:border-[#2c6700]"
+              ? "border-[#dcd9ce] bg-[#faf9f5] hover:bg-white text-ink text-[#1a2e0a] md:h-11 md:rounded-full [color-scheme:light] font-medium transition-colors focus:bg-white focus:border-[#2c6700]"
               : undefined
           }
         />
@@ -101,10 +101,13 @@ export default function BookingSearch({ variant = "default" }) {
           max={30}
           required
           value={adults}
-          onChange={(event) => setAdults(Number(event.target.value))}
+          onChange={(event) => {
+            const val = event.target.value;
+            setAdults(val === "" ? "" : Number(val));
+          }}
           inputClassName={
             isHero
-              ? "border-[#dcd9ce] bg-[#faf9f5] hover:bg-white text-ink md:h-11 md:rounded-full [color-scheme:light] font-medium transition-colors focus:bg-white focus:border-[#2c6700]"
+              ? "border-[#dcd9ce] bg-[#faf9f5] hover:bg-white text-ink text-[#1a2e0a] md:h-11 md:rounded-full [color-scheme:light] font-medium transition-colors focus:bg-white focus:border-[#2c6700]"
               : undefined
           }
         />
@@ -115,10 +118,13 @@ export default function BookingSearch({ variant = "default" }) {
           min={0}
           max={30}
           value={children}
-          onChange={(event) => setChildren(Number(event.target.value))}
+          onChange={(event) => {
+            const val = event.target.value;
+            setChildren(val === "" ? "" : Number(val));
+          }}
           inputClassName={
             isHero
-              ? "border-[#dcd9ce] bg-[#faf9f5] hover:bg-white text-ink md:h-11 md:rounded-full [color-scheme:light] font-medium transition-colors focus:bg-white focus:border-[#2c6700]"
+              ? "border-[#dcd9ce] bg-[#faf9f5] hover:bg-white text-ink text-[#1a2e0a] md:h-11 md:rounded-full [color-scheme:light] font-medium transition-colors focus:bg-white focus:border-[#2c6700]"
               : undefined
           }
         />
@@ -129,10 +135,13 @@ export default function BookingSearch({ variant = "default" }) {
           min={1}
           max={10}
           value={rooms}
-          onChange={(event) => setRooms(Number(event.target.value))}
+          onChange={(event) => {
+            const val = event.target.value;
+            setRooms(val === "" ? "" : Number(val));
+          }}
           inputClassName={
             isHero
-              ? "border-[#dcd9ce] bg-[#faf9f5] hover:bg-white text-ink md:h-11 md:rounded-full [color-scheme:light] font-medium transition-colors focus:bg-white focus:border-[#2c6700]"
+              ? "border-[#dcd9ce] bg-[#faf9f5] hover:bg-white text-ink text-[#1a2e0a] md:h-11 md:rounded-full [color-scheme:light] font-medium transition-colors focus:bg-white focus:border-[#2c6700]"
               : undefined
           }
         />

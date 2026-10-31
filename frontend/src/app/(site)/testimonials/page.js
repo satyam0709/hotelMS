@@ -35,7 +35,7 @@ export default async function TestimonialsPage() {
       </section>
 
       <Container>
-        <Stagger className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <Stagger className="mt-10 grid gap-x-4 gap-y-12 md:grid-cols-2 xl:grid-cols-3">
           {testimonials.map((item) => (
             <StaggerItem key={item.id}>
               <TestimonialCard item={item} />

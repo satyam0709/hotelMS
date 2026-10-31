@@ -17,7 +17,7 @@ export default function TestimonialsGrid({ testimonials = [] }) {
           description="Stories from travelers who arrived for a weekend and left with a slower rhythm."
           action={<Button href="/testimonials" variant="secondary">All reviews</Button>}
         />
-        <Stagger className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <Stagger className="mt-10 grid gap-x-4 gap-y-12 md:grid-cols-2 xl:grid-cols-3">
           {items.slice(0, 6).map((item) => (
             <StaggerItem key={item.id}>
               <TestimonialCard item={item} />
