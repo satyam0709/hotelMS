@@ -1,15 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { LogIn, Menu, Phone, X } from "lucide-react";
 import Button from "@/components/ui/Button";
+import BrandLogo from "@/components/site/BrandLogo";
 import NavbarLinks from "@/components/site/NavbarLinks";
 import { siteConfig } from "@/lib/config";
-import { mediaAlt, mediaUrl } from "@/lib/utils";
 
 const fallbackLinks = [
   { label: "Home", href: "/" },
@@ -22,14 +20,7 @@ const fallbackLinks = [
 ];
 
 export default function Navbar({ settings, navigation = [] }) {
-  const pathname = usePathname();
-  const isHomePage = pathname === "/";
   const [open, setOpen] = useState(false);
-
-  const rawBrand = settings?.websiteName;
-  const brand = !rawBrand || /hotel\s*l?ms/i.test(rawBrand) ? siteConfig.name : rawBrand;
-  const logo = settings?.headerLogoMedia || settings?.logoMedia;
-  const logoSrc = mediaUrl(logo);
   const links = navigation.length ? navigation : fallbackLinks;
 
   useEffect(() => {
@@ -50,36 +41,12 @@ export default function Navbar({ settings, navigation = [] }) {
           <div
             className="grid h-[var(--header-h)] grid-cols-[auto_1fr_auto] items-center gap-3 md:gap-6"
           >
-            <Link href="/" className="flex min-w-0 items-center gap-2.5" onClick={() => setOpen(false)}>
-              {isHomePage ? (
-                <div className="relative size-9 overflow-hidden rounded-full border border-accent/20 bg-black shadow-sm ring-1 ring-accent/30">
-                  <video
-                    src="/assets/Logo_design_for_ExoStay_20261019181516.mp4"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="size-full object-cover scale-110"
-                    aria-label={`${brand} animated logo`}
-                  />
-                </div>
-              ) : logoSrc ? (
-                <Image
-                  src={logoSrc}
-                  alt={mediaAlt(logo, brand)}
-                  width={36}
-                  height={36}
-                  className="size-9 rounded-full object-cover"
-                  priority
-                />
-              ) : (
-                <span className="flex size-9 items-center justify-center rounded-full bg-accent text-sm font-semibold text-white">
-                  {brand.slice(0, 1)}
-                </span>
-              )}
-              <span className="truncate font-display text-lg tracking-tight text-ink md:text-xl">
-                {brand}
-              </span>
+            <Link href="/" className="flex min-w-0 items-center" aria-label="ExoStay home" onClick={() => setOpen(false)}>
+              <BrandLogo
+                priority
+                sizes="(max-width: 640px) 140px, 180px"
+                className="h-9 max-w-[140px] md:h-11 md:max-w-[168px]"
+              />
             </Link>
 
             <div className="hidden min-w-0 justify-center lg:flex">

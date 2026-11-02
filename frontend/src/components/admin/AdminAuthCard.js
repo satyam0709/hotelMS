@@ -1,8 +1,8 @@
 import { ArrowLeft } from "lucide-react";
 import Button from "@/components/ui/Button";
+import BrandLogo from "@/components/site/BrandLogo";
 
 export default function AdminAuthCard({
-  eyebrow = "ExoStay",
   title,
   description,
   children,
@@ -25,8 +25,8 @@ export default function AdminAuthCard({
           </Button>
         </div>
         <div className="overflow-hidden rounded-[1.75rem] border border-white/15 bg-elevated/95 p-8 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-md">
-          <p className="text-xs font-semibold tracking-[0.22em] text-accent uppercase">{eyebrow}</p>
-          <h1 className="mt-2 font-display text-3xl text-ink">{title}</h1>
+          <BrandLogo sizes="170px" className="h-11 max-w-[170px]" />
+          <h1 className="mt-5 font-display text-3xl text-ink">{title}</h1>
           {description ? <p className="mt-2 text-sm leading-relaxed text-muted">{description}</p> : null}
           <div className="mt-8">{children}</div>
         </div>

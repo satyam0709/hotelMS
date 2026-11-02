@@ -24,13 +24,6 @@ const FIELDS = [
   { key: "copyrightText", label: "Copyright text" },
 ];
 
-const MEDIA_FIELDS = [
-  { key: "logoMediaId", label: "Logo media ID" },
-  { key: "faviconMediaId", label: "Favicon media ID" },
-  { key: "headerLogoMediaId", label: "Header logo media ID" },
-  { key: "footerLogoMediaId", label: "Footer logo media ID" },
-];
-
 const SEO_FIELDS = [
   { key: "metaTitle", label: "Default meta title" },
   { key: "metaDescription", label: "Default meta description", multiline: true },
@@ -185,19 +178,10 @@ export default function AdminSettingsForm() {
       </div>
 
       <div className="space-y-3 rounded-2xl border border-line bg-elevated p-5">
-        <h2 className="font-display text-xl text-ink">Brand media</h2>
+        <h2 className="font-display text-xl text-ink">Brand logo</h2>
         <p className="text-sm text-muted">
-          Paste media asset IDs from the Media library (logo / favicon / header / footer).
+          The ExoStay logo is standardized across the website and admin area. The transparent logo and matching browser icon are managed with the site assets.
         </p>
-        {MEDIA_FIELDS.map((field) => (
-          <Input
-            key={field.key}
-            label={field.label}
-            name={field.key}
-            value={form[field.key] || ""}
-            onChange={(event) => updateField(field.key, event.target.value)}
-          />
-        ))}
       </div>
 
       <div className="space-y-3 rounded-2xl border border-line bg-elevated p-5">

@@ -32,6 +32,7 @@ import {
   Users,
   UtensilsCrossed,
 } from "lucide-react";
+import BrandLogo from "@/components/site/BrandLogo";
 import { hasPermission } from "@/lib/admin/permissions";
 import { ADMIN_NAV } from "@/lib/admin/nav";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
@@ -99,8 +100,10 @@ export default function AdminSidebar() {
   return (
     <aside className="admin-sidebar flex w-full flex-col border-b border-line bg-[#f7f5ef] md:h-full md:w-60 md:border-b-0 md:border-r">
       <div className="shrink-0 px-5 py-5">
-        <p className="text-xs font-semibold tracking-[0.2em] text-muted uppercase">ExoStay</p>
-        <p className="mt-1 font-display text-xl text-ink">Admin</p>
+        <Link href="/admin" aria-label="ExoStay admin home" className="inline-flex">
+          <BrandLogo sizes="160px" className="h-10 max-w-[160px]" />
+        </Link>
+        <p className="mt-1 text-xs font-medium tracking-wide text-muted">Admin workspace</p>
       </div>
       <nav
         ref={navRef}

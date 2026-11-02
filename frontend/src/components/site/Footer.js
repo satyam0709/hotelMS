@@ -45,7 +45,6 @@ export default function Footer({ settings, navigation = [] }) {
 
   return (
     <FooterContent
-      brand={brand}
       settings={settings}
       quickLinks={quickLinks}
       packageLinks={defaultPackageLinks}

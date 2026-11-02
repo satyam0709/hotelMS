@@ -1,14 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Mail, Phone } from "lucide-react";
 import { motion } from "motion/react";
-import Button from "@/components/ui/Button";
+import BrandLogo from "@/components/site/BrandLogo";
 import Container from "@/components/ui/Container";
 import NewsletterForm from "@/components/site/NewsletterForm";
 import { containerVariants, itemVariants } from "@/lib/motion/presets";
-import { mediaAlt, mediaUrl } from "@/lib/utils";
 
 function FacebookIcon(props) {
   return (
@@ -132,7 +130,6 @@ function SocialButtons({ socials }) {
 }
 
 export default function FooterContent({
-  brand,
   settings,
   quickLinks,
   packageLinks,
@@ -140,9 +137,6 @@ export default function FooterContent({
   socials,
   copyright,
 }) {
-  const logo = settings?.footerLogoMedia || settings?.headerLogoMedia || settings?.logoMedia;
-  const logoSrc = mediaUrl(logo) || "/assets/logo.jpg";
-
   return (
     <motion.footer
       className="border-t border-line bg-[#f4f3ee]"
@@ -156,16 +150,10 @@ export default function FooterContent({
           {/* Brand Column */}
           <motion.div variants={itemVariants} className="sm:col-span-2 lg:col-span-4 flex flex-col items-start">
             <Link href="/" className="inline-flex items-center gap-3 group">
-              <div className="relative flex h-9 w-auto items-center">
-                <Image
-                  src={logoSrc}
-                  alt={mediaAlt(logo, `${brand} Logo`)}
-                  width={140}
-                  height={38}
-                  className="h-8 md:h-9 w-auto max-w-[150px] object-contain object-left transition-transform group-hover:scale-[1.02]"
-                  priority={false}
-                />
-              </div>
+              <BrandLogo
+                sizes="190px"
+                className="h-11 max-w-[190px] object-left transition-transform group-hover:scale-[1.02]"
+              />
             </Link>
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted font-normal">
               A calm retreat for unhurried mornings and thoughtful stays.

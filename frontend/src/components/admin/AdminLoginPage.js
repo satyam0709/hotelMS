@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, BedDouble, CalendarDays, CheckCircle2, X } from "lucide-react";
 import AdminLoginForm from "@/components/admin/AdminLoginForm";
+import BrandLogo from "@/components/site/BrandLogo";
 import LoadingState from "@/components/ui/LoadingState";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { fallbackSrc } from "@/lib/site-assets";
@@ -48,9 +49,7 @@ export default function AdminLoginPage() {
         {/* Left — form */}
         <div className="flex flex-col px-6 py-7 sm:px-10 sm:py-10 lg:px-12 lg:py-12">
           <div className="flex items-center justify-between gap-3">
-            <span className="inline-flex items-center rounded-full border border-[#d9d4c6] bg-white/70 px-4 py-1.5 text-sm font-semibold tracking-wide text-ink">
-              ExoStay
-            </span>
+            <BrandLogo sizes="160px" className="h-10 max-w-[160px]" />
             <Link
               href="/"
               className="inline-flex items-center gap-1.5 rounded-full border border-[#d9d4c6] bg-white/70 px-3 py-1.5 text-xs font-medium text-[#5c5a52] transition hover:border-[#c99212] hover:text-ink"
