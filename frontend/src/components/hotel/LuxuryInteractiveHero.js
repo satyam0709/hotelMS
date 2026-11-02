@@ -389,9 +389,8 @@ export default function LuxuryInteractiveHero({ banners = [], settings = {} }) {
           <div
             className="absolute inset-0 transition-opacity duration-700 opacity-70 pointer-events-none"
             style={{
-              background: `radial-gradient(circle 600px at ${50 + mousePos.x * 40}% ${
-                50 + mousePos.y * 40
-              }%, rgba(146, 205, 0, 0.14), rgba(255, 207, 121, 0.08) 40%, transparent 70%)`,
+              background: `radial-gradient(circle 600px at ${50 + mousePos.x * 40}% ${50 + mousePos.y * 40
+                }%, rgba(146, 205, 0, 0.14), rgba(255, 207, 121, 0.08) 40%, transparent 70%)`,
             }}
             aria-hidden="true"
           />
@@ -513,11 +512,10 @@ export default function LuxuryInteractiveHero({ banners = [], settings = {} }) {
                       type="button"
                       onClick={() => setIndex(i)}
                       aria-label={`Go to slide ${i + 1}`}
-                      className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                        i === index
+                      className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${i === index
                           ? "w-8 bg-[#92cd00] shadow-[0_0_8px_#92cd00]"
                           : "w-2.5 bg-white/35 hover:bg-white/70"
-                      }`}
+                        }`}
                     />
                   ))}
                 </div>
@@ -568,10 +566,10 @@ export default function LuxuryInteractiveHero({ banners = [], settings = {} }) {
                 />
               </div>
               {/* Floating Interaction Hint */}
-              <div className="absolute bottom-2 flex items-center gap-2 rounded-full border border-white/20 bg-black/50 px-3.5 py-1.5 text-[11px] font-medium text-white/90 backdrop-blur-md shadow-lg pointer-events-none">
+              {/* <div className="absolute bottom-2 flex items-center gap-2 rounded-full border border-white/20 bg-black/50 px-3.5 py-1.5 text-[11px] font-medium text-white/90 backdrop-blur-md shadow-lg pointer-events-none">
                 <Sparkles className="size-3 text-[#ffcf79]" />
                 <span>Interactive 3D Resort Sphere · Drag to rotate · Click photo to explore</span>
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -583,9 +581,8 @@ export default function LuxuryInteractiveHero({ banners = [], settings = {} }) {
                 type="button"
                 onClick={() => setIndex(i)}
                 aria-label={`Go to slide ${i + 1}`}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  i === index ? "w-8 bg-[#92cd00] shadow-[0_0_8px_#92cd00]" : "w-2 bg-white/40"
-                }`}
+                className={`h-2 rounded-full transition-all duration-300 ${i === index ? "w-8 bg-[#92cd00] shadow-[0_0_8px_#92cd00]" : "w-2 bg-white/40"
+                  }`}
               />
             ))}
           </div>

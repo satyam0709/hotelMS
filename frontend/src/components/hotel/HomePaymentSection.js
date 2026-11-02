@@ -198,27 +198,53 @@ function TrustBadges() {
 
 /* --- Main section ----------------------------------------------- */
 export default function HomePaymentSection({ brandName }) {
+  const [mode,       setMode]       = useState("email"); // 'email' | 'phone'
   const [bookingRef, setBookingRef] = useState("");
-  const [email,      setEmail]      = useState("");
-  const [phone,      setPhone]      = useState("");
+  const [contact,    setContact]    = useState("");
+  const [refError,   setRefError]   = useState(false);
+  const [contactErr, setContactErr] = useState(false);
   const [loading,    setLoading]    = useState(false);
   const [booking,    setBooking]    = useState(null);
   const [error,      setError]      = useState("");
   const [searchKey,  setSearchKey]  = useState(0);
 
+  function handleSwitchMode(newMode) {
+    if (newMode === mode) return;
+    setMode(newMode);
+    setContact("");
+    setContactErr(false);
+    setError("");
+  }
+
   async function handleLookup(e) {
-    e.preventDefault();
-    if (!bookingRef.trim()) { setError("Please enter your booking reference."); return; }
-    if (!email.trim() && !phone.trim()) { setError("Enter your email or phone to verify identity."); return; }
+    if (e) e.preventDefault();
+    const r = bookingRef.trim();
+    const c = contact.trim();
+
+    const isRefValid = Boolean(r);
+    const isContactValid =
+      mode === "email"
+        ? /^\S+@\S+\.\S+$/.test(c)
+        : c.replace(/\D/g, "").length >= 10;
+
+    setRefError(!isRefValid);
+    setContactErr(!isContactValid);
+
+    if (!isRefValid || !isContactValid) {
+      return;
+    }
 
     setLoading(true);
     setError("");
     setBooking(null);
 
+    const lookupEmail = mode === "email" ? c : undefined;
+    const lookupPhone = mode === "phone" ? c : undefined;
+
     try {
-      const result = await getBooking(bookingRef.trim(), {
-        email: email.trim() || undefined,
-        phone: phone.trim() || undefined,
+      const result = await getBooking(r, {
+        email: lookupEmail,
+        phone: lookupPhone,
       });
       setBooking(result?.booking || result);
       setSearchKey((k) => k + 1);
@@ -231,166 +257,240 @@ export default function HomePaymentSection({ brandName }) {
     } finally {
       setLoading(false);
     }
-  }  return (
-    <section className="py-16 md:py-24 bg-[linear-gradient(160deg,#f4f2ec_0%,#fffdf9_50%,#f0f3e8_100%)] border-y border-line/60">
-      <Container>
-        <div className="grid gap-10 lg:grid-cols-12 lg:gap-12 items-center">
-          {/* Left Column: Content, Context & Security Assurance */}
-          <div className="lg:col-span-6 flex flex-col justify-center">
-            <div className="inline-flex items-center gap-2 rounded-full bg-sand-soft px-3 py-1 text-xs font-semibold tracking-[0.16em] text-accent uppercase w-fit border border-line/60">
-              <Shield className="size-3.5 text-accent" />
-              <span>Secure Reservation Desk</span>
+  }
+
+  return (
+    <section className="py-12 md:py-20 px-4 sm:px-6 lg:px-8 border-y border-line/60">
+      <div className="mx-auto w-full max-w-5xl lg:max-w-6xl">
+        {/* Split card shell */}
+        <div className="w-full grid grid-cols-1 md:grid-cols-[5fr_6fr] bg-white border border-[var(--exo-line)] rounded-[28px] overflow-hidden shadow-[0_30px_60px_-30px_rgba(28,61,10,0.35)] font-[var(--font-figtree),system-ui,sans-serif]">
+          {/* Left Panel (5fr, dark green) */}
+          <aside className="bg-[#1c3d0a] text-[#eef5df] p-7 sm:p-10 lg:p-[44px_38px] flex flex-col justify-between gap-7">
+            <div className="space-y-6">
+              <div className="font-[var(--font-bricolage),sans-serif] font-bold text-xl tracking-[0.02em] text-[#d6ec9b]">
+                {brandName || "EXOSTAY"}
+              </div>
+              <h1 className="font-[var(--font-bricolage),sans-serif] font-bold text-2xl sm:text-3xl lg:text-[34px] leading-[1.1] text-white">
+                Complete your booking payment
+              </h1>
+              <p className="text-[#c3d3a8] text-sm sm:text-base max-w-[34ch] leading-relaxed">
+                Enter your booking reference to see its status and pay securely through Razorpay.
+              </p>
             </div>
 
-            <h2 className="mt-4 font-display text-3xl sm:text-4xl lg:text-5xl text-ink font-bold tracking-tight leading-tight">
-              Complete your booking payment
-            </h2>
-
-            <p className="mt-4 text-sm sm:text-base text-muted leading-relaxed max-w-lg">
-              Already have a reservation? Enter your booking reference to check live status, view booking details, and complete your payment securely via Razorpay.
-            </p>
-
-            {/* Feature highlights list */}
-            <div className="mt-8 space-y-4 max-w-md">
-              <div className="flex items-start gap-3.5">
-                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
-                  <Zap className="size-4.5" />
-                </div>
+            <ul className="list-none m-0 p-0 grid gap-4 text-sm text-[#c3d3a8]">
+              <li className="grid grid-cols-[36px_1fr] gap-3 items-start">
+                <i className="w-9 h-9 rounded-full bg-[#2f5a14] text-[var(--exo-lime)] flex items-center justify-center not-italic font-bold text-sm shrink-0">
+                  ✓
+                </i>
                 <div>
-                  <h4 className="text-sm font-semibold text-ink">Instant Confirmation</h4>
-                  <p className="mt-0.5 text-xs text-muted leading-relaxed">
-                    Live verification and immediate digital receipt sent directly to your email and phone.
-                  </p>
+                  <b className="block text-white font-semibold text-[15px] mb-0.5">Instant confirmation</b>
+                  <span>Receipt sent to your email and phone.</span>
                 </div>
+              </li>
+              <li className="grid grid-cols-[36px_1fr] gap-3 items-start">
+                <i className="w-9 h-9 rounded-full bg-[#2f5a14] text-[var(--exo-lime)] flex items-center justify-center not-italic font-bold text-sm shrink-0">
+                  ✓
+                </i>
+                <div>
+                  <b className="block text-white font-semibold text-[15px] mb-0.5">Secure payments</b>
+                  <span>Encrypted and PCI-DSS compliant.</span>
+                </div>
+              </li>
+              <li className="grid grid-cols-[36px_1fr] gap-3 items-start">
+                <i className="w-9 h-9 rounded-full bg-[#2f5a14] text-[var(--exo-lime)] flex items-center justify-center not-italic font-bold text-sm shrink-0">
+                  ✓
+                </i>
+                <div>
+                  <b className="block text-white font-semibold text-[15px] mb-0.5">Pay your way</b>
+                  <span>UPI, cards, NetBanking, international cards.</span>
+                </div>
+              </li>
+            </ul>
+          </aside>
+
+          {/* Right Form (6fr, white / dark card) */}
+          <div className="p-6 sm:p-9 lg:p-[44px_44px_36px] bg-[var(--exo-card)] text-[var(--exo-ink)] flex flex-col justify-between">
+            <div>
+              <h2 className="font-[var(--font-bricolage),sans-serif] font-bold text-2xl text-[var(--exo-ink)] mb-1">
+                Find your booking
+              </h2>
+              <p className="text-[var(--exo-mute)] text-[15px] mb-6">
+                We’ll show any payment that’s still pending.
+              </p>
+
+              {/* Segmented toggle: Email | Phone */}
+              <div
+                className="grid grid-cols-2 bg-[var(--exo-field)] border border-[var(--exo-line)] rounded-[14px] p-1 mb-5"
+                role="group"
+                aria-label="Look up using"
+              >
+                <button
+                  type="button"
+                  id="tEmail"
+                  aria-pressed={mode === "email"}
+                  onClick={() => handleSwitchMode("email")}
+                  className={cn(
+                    "border-0 font-semibold text-sm py-2.5 px-3 rounded-[10px] cursor-pointer transition-colors focus-visible:outline-[3px] focus-visible:outline-[var(--exo-lime)] focus-visible:outline-offset-2",
+                    mode === "email"
+                      ? "bg-[var(--exo-green)] text-white shadow-sm"
+                      : "bg-transparent text-[var(--exo-mute)] hover:text-[var(--exo-ink)]"
+                  )}
+                >
+                  Email
+                </button>
+                <button
+                  type="button"
+                  id="tPhone"
+                  aria-pressed={mode === "phone"}
+                  onClick={() => handleSwitchMode("phone")}
+                  className={cn(
+                    "border-0 font-semibold text-sm py-2.5 px-3 rounded-[10px] cursor-pointer transition-colors focus-visible:outline-[3px] focus-visible:outline-[var(--exo-lime)] focus-visible:outline-offset-2",
+                    mode === "phone"
+                      ? "bg-[var(--exo-green)] text-white shadow-sm"
+                      : "bg-transparent text-[var(--exo-mute)] hover:text-[var(--exo-ink)]"
+                  )}
+                >
+                  Phone
+                </button>
               </div>
 
-              <div className="flex items-start gap-3.5">
-                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
-                  <Lock className="size-4.5" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-semibold text-ink">256-Bit Bank Grade Encryption</h4>
-                  <p className="mt-0.5 text-xs text-muted leading-relaxed">
-                    All transactions are tokenized and processed via certified PCI-DSS compliant gateways.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3.5">
-                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
-                  <CreditCard className="size-4.5" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-semibold text-ink">Flexible Payment Options</h4>
-                  <p className="mt-0.5 text-xs text-muted leading-relaxed">
-                    Supports UPI, Credit/Debit cards, NetBanking, and international card payments.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Additional trust points badge strip */}
-            <div className="mt-8 pt-6 border-t border-line/60">
-              <TrustBadges />
-            </div>
-          </div>
-
-          {/* Right Column: Interactive Lookup & Payment Form Card */}
-          <div className="lg:col-span-6 w-full max-w-lg lg:max-w-none mx-auto">
-            <div className="rounded-[1.75rem] border border-line/80 bg-elevated p-6 sm:p-8 shadow-soft backdrop-blur-sm">
-              <div className="mb-6 flex items-center gap-3.5 border-b border-line/60 pb-4">
-                <div className="flex size-11 items-center justify-center rounded-2xl bg-accent/10 border border-accent/20">
-                  <CreditCard className="size-5.5 text-accent" />
-                </div>
-                <div>
-                  <p className="font-display text-lg font-bold text-ink">Pay for your booking</p>
-                  <p className="text-xs text-muted">Look up any pending reservation instantly</p>
-                </div>
-              </div>
-
-              <form onSubmit={handleLookup} className="space-y-4" noValidate>
-                <div>
-                  <label htmlFor="pay-booking-ref" className="block text-xs font-semibold tracking-[0.12em] text-muted uppercase mb-1.5">
-                    Booking reference *
-                  </label>
-                  <input
-                    id="pay-booking-ref"
-                    type="text"
-                    value={bookingRef}
-                    onChange={(e) => setBookingRef(e.target.value)}
-                    placeholder="e.g. BK-2024-0001"
-                    className="w-full rounded-xl border border-line bg-canvas px-4 py-3 text-sm font-mono text-ink placeholder:text-muted/60 outline-none transition-all duration-200 focus:border-accent focus:shadow-[0_0_0_3px_var(--focus-ring)]"
-                    autoComplete="off"
-                    spellCheck={false}
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="pay-email" className="block text-xs font-semibold tracking-[0.12em] text-muted uppercase mb-1.5">
-                    Email address
-                  </label>
-                  <input
-                    id="pay-email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    className="w-full rounded-xl border border-line bg-canvas px-4 py-3 text-sm text-ink placeholder:text-muted/60 outline-none transition-all duration-200 focus:border-accent focus:shadow-[0_0_0_3px_var(--focus-ring)]"
-                    autoComplete="email"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="pay-phone" className="block text-xs font-semibold tracking-[0.12em] text-muted uppercase mb-1.5">
-                    Phone number <span className="text-muted/60 normal-case font-normal">(if email not used)</span>
-                  </label>
-                  <input
-                    id="pay-phone"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+91 98765 43210"
-                    className="w-full rounded-xl border border-line bg-canvas px-4 py-3 text-sm text-ink placeholder:text-muted/60 outline-none transition-all duration-200 focus:border-accent focus:shadow-[0_0_0_3px_var(--focus-ring)]"
-                    autoComplete="tel"
-                  />
-                </div>
-
-                {error && (
-                  <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                    <AlertCircle className="mt-0.5 size-4 shrink-0" />
-                    <span>{error}</span>
+              {/* Form elements with floating labels */}
+              <form onSubmit={handleLookup} noValidate>
+                {/* Field 1: Booking reference */}
+                <div className="relative mb-2">
+                  <div className="relative">
+                    <input
+                      id="exo-ref"
+                      type="text"
+                      placeholder=" "
+                      autoComplete="off"
+                      inputMode="text"
+                      spellCheck={false}
+                      value={bookingRef}
+                      onChange={(e) => {
+                        setBookingRef(e.target.value);
+                        if (refError && e.target.value.trim()) setRefError(false);
+                      }}
+                      className={cn(
+                        "peer w-full h-[58px] pt-6 pb-1.5 px-4 rounded-[14px] bg-[var(--exo-field)] text-[var(--exo-ink)] text-base font-medium outline-none transition-[border-color,box-shadow] duration-150 border-[1.5px]",
+                        refError
+                          ? "border-[var(--exo-err)] focus:border-[var(--exo-err)] focus:shadow-[0_0_0_4px_rgba(179,38,30,0.18)]"
+                          : "border-[var(--exo-line)] focus:border-[var(--exo-green)] focus:shadow-[0_0_0_4px_rgba(111,164,40,0.2)]"
+                      )}
+                    />
+                    <label
+                      htmlFor="exo-ref"
+                      className="absolute left-[17px] top-[19px] text-[var(--exo-mute)] text-[15px] pointer-events-none transition-all duration-150 peer-focus:top-[8px] peer-focus:text-[12px] peer-focus:font-semibold peer-not-placeholder-shown:top-[8px] peer-not-placeholder-shown:text-[12px] peer-not-placeholder-shown:font-semibold"
+                    >
+                      Booking reference
+                    </label>
                   </div>
-                )}
+                  {refError && (
+                    <div className="text-[var(--exo-err)] text-[13px] mt-1.5 ml-1">
+                      Enter the reference from your confirmation message.
+                    </div>
+                  )}
+                </div>
 
-                <Button type="submit" className="w-full h-12 rounded-xl font-semibold shadow-soft" size="lg" disabled={loading}>
+                {/* Field 2: Contact (Email or Phone) */}
+                <div className="relative mb-2 mt-4">
+                  <div className="relative">
+                    <input
+                      id="exo-contact"
+                      type={mode === "email" ? "email" : "tel"}
+                      placeholder=" "
+                      autoComplete={mode === "email" ? "email" : "tel"}
+                      value={contact}
+                      onChange={(e) => {
+                        setContact(e.target.value);
+                        if (contactErr) {
+                          const val = e.target.value.trim();
+                          const ok =
+                            mode === "email"
+                              ? /^\S+@\S+\.\S+$/.test(val)
+                              : val.replace(/\D/g, "").length >= 10;
+                          if (ok) setContactErr(false);
+                        }
+                      }}
+                      className={cn(
+                        "peer w-full h-[58px] pt-6 pb-1.5 px-4 rounded-[14px] bg-[var(--exo-field)] text-[var(--exo-ink)] text-base font-medium outline-none transition-[border-color,box-shadow] duration-150 border-[1.5px]",
+                        contactErr
+                          ? "border-[var(--exo-err)] focus:border-[var(--exo-err)] focus:shadow-[0_0_0_4px_rgba(179,38,30,0.18)]"
+                          : "border-[var(--exo-line)] focus:border-[var(--exo-green)] focus:shadow-[0_0_0_4px_rgba(111,164,40,0.2)]"
+                      )}
+                    />
+                    <label
+                      htmlFor="exo-contact"
+                      className="absolute left-[17px] top-[19px] text-[var(--exo-mute)] text-[15px] pointer-events-none transition-all duration-150 peer-focus:top-[8px] peer-focus:text-[12px] peer-focus:font-semibold peer-not-placeholder-shown:top-[8px] peer-not-placeholder-shown:text-[12px] peer-not-placeholder-shown:font-semibold"
+                    >
+                      {mode === "email" ? "Email address" : "Phone number"}
+                    </label>
+                  </div>
+                  {contactErr ? (
+                    <div className="text-[var(--exo-err)] text-[13px] mt-1.5 ml-1">
+                      {mode === "email"
+                        ? "Enter the email used for this booking."
+                        : "Enter the phone number used for this booking."}
+                    </div>
+                  ) : (
+                    <p className="text-[13px] text-[var(--exo-mute)] mt-1.5 ml-1 mb-4">
+                      {mode === "email" ? "Use the email you booked with." : "Use the phone number you booked with."}
+                    </p>
+                  )}
+                </div>
+
+                {/* Primary Button */}
+                <button
+                  id="go"
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-[56px] border-0 rounded-[14px] bg-[var(--exo-green)] text-white font-semibold text-[17px] cursor-pointer transition-all duration-150 hover:brightness-105 active:scale-[0.99] focus-visible:outline-[3px] focus-visible:outline-[var(--exo-lime)] focus-visible:outline-offset-2 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
                   <Search className="size-4" />
                   {loading ? "Looking up booking…" : "Find my booking"}
-                </Button>
+                </button>
               </form>
 
-              <div className="mt-5 rounded-xl bg-sand-soft/40 p-3 text-center border border-line/60">
-                <p className="text-xs text-muted">
-                  Don't have a booking yet?{" "}
-                  <a href="/booking" className="font-semibold text-accent hover:underline">
-                    Reserve a room
-                  </a>
-                </p>
-              </div>
+              {/* Error box */}
+              {error && (
+                <div className="mt-4 flex items-start gap-2 rounded-[14px] border border-rose-200 bg-rose-50 p-3.5 text-sm text-rose-700" role="alert">
+                  <AlertCircle className="mt-0.5 size-4 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
             </div>
 
-            {booking && (
-              <div className="mt-6">
-                <BookingCard
-                  key={searchKey}
-                  booking={booking}
-                  lookup={{ email: email.trim(), phone: phone.trim() }}
-                  brandName={brandName}
-                />
-              </div>
-            )}
+            {/* Secondary line */}
+            <p className="mt-6 mb-0 text-center text-sm text-[var(--exo-mute)]">
+              No booking yet?{" "}
+              <a href="/rooms" className="text-[var(--exo-green)] font-semibold hover:underline">
+                Reserve a room
+              </a>
+            </p>
           </div>
         </div>
-      </Container>
+
+        {/* Real result: Booking details card + Razorpay payment */}
+        {booking && (
+          <div className="mt-8">
+            <BookingCard
+              key={searchKey}
+              booking={booking}
+              lookup={{
+                email: mode === "email" ? contact.trim() : "",
+                phone: mode === "phone" ? contact.trim() : "",
+              }}
+              brandName={brandName}
+            />
+          </div>
+        )}
+
+        {/* Trust badges footer */}
+        <div className="mt-6">
+          <TrustBadges />
+        </div>
+      </div>
     </section>
   );
 }

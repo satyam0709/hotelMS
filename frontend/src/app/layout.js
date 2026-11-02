@@ -1,4 +1,4 @@
-import { Montserrat } from "next/font/google";
+import { Montserrat, Bricolage_Grotesque, Figtree } from "next/font/google";
 import "./globals.css";
 import { siteConfig } from "@/lib/config";
 
@@ -7,6 +7,20 @@ const montserrat = Montserrat({
   variable: "--font-montserrat",
   display: "swap",
   weight: ["400", "600"],
+});
+
+const bricolage = Bricolage_Grotesque({
+  subsets: ["latin"],
+  variable: "--font-bricolage",
+  display: "swap",
+  weight: ["400", "500", "700"],
+});
+
+const figtree = Figtree({
+  subsets: ["latin"],
+  variable: "--font-figtree",
+  display: "swap",
+  weight: ["400", "500", "600"],
 });
 
 export const metadata = {
@@ -29,7 +43,11 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${montserrat.variable} h-full`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${montserrat.variable} ${bricolage.variable} ${figtree.variable} h-full`}
+      suppressHydrationWarning
+    >
       <body className="min-h-full bg-background font-sans text-foreground antialiased" suppressHydrationWarning>
         {children}
       </body>
