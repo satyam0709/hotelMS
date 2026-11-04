@@ -238,6 +238,57 @@ test("admin content mutations create an ActivityLog entry", async () => {
   assert.equal(activityLogs[0].userAgent, "phase4-admin-test");
 });
 
+test("admin can update inquiry status and notes through the inquiry detail endpoint", async () => {
+  const activityLogs = [];
+  let updateArgs;
+  stub(prisma.adminUser, "findFirst", async () => adminRecord(["inquiries.update"]));
+  stub(prisma.inquiry, "findFirst", async () => ({ id: "inquiry-1" }));
+  stub(prisma.inquiry, "update", async (args) => {
+    updateArgs = args;
+    return {
+      id: "inquiry-1",
+      status: args.data.status,
+      adminRemarks: args.data.adminRemarks,
+      followUpDate: args.data.followUpDate,
+      assignedToId: null,
+      updatedAt: new Date("2026-11-04T10:00:00.000Z"),
+    };
+  });
+  stub(prisma.activityLog, "create", async ({ data }) => activityLogs.push(data));
+  setTransactionStub();
+
+  const followUpDate = "2026-11-06T00:00:00.000Z";
+  const response = await request("/api/admin/inquiries/inquiry-1", {
+    method: "PATCH",
+    headers: { cookie: adminCookie(), "content-type": "application/json", "user-agent": "phase4-inquiry-test" },
+    body: JSON.stringify({
+      status: "IN_PROGRESS",
+      adminRemarks: "Contact guest to confirm the cancellation details.",
+      followUpDate,
+    }),
+  });
+  const body = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(body.data.id, "inquiry-1");
+  assert.equal(body.data.status, "IN_PROGRESS");
+  assert.equal(body.data.adminRemarks, "Contact guest to confirm the cancellation details.");
+  assert.equal(body.data.followUpDate, followUpDate);
+  assert.deepEqual(updateArgs.data, {
+    status: "IN_PROGRESS",
+    adminRemarks: "Contact guest to confirm the cancellation details.",
+    followUpDate: new Date(followUpDate),
+  });
+  assert.equal(activityLogs.length, 1);
+  assert.equal(activityLogs[0].module, "inquiries");
+  assert.equal(activityLogs[0].action, "update");
+  assert.equal(activityLogs[0].entityId, "inquiry-1");
+  assert.deepEqual(activityLogs[0].metadataJson, {
+    changedFields: ["status", "adminRemarks", "followUpDate"],
+  });
+  assert.equal(activityLogs[0].userAgent, "phase4-inquiry-test");
+});
+
 test("admin can change newsletter subscription status with an audit record", async () => {
   const activityLogs = [];
   stub(prisma.adminUser, "findFirst", async () => adminRecord(["newsletter.update"]));

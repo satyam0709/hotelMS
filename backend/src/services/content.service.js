@@ -1111,6 +1111,7 @@ const service = {
   subscribe,
   updatePage,
   updatePageSections,
+  updateInquiry,
   updateResource,
   updateSettings,
 };
