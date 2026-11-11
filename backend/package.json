@@ -51,6 +51,9 @@
   "overrides": {
     "uuid": "^11.1.1",
     "deepmerge-ts": "^8.0.0",
-    "effect": "^3.20.0"
+    "effect": "^3.20.0",
+    "nodemon": {
+      "minimatch": "^11.0.1"
+    }
   }
 }

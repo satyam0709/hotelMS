@@ -51,3 +51,5 @@ frontend/next-env.d.ts
 .hotel.md 
 .DEPLOY.md 
 .md
+.backend-licenses.csv
+.frontend-licenses.csv
