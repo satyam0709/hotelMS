@@ -91,7 +91,7 @@ Rate limit: **10 requests / 15 minutes**.
 |--------|------|--------------|-------------|
 | GET | `/availability` | `checkIn`, `checkOut`, `adults`, `children`, `rooms` | Search available inventory |
 | POST | `/bookings` | See below | Create guest booking |
-| GET | `/bookings/:bookingRef` | `email` **and** `phone` (required) | Guest lookup |
+| GET | `/bookings/:bookingRef` | `email` **and** `phone` (required) | Guest lookup; returns booking/stay/room details and up to 5 recent payment summaries (no gateway IDs or raw provider payloads) |
 | GET | `/bookings/:bookingRef/invoice` | `email` **and** `phone` (required) | Guest invoice |
 | POST | `/bookings/:bookingRef/cancel-request` | `{ email, phone, reason? }` | Guest cancel: unpaid `PENDING` / `PENDING_PAYMENT` cancels immediately; **paid/confirmed** opens a staff cancel-request inquiry (no inventory release until admin cancels) |
 

@@ -198,9 +198,21 @@ test("public booking lookup requires email and phone and returns narrow projecti
     findArgs = args;
     return {
       bookingRef: "HMS-TEST-001",
-      status: "PENDING",
+      status: "CONFIRMED",
+      paymentStatus: "PAID",
+      paymentMethod: "ONLINE",
       guest: { fullName: "Riya Sharma", email: "riya@example.com", phone: "9999999999" },
       rooms: [],
+      payments: [{
+        id: "payment-1",
+        amount: "448.00",
+        currency: "INR",
+        status: "PAID",
+        provider: "RAZORPAY",
+        method: "ONLINE",
+        paidAt: new Date("2026-11-14T10:00:00.000Z"),
+        createdAt: new Date("2026-11-14T10:00:00.000Z"),
+      }],
     };
   });
 
@@ -220,6 +232,11 @@ test("public booking lookup requires email and phone and returns narrow projecti
   assert.equal(findArgs.where.guest.is.email, "riya@example.com");
   assert.equal(findArgs.where.guest.is.phone, "9999999999");
   assert.equal("guestId" in findArgs.select, false);
+  assert.equal(body.data.paymentStatus, "PAID");
+  assert.equal(body.data.payments[0].status, "PAID");
+  assert.equal(body.data.payments[0].provider, "RAZORPAY");
+  assert.equal("providerPaymentId" in findArgs.select.payments.select, false);
+  assert.equal("rawResponseJson" in findArgs.select.payments.select, false);
 });
 
 test("admin booking endpoints enforce auth and permissions", async () => {

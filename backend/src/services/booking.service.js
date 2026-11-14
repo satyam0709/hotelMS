@@ -1013,6 +1013,20 @@ async function getPublicBooking(bookingRef, { email, phone } = {}) {
           room: { select: { name: true, slug: true } },
         },
       },
+      payments: {
+        orderBy: { createdAt: "desc" },
+        take: 5,
+        select: {
+          id: true,
+          amount: true,
+          currency: true,
+          status: true,
+          provider: true,
+          method: true,
+          paidAt: true,
+          createdAt: true,
+        },
+      },
     },
   });
   if (!booking) fail(404, "Booking not found.", "NOT_FOUND");

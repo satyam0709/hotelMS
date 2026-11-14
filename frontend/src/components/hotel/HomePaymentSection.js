@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { CreditCard, Search, CheckCircle, XCircle, AlertCircle, Lock, Zap, Shield } from "lucide-react";
 import Container from "@/components/ui/Container";
@@ -40,18 +41,21 @@ function BookingCard({ booking, lookup, brandName, onPaid }) {
   const [paying,  setPaying]  = useState(false);
   const [error,   setError]   = useState("");
   const [success, setSuccess] = useState(false);
+  const [paidBooking, setPaidBooking] = useState(null);
+  const currentBooking = paidBooking || booking;
+  const payments = Array.isArray(currentBooking.payments) ? currentBooking.payments : [];
 
   const canPay =
-    booking.paymentMethod === "ONLINE" &&
-    ["PENDING_PAYMENT", "PENDING"].includes(booking.status) &&
-    booking.paymentStatus !== "PAID";
+    currentBooking.paymentMethod === "ONLINE" &&
+    ["PENDING_PAYMENT", "PENDING"].includes(currentBooking.status) &&
+    currentBooking.paymentStatus !== "PAID";
 
   async function handlePay() {
     setPaying(true);
     setError("");
     try {
       const order = await createPaymentOrder({
-        bookingRef: booking.bookingRef,
+        bookingRef: currentBooking.bookingRef,
         email: lookup.email,
         phone: lookup.phone,
       });
@@ -62,16 +66,16 @@ function BookingCard({ booking, lookup, brandName, onPaid }) {
         amount:      order.amount,
         currency:    order.currency || "INR",
         name:        brandName || "Hotel booking",
-        description: `Booking ${booking.bookingRef}`,
+        description: `Booking ${currentBooking.bookingRef}`,
         prefill: {
-          name:    booking.guest?.fullName,
-          email:   lookup.email  || booking.guest?.email  || undefined,
-          contact: lookup.phone  || booking.guest?.phone  || undefined,
+          name:    currentBooking.guest?.fullName,
+          email:   lookup.email  || currentBooking.guest?.email  || undefined,
+          contact: lookup.phone  || currentBooking.guest?.phone  || undefined,
         },
       });
 
-      await verifyPayment({
-        bookingRef:          booking.bookingRef,
+      const verification = await verifyPayment({
+        bookingRef:          currentBooking.bookingRef,
         razorpayOrderId:     rpRes.razorpay_order_id,
         razorpayPaymentId:   rpRes.razorpay_payment_id,
         razorpaySignature:   rpRes.razorpay_signature,
@@ -79,8 +83,11 @@ function BookingCard({ booking, lookup, brandName, onPaid }) {
         phone: lookup.phone,
       });
 
+      if (verification?.booking) {
+        setPaidBooking(verification.booking);
+        onPaid?.(verification.booking);
+      }
       setSuccess(true);
-      if (onPaid) onPaid();
     } catch (err) {
       if (err?.message === "Payment cancelled.") {
         setError("Payment was cancelled. You can try again while the hold is active.");
@@ -98,9 +105,9 @@ function BookingCard({ booking, lookup, brandName, onPaid }) {
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-canvas/50 px-5 py-4">
         <div>
           <p className="text-xs font-semibold tracking-[0.18em] text-accent uppercase">Booking found</p>
-          <p className="mt-0.5 font-display text-xl text-ink">{booking.bookingRef}</p>
+          <p className="mt-0.5 font-display text-xl text-ink">{currentBooking.bookingRef}</p>
         </div>
-        <StatusBadge status={booking.status} />
+        <StatusBadge status={currentBooking.status} />
       </div>
 
       {/* Body */}
@@ -108,63 +115,101 @@ function BookingCard({ booking, lookup, brandName, onPaid }) {
         <dl className="space-y-3 text-sm">
           <div>
             <dt className="text-xs tracking-[0.12em] text-muted uppercase">Guest</dt>
-            <dd className="mt-0.5 font-medium text-ink">{booking.guest?.fullName || ""}</dd>
+            <dd className="mt-0.5 font-medium text-ink">{currentBooking.guest?.fullName || ""}</dd>
           </div>
           <div>
             <dt className="text-xs tracking-[0.12em] text-muted uppercase">Check-in</dt>
-            <dd className="mt-0.5 font-medium text-ink">{formatDateLabel(booking.checkInDate)}</dd>
+            <dd className="mt-0.5 font-medium text-ink">{formatDateLabel(currentBooking.checkInDate)}</dd>
           </div>
           <div>
             <dt className="text-xs tracking-[0.12em] text-muted uppercase">Check-out</dt>
-            <dd className="mt-0.5 font-medium text-ink">{formatDateLabel(booking.checkOutDate)}</dd>
+            <dd className="mt-0.5 font-medium text-ink">{formatDateLabel(currentBooking.checkOutDate)}</dd>
+          </div>
+          <div>
+            <dt className="text-xs tracking-[0.12em] text-muted uppercase">Guests</dt>
+            <dd className="mt-0.5 font-medium text-ink">
+              {currentBooking.adults} adult(s){currentBooking.children ? ` · ${currentBooking.children} child(ren)` : ""}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs tracking-[0.12em] text-muted uppercase">Rooms</dt>
+            <dd className="mt-0.5 font-medium text-ink">
+              {currentBooking.rooms?.length
+                ? currentBooking.rooms.map((item, index) => (
+                  <span key={`${item.room?.slug || item.room?.name || "room"}-${index}`}>
+                    {index ? ", " : ""}{item.room?.name || "Room"} × {item.quantity}
+                  </span>
+                ))
+                : `${currentBooking.roomCount || 0} room(s)`}
+            </dd>
           </div>
         </dl>
 
         <dl className="space-y-3 text-sm">
           <div>
             <dt className="text-xs tracking-[0.12em] text-muted uppercase">Payment status</dt>
-            <dd className="mt-0.5 font-medium text-ink">{booking.paymentStatus}</dd>
+            <dd className="mt-0.5 font-medium text-ink">{currentBooking.paymentStatus}</dd>
           </div>
           <div>
             <dt className="text-xs tracking-[0.12em] text-muted uppercase">Payment method</dt>
-            <dd className="mt-0.5 font-medium text-ink">{(booking.paymentMethod || "").replaceAll("_", " ")}</dd>
+            <dd className="mt-0.5 font-medium text-ink">{(currentBooking.paymentMethod || "").replaceAll("_", " ")}</dd>
           </div>
           <div>
             <dt className="text-xs tracking-[0.12em] text-muted uppercase">Total amount</dt>
-            <dd className="mt-0.5 font-semibold text-accent text-base">{formatCurrency(booking.totalAmount)}</dd>
+            <dd className="mt-0.5 font-semibold text-accent text-base">
+              {formatCurrency(currentBooking.totalAmount, currentBooking.currency)}
+            </dd>
           </div>
         </dl>
+        {payments.length > 0 && (
+          <div className="sm:col-span-2 rounded-xl border border-line bg-canvas/50 p-4">
+            <p className="text-xs font-semibold tracking-[0.12em] text-muted uppercase">Payment details</p>
+            <ul className="mt-2 space-y-2">
+              {payments.map((payment) => (
+                <li key={payment.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                  <span className="text-ink">
+                    {payment.status.replaceAll("_", " ")}
+                    {payment.provider || payment.method
+                      ? ` · ${(payment.provider || payment.method).replaceAll("_", " ")}`
+                      : ""}
+                    {payment.paidAt ? ` · ${formatDateLabel(payment.paidAt)}` : ""}
+                  </span>
+                  <span className="font-medium text-ink">
+                    {formatCurrency(payment.amount, payment.currency || currentBooking.currency)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       {/* Actions */}
       <div className="flex flex-wrap items-center gap-3 border-t border-line px-5 py-4">
-        {success ? (
+        {success && (
           <span className="flex items-center gap-2 text-sm font-semibold text-emerald-600">
-            <CheckCircle className="size-4" /> Payment successful! Check your email for confirmation.
+            <CheckCircle className="size-4" /> Payment verified. Your booking details are up to date.
           </span>
-        ) : (
-          <>
-            {canPay ? (
-              <Button onClick={handlePay} disabled={paying} size="md">
-                <CreditCard className="size-4" />
-                {paying ? "Opening Razorpay" : "Pay now via Razorpay"}
-              </Button>
-            ) : (
-              <p className="text-sm text-muted">
-                {booking.paymentStatus === "PAID"
-                  ? "Payment already received."
-                  : "No online payment action needed for this booking."}
-              </p>
-            )}
-            <Button
-              href={`/booking/invoice?bookingRef=${encodeURIComponent(booking.bookingRef)}${lookup.email ? `&email=${encodeURIComponent(lookup.email)}` : ""}${lookup.phone ? `&phone=${encodeURIComponent(lookup.phone)}` : ""}`}
-              variant="secondary"
-              size="md"
-            >
-              View invoice
-            </Button>
-          </>
         )}
+        {canPay ? (
+          <Button onClick={handlePay} disabled={paying} size="md">
+            <CreditCard className="size-4" />
+            {paying ? "Opening Razorpay…" : "Pay now via Razorpay"}
+          </Button>
+        ) : (
+          <p className="text-sm text-muted">
+            {currentBooking.paymentStatus === "PAID"
+              ? "Payment already received."
+              : "No online payment action needed for this booking."}
+          </p>
+        )}
+        <Button
+          href={`/booking/invoice?bookingRef=${encodeURIComponent(currentBooking.bookingRef)}&email=${encodeURIComponent(lookup.email)}&phone=${encodeURIComponent(lookup.phone)}`}
+          variant="secondary"
+          size="md"
+        >
+          View invoice
+        </Button>
       </div>
 
       {/* Error */}
@@ -183,9 +228,9 @@ function TrustBadges() {
   return (
     <div className="mt-8 flex flex-wrap justify-center gap-6">
       {[
-        { icon: Lock,   text: "256-bit SSL encrypted" },
-        { icon: Shield, text: "Razorpay secured" },
-        { icon: Zap,    text: "Instant confirmation" },
+        { icon: Lock,   text: "Server-verified payment" },
+        { icon: Shield, text: "Razorpay checkout" },
+        { icon: Zap,    text: "Booking status synced" },
       ].map(({ icon: Icon, text }) => (
         <div key={text} className="flex items-center gap-2 text-xs text-muted">
           <Icon className="size-3.5 text-accent" />
@@ -198,39 +243,33 @@ function TrustBadges() {
 
 /* --- Main section ----------------------------------------------- */
 export default function HomePaymentSection({ brandName }) {
-  const [mode,       setMode]       = useState("email"); // 'email' | 'phone'
   const [bookingRef, setBookingRef] = useState("");
-  const [contact,    setContact]    = useState("");
+  const [email,      setEmail]      = useState("");
+  const [phone,      setPhone]      = useState("");
   const [refError,   setRefError]   = useState(false);
-  const [contactErr, setContactErr] = useState(false);
+  const [emailError, setEmailError] = useState(false);
+  const [phoneError, setPhoneError] = useState(false);
   const [loading,    setLoading]    = useState(false);
   const [booking,    setBooking]    = useState(null);
   const [error,      setError]      = useState("");
   const [searchKey,  setSearchKey]  = useState(0);
 
-  function handleSwitchMode(newMode) {
-    if (newMode === mode) return;
-    setMode(newMode);
-    setContact("");
-    setContactErr(false);
-    setError("");
-  }
-
   async function handleLookup(e) {
     if (e) e.preventDefault();
     const r = bookingRef.trim();
-    const c = contact.trim();
+    const emailValue = email.trim();
+    const phoneValue = phone.trim();
 
     const isRefValid = Boolean(r);
-    const isContactValid =
-      mode === "email"
-        ? /^\S+@\S+\.\S+$/.test(c)
-        : c.replace(/\D/g, "").length >= 10;
+    const isEmailValid = emailValue.length <= 191 && /^\S+@\S+\.\S+$/.test(emailValue);
+    const isPhoneValid = phoneValue.length >= 5 && phoneValue.length <= 40;
 
     setRefError(!isRefValid);
-    setContactErr(!isContactValid);
+    setEmailError(!isEmailValid);
+    setPhoneError(!isPhoneValid);
+    setError("");
 
-    if (!isRefValid || !isContactValid) {
+    if (!isRefValid || !isEmailValid || !isPhoneValid) {
       return;
     }
 
@@ -238,13 +277,10 @@ export default function HomePaymentSection({ brandName }) {
     setError("");
     setBooking(null);
 
-    const lookupEmail = mode === "email" ? c : undefined;
-    const lookupPhone = mode === "phone" ? c : undefined;
-
     try {
       const result = await getBooking(r, {
-        email: lookupEmail,
-        phone: lookupPhone,
+        email: emailValue,
+        phone: phoneValue,
       });
       setBooking(result?.booking || result);
       setSearchKey((k) => k + 1);
@@ -284,8 +320,8 @@ export default function HomePaymentSection({ brandName }) {
                   ✓
                 </i>
                 <div>
-                  <b className="block text-white font-semibold text-[15px] mb-0.5">Instant confirmation</b>
-                  <span>Receipt sent to your email and phone.</span>
+                  <b className="block text-white font-semibold text-[15px] mb-0.5">Server-verified payment</b>
+                  <span>Your booking updates after payment verification.</span>
                 </div>
               </li>
               <li className="grid grid-cols-[36px_1fr] gap-3 items-start">
@@ -293,8 +329,8 @@ export default function HomePaymentSection({ brandName }) {
                   ✓
                 </i>
                 <div>
-                  <b className="block text-white font-semibold text-[15px] mb-0.5">Secure payments</b>
-                  <span>Encrypted and PCI-DSS compliant.</span>
+                  <b className="block text-white font-semibold text-[15px] mb-0.5">Razorpay checkout</b>
+                  <span>Payment details are handled by the payment provider.</span>
                 </div>
               </li>
               <li className="grid grid-cols-[36px_1fr] gap-3 items-start">
@@ -302,7 +338,7 @@ export default function HomePaymentSection({ brandName }) {
                   ✓
                 </i>
                 <div>
-                  <b className="block text-white font-semibold text-[15px] mb-0.5">Pay your way</b>
+                  <b className="block text-white font-semibold text-[15px] mb-0.5">Payment status stays in sync</b>
                   <span>UPI, cards, NetBanking, international cards.</span>
                 </div>
               </li>
@@ -316,44 +352,8 @@ export default function HomePaymentSection({ brandName }) {
                 Find your booking
               </h2>
               <p className="text-[var(--exo-mute)] text-[15px] mb-6">
-                We’ll show any payment that’s still pending.
+                Securely view your booking and payment status.
               </p>
-
-              {/* Segmented toggle: Email | Phone */}
-              <div
-                className="grid grid-cols-2 bg-[var(--exo-field)] border border-[var(--exo-line)] rounded-[14px] p-1 mb-5"
-                role="group"
-                aria-label="Look up using"
-              >
-                <button
-                  type="button"
-                  id="tEmail"
-                  aria-pressed={mode === "email"}
-                  onClick={() => handleSwitchMode("email")}
-                  className={cn(
-                    "border-0 font-semibold text-sm py-2.5 px-3 rounded-[10px] cursor-pointer transition-colors focus-visible:outline-[3px] focus-visible:outline-[var(--exo-lime)] focus-visible:outline-offset-2",
-                    mode === "email"
-                      ? "bg-[var(--exo-green)] text-white shadow-sm"
-                      : "bg-transparent text-[var(--exo-mute)] hover:text-[var(--exo-ink)]"
-                  )}
-                >
-                  Email
-                </button>
-                <button
-                  type="button"
-                  id="tPhone"
-                  aria-pressed={mode === "phone"}
-                  onClick={() => handleSwitchMode("phone")}
-                  className={cn(
-                    "border-0 font-semibold text-sm py-2.5 px-3 rounded-[10px] cursor-pointer transition-colors focus-visible:outline-[3px] focus-visible:outline-[var(--exo-lime)] focus-visible:outline-offset-2",
-                    mode === "phone"
-                      ? "bg-[var(--exo-green)] text-white shadow-sm"
-                      : "bg-transparent text-[var(--exo-mute)] hover:text-[var(--exo-ink)]"
-                  )}
-                >
-                  Phone
-                </button>
-              </div>
 
               {/* Form elements with floating labels */}
               <form onSubmit={handleLookup} noValidate>
@@ -393,49 +393,76 @@ export default function HomePaymentSection({ brandName }) {
                   )}
                 </div>
 
-                {/* Field 2: Contact (Email or Phone) */}
                 <div className="relative mb-2 mt-4">
                   <div className="relative">
                     <input
-                      id="exo-contact"
-                      type={mode === "email" ? "email" : "tel"}
+                      id="exo-email"
+                      type="email"
                       placeholder=" "
-                      autoComplete={mode === "email" ? "email" : "tel"}
-                      value={contact}
+                      autoComplete="email"
+                      aria-invalid={emailError}
+                      value={email}
                       onChange={(e) => {
-                        setContact(e.target.value);
-                        if (contactErr) {
-                          const val = e.target.value.trim();
-                          const ok =
-                            mode === "email"
-                              ? /^\S+@\S+\.\S+$/.test(val)
-                              : val.replace(/\D/g, "").length >= 10;
-                          if (ok) setContactErr(false);
-                        }
+                        setEmail(e.target.value);
+                        setError("");
+                        if (emailError && /^\S+@\S+\.\S+$/.test(e.target.value.trim())) setEmailError(false);
                       }}
                       className={cn(
                         "peer w-full h-[58px] pt-6 pb-1.5 px-4 rounded-[14px] bg-[var(--exo-field)] text-[var(--exo-ink)] text-base font-medium outline-none transition-[border-color,box-shadow] duration-150 border-[1.5px]",
-                        contactErr
+                        emailError
                           ? "border-[var(--exo-err)] focus:border-[var(--exo-err)] focus:shadow-[0_0_0_4px_rgba(179,38,30,0.18)]"
                           : "border-[var(--exo-line)] focus:border-[var(--exo-green)] focus:shadow-[0_0_0_4px_rgba(111,164,40,0.2)]"
                       )}
                     />
                     <label
-                      htmlFor="exo-contact"
+                      htmlFor="exo-email"
                       className="absolute left-[17px] top-[19px] text-[var(--exo-mute)] text-[15px] pointer-events-none transition-all duration-150 peer-focus:top-[8px] peer-focus:text-[12px] peer-focus:font-semibold peer-not-placeholder-shown:top-[8px] peer-not-placeholder-shown:text-[12px] peer-not-placeholder-shown:font-semibold"
                     >
-                      {mode === "email" ? "Email address" : "Phone number"}
+                      Email address
                     </label>
                   </div>
-                  {contactErr ? (
+                  {emailError ? (
                     <div className="text-[var(--exo-err)] text-[13px] mt-1.5 ml-1">
-                      {mode === "email"
-                        ? "Enter the email used for this booking."
-                        : "Enter the phone number used for this booking."}
+                      Enter the email used for this booking.
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="relative mb-4 mt-4">
+                  <div className="relative">
+                    <input
+                      id="exo-phone"
+                      type="tel"
+                      placeholder=" "
+                      autoComplete="tel"
+                      aria-invalid={phoneError}
+                      value={phone}
+                      onChange={(e) => {
+                        setPhone(e.target.value);
+                        setError("");
+                        if (phoneError && e.target.value.trim().length >= 5) setPhoneError(false);
+                      }}
+                      className={cn(
+                        "peer w-full h-[58px] pt-6 pb-1.5 px-4 rounded-[14px] bg-[var(--exo-field)] text-[var(--exo-ink)] text-base font-medium outline-none transition-[border-color,box-shadow] duration-150 border-[1.5px]",
+                        phoneError
+                          ? "border-[var(--exo-err)] focus:border-[var(--exo-err)] focus:shadow-[0_0_0_4px_rgba(179,38,30,0.18)]"
+                          : "border-[var(--exo-line)] focus:border-[var(--exo-green)] focus:shadow-[0_0_0_4px_rgba(111,164,40,0.2)]"
+                      )}
+                    />
+                    <label
+                      htmlFor="exo-phone"
+                      className="absolute left-[17px] top-[19px] text-[var(--exo-mute)] text-[15px] pointer-events-none transition-all duration-150 peer-focus:top-[8px] peer-focus:text-[12px] peer-focus:font-semibold peer-not-placeholder-shown:top-[8px] peer-not-placeholder-shown:text-[12px] peer-not-placeholder-shown:font-semibold"
+                    >
+                      Phone number
+                    </label>
+                  </div>
+                  {phoneError ? (
+                    <div className="text-[var(--exo-err)] text-[13px] mt-1.5 ml-1">
+                      Enter the phone number used for this booking.
                     </div>
                   ) : (
-                    <p className="text-[13px] text-[var(--exo-mute)] mt-1.5 ml-1 mb-4">
-                      {mode === "email" ? "Use the email you booked with." : "Use the phone number you booked with."}
+                    <p className="text-[13px] text-[var(--exo-mute)] mt-1.5 ml-1">
+                      We verify both contact details before showing your booking.
                     </p>
                   )}
                 </div>
@@ -464,9 +491,9 @@ export default function HomePaymentSection({ brandName }) {
             {/* Secondary line */}
             <p className="mt-6 mb-0 text-center text-sm text-[var(--exo-mute)]">
               No booking yet?{" "}
-              <a href="/rooms" className="text-[var(--exo-green)] font-semibold hover:underline">
+              <Link href="/rooms" className="text-[var(--exo-green)] font-semibold hover:underline">
                 Reserve a room
-              </a>
+              </Link>
             </p>
           </div>
         </div>
@@ -478,10 +505,11 @@ export default function HomePaymentSection({ brandName }) {
               key={searchKey}
               booking={booking}
               lookup={{
-                email: mode === "email" ? contact.trim() : "",
-                phone: mode === "phone" ? contact.trim() : "",
+                email: email.trim(),
+                phone: phone.trim(),
               }}
               brandName={brandName}
+              onPaid={setBooking}
             />
           </div>
         )}

@@ -5,6 +5,7 @@ const { after, afterEach, before, test } = require("node:test");
 const app = require("../src/app");
 const env = require("../src/config/env");
 const prisma = require("../src/prisma/client");
+const realtime = require("../src/realtime/hub");
 const {
   setRazorpayClient,
   resetRazorpayClient,
@@ -195,6 +196,8 @@ test("verify payment confirms booking when signature is valid", async () => {
   const paymentId = "pay_abc";
   const signature = crypto.createHmac("sha256", secret).update(`${orderId}|${paymentId}`).digest("hex");
   const activityLogs = [];
+  const realtimeEvents = [];
+  stub(realtime, "publish", (type, payload) => realtimeEvents.push({ type, payload }));
   let bookingStatus = "PENDING_PAYMENT";
 
   stub(prisma.booking, "findMany", async () => []);
@@ -282,6 +285,9 @@ test("verify payment confirms booking when signature is valid", async () => {
   const body = await response.json();
   assert.equal(response.status, 200);
   assert.equal(body.data.booking.status, "CONFIRMED");
+  assert.equal(body.data.booking.paymentStatus, "PAID");
+  assert.ok(realtimeEvents.some((event) => event.type === "payment.updated" && event.payload.bookingRef === "HMS-PAY-1"));
+  assert.ok(realtimeEvents.some((event) => event.type === "booking.updated" && event.payload.bookingRef === "HMS-PAY-1"));
   assert.equal(activityLogs.some((item) => item.action === "paid"), true);
 });
 
