@@ -144,6 +144,7 @@ export default function AdminSettingsForm() {
               <textarea
                 value={form[field.key] || ""}
                 onChange={(event) => updateField(field.key, event.target.value)}
+                disabled={!canUpdate}
                 rows={3}
                 className="mt-2 w-full rounded-xl border border-line bg-elevated px-4 py-3 text-sm text-ink outline-none focus:border-accent focus:shadow-[0_0_0_3px_var(--focus-ring)]"
               />
@@ -155,6 +156,7 @@ export default function AdminSettingsForm() {
               type={field.type || "text"}
               value={form[field.key] || ""}
               onChange={(event) => updateField(field.key, event.target.value)}
+              disabled={!canUpdate}
               required={field.required}
             />
           )}
@@ -170,6 +172,7 @@ export default function AdminSettingsForm() {
           <textarea
             value={socialText}
             onChange={(event) => setSocialText(event.target.value)}
+            disabled={!canUpdate}
             rows={4}
             className="mt-2 w-full rounded-xl border border-line bg-elevated px-4 py-3 text-sm text-ink outline-none focus:border-accent focus:shadow-[0_0_0_3px_var(--focus-ring)]"
             placeholder="Instagram|https://instagram.com/..."
@@ -193,6 +196,7 @@ export default function AdminSettingsForm() {
               <textarea
                 value={form[field.key] || ""}
                 onChange={(event) => updateField(field.key, event.target.value)}
+                disabled={!canUpdate}
                 rows={3}
                 className="mt-2 w-full rounded-xl border border-line bg-elevated px-4 py-3 text-sm text-ink outline-none focus:border-accent focus:shadow-[0_0_0_3px_var(--focus-ring)]"
               />
@@ -204,6 +208,7 @@ export default function AdminSettingsForm() {
               name={field.key}
               value={form[field.key] || ""}
               onChange={(event) => updateField(field.key, event.target.value)}
+              disabled={!canUpdate}
             />
           )
         ))}
@@ -219,6 +224,7 @@ export default function AdminSettingsForm() {
             type="checkbox"
             checked={form.onlinePaymentEnabled !== false}
             onChange={(event) => updateField("onlinePaymentEnabled", event.target.checked)}
+            disabled={!canUpdate}
           />
           Online payment (Razorpay)
         </label>
@@ -227,6 +233,7 @@ export default function AdminSettingsForm() {
             type="checkbox"
             checked={form.payAtHotelEnabled !== false}
             onChange={(event) => updateField("payAtHotelEnabled", event.target.checked)}
+            disabled={!canUpdate}
           />
           Pay at hotel
         </label>

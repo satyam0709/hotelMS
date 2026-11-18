@@ -7,9 +7,9 @@ const prisma = new PrismaClient();
 
 const defaultAdmin = {
   name: process.env.DEFAULT_ADMIN_NAME || "ExoStay Super Admin",
-  email: (process.env.DEFAULT_ADMIN_EMAIL || "admin@example.com").trim().toLowerCase(),
-  username: process.env.DEFAULT_ADMIN_USERNAME || "admin",
-  password: process.env.DEFAULT_ADMIN_PASSWORD || "ChangeMe123!",
+  email: (process.env.DEFAULT_ADMIN_EMAIL || "").trim().toLowerCase(),
+  username: (process.env.DEFAULT_ADMIN_USERNAME || "").trim(),
+  password: process.env.DEFAULT_ADMIN_PASSWORD || "",
 };
 
 const roles = [
@@ -29,6 +29,12 @@ const roles = [
     name: "Staff",
     slug: "staff",
     description: "Limited access for booking, guest, and inquiry operations.",
+    isSystem: true,
+  },
+  {
+    name: "Demo Viewer",
+    slug: "demo-read-only",
+    description: "Read-only access for the shared product demo.",
     isSystem: true,
   },
 ];
@@ -120,6 +126,10 @@ const staffPermissions = [
 ];
 
 async function main() {
+  if (!defaultAdmin.email || !defaultAdmin.username || defaultAdmin.password.length < 16) {
+    throw new Error("Set DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_USERNAME, and a unique DEFAULT_ADMIN_PASSWORD of at least 16 characters before seeding.");
+  }
+
   const permissionRecords = [];
 
   for (const [module, actions] of Object.entries(permissionGroups)) {
@@ -160,14 +170,22 @@ async function main() {
   const staffPermissionRecords = permissionRecords.filter((permission) =>
     staffPermissions.includes(permission.key)
   );
+  const demoReadPermissions = permissionRecords.filter((permission) =>
+    permission.action === "read" &&
+    !["activity", "notifications", "roles", "users"].includes(permission.module)
+  );
 
   const assignments = [
     [roleRecords["super-admin"], superAdminPermissions],
     [roleRecords.manager, managerPermissions],
     [roleRecords.staff, staffPermissionRecords],
+    [roleRecords["demo-read-only"], demoReadPermissions],
   ];
 
   for (const [role, permissions] of assignments) {
+    if (role.slug === "demo-read-only") {
+      await prisma.rolePermission.deleteMany({ where: { roleId: role.id } });
+    }
     for (const permission of permissions) {
       await prisma.rolePermission.upsert({
         where: {
@@ -210,7 +228,6 @@ async function main() {
       },
     });
     console.log(`Created default super admin: ${defaultAdmin.email}`);
-    console.log("Default admin password is from DEFAULT_ADMIN_PASSWORD or the development fallback.");
   } else {
     const updateData = {
       name: defaultAdmin.name,
@@ -232,12 +249,81 @@ async function main() {
     console.log(`Ensured default super admin role: ${defaultAdmin.email}`);
   }
 
+  await seedDemoViewer(roleRecords["demo-read-only"]);
+
   const { ensureDefaultTemplates } = require("../src/services/notification.service");
   await ensureDefaultTemplates();
   console.log("Seeded roles, permissions, email templates, and default admin bootstrap.");
 
   await seedCoreContent();
   console.log("Seeded core website content (settings, rooms, CMS samples).");
+}
+
+async function seedDemoViewer(demoRole) {
+  const enabled = process.env.DEMO_READ_ONLY_ENABLED || "false";
+  if (!["true", "false"].includes(enabled.toLowerCase())) {
+    throw new Error("DEMO_READ_ONLY_ENABLED must be either true or false.");
+  }
+  if (enabled.toLowerCase() !== "true") {
+    await prisma.adminUser.updateMany({
+      where: {
+        status: "ACTIVE",
+        deletedAt: null,
+        roles: { some: { role: { slug: "demo-read-only" } } },
+      },
+      data: { status: "INACTIVE" },
+    });
+    console.log("Skipped read-only demo account (DEMO_READ_ONLY_ENABLED is not true).");
+    return;
+  }
+
+  const email = (process.env.DEMO_READ_ONLY_EMAIL || "").trim().toLowerCase();
+  const username = (process.env.DEMO_READ_ONLY_USERNAME || "").trim();
+  const password = process.env.DEMO_READ_ONLY_PASSWORD || "";
+  const name = (process.env.DEMO_READ_ONLY_NAME || "HotelMS Demo Viewer").trim();
+  if (!email || !username || password.length < 16) {
+    throw new Error("Set DEMO_READ_ONLY_EMAIL, DEMO_READ_ONLY_USERNAME, and a DEMO_READ_ONLY_PASSWORD of at least 16 characters.");
+  }
+  if (email === defaultAdmin.email || username === defaultAdmin.username) {
+    throw new Error("The read-only demo account must not share the super admin email or username.");
+  }
+
+  const existingSelect = {
+    id: true,
+    roles: { select: { role: { select: { slug: true } } } },
+  };
+  const existingByEmail = await prisma.adminUser.findUnique({ where: { email }, select: existingSelect });
+  const existingByUsername = await prisma.adminUser.findUnique({ where: { username }, select: existingSelect });
+  if (existingByEmail && existingByUsername && existingByEmail.id !== existingByUsername.id) {
+    throw new Error("The configured demo email and username belong to different admin accounts.");
+  }
+  const existing = existingByEmail || existingByUsername;
+  if (
+    existing &&
+    !existing.roles?.some(({ role }) => role.slug === "demo-read-only")
+  ) {
+    throw new Error("The configured demo email or username already belongs to a non-demo admin account.");
+  }
+  const updatePassword = process.env.DEMO_READ_ONLY_UPDATE_PASSWORD === "true";
+  const data = {
+    name,
+    email,
+    username,
+    status: "ACTIVE",
+    deletedAt: null,
+    roles: {
+      deleteMany: {},
+      create: { roleId: demoRole.id },
+    },
+  };
+
+  if (existing) {
+    if (updatePassword) data.passwordHash = await hashPassword(password);
+    await prisma.adminUser.update({ where: { id: existing.id }, data });
+  } else {
+    await prisma.adminUser.create({ data: { ...data, passwordHash: await hashPassword(password) } });
+  }
+  console.log(`Ensured read-only demo account: ${email}`);
 }
 
 async function seedCoreContent() {

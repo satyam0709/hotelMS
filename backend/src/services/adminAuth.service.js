@@ -108,11 +108,15 @@ async function logout(token, request) {
 async function requestPasswordReset(email, request) {
   const admin = await prisma.adminUser.findFirst({
     where: { email: normalizeEmail(email), status: "ACTIVE", deletedAt: null },
-    select: { id: true },
+    select: {
+      id: true,
+      roles: { select: { role: { select: { slug: true } } } },
+    },
   });
+  const isReadOnlyDemo = admin?.roles?.some(({ role }) => role.slug === "demo-read-only") || false;
   let rawToken;
   let tokenHash;
-  if (admin) {
+  if (admin && !isReadOnlyDemo) {
     rawToken = randomBytes(32).toString("hex");
     tokenHash = createHash("sha256").update(rawToken).digest("hex");
     await prisma.passwordResetToken.create({
@@ -134,7 +138,7 @@ async function requestPasswordReset(email, request) {
     request,
   });
 
-  if (!admin) return;
+  if (!admin || isReadOnlyDemo) return { accepted: true };
 
   let resetUrl;
   const requestOrigin = request?.get ? (request.get("origin") || "") : "";
@@ -194,14 +198,21 @@ async function resetPassword({ token, password, request }) {
   await prisma.$transaction(async (tx) => {
     const resetRecord = await tx.passwordResetToken.findUnique({
       where: { tokenHash },
-      include: { user: true },
+      include: {
+        user: {
+          include: {
+            roles: { include: { role: { select: { slug: true } } } },
+          },
+        },
+      },
     });
     if (
       !resetRecord ||
       resetRecord.usedAt ||
       resetRecord.expiresAt <= now ||
       resetRecord.user.status !== "ACTIVE" ||
-      resetRecord.user.deletedAt
+      resetRecord.user.deletedAt ||
+      resetRecord.user.roles?.some(({ role }) => role.slug === "demo-read-only")
     ) {
       throw new AppError(400, "Reset token is invalid or expired.", "RESET_TOKEN_INVALID");
     }

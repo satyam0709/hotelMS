@@ -5,7 +5,11 @@ const { after, before, test } = require("node:test");
 const app = require("../src/app");
 const env = require("../src/config/env");
 const prisma = require("../src/prisma/client");
-const { serializeAdmin } = require("../src/middleware/auth.middleware");
+const {
+  isReadOnlyDemoAdmin,
+  isReadOnlyDemoWrite,
+  serializeAdmin,
+} = require("../src/middleware/auth.middleware");
 const { requirePermission } = require("../src/middleware/permission.middleware");
 
 let server;
@@ -86,6 +90,23 @@ test("permission middleware rejects missing permissions and bypasses for Super A
 
   const allowed = await invoke({ roles: [{ slug: "super-admin" }], permissions: [] });
   assert.equal(allowed, null);
+});
+
+test("demo viewer cannot make authenticated admin writes but can log out", () => {
+  const demo = { roles: [{ slug: "demo-read-only" }] };
+  const request = (method, baseUrl = "/api/admin", path = "/bookings") => ({
+    method,
+    baseUrl,
+    path,
+  });
+
+  assert.equal(isReadOnlyDemoAdmin(demo), true);
+  assert.equal(isReadOnlyDemoWrite(request("GET"), demo), false);
+  assert.equal(isReadOnlyDemoWrite(request("POST"), demo), true);
+  assert.equal(isReadOnlyDemoWrite(request("PATCH"), demo), true);
+  assert.equal(isReadOnlyDemoWrite(request("DELETE"), demo), true);
+  assert.equal(isReadOnlyDemoWrite(request("POST", "/api/admin/auth", "/logout"), demo), false);
+  assert.equal(isReadOnlyDemoWrite(request("POST"), { roles: [{ slug: "manager" }] }), false);
 });
 
 test("admin serialization excludes password and authentication secrets", () => {

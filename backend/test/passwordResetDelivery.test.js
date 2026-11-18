@@ -71,6 +71,74 @@ test("forgot-password delivers a hashed token through the development outbox and
   assert.equal(outboxMessage.to, "admin@example.invalid");
 });
 
+test("demo viewer password reset requests do not create reset tokens or send email", async (t) => {
+  const activityLogs = [];
+  const originalFindFirst = prisma.adminUser.findFirst;
+  const originalActivityCreate = prisma.activityLog.create;
+  const originalTokenCreate = prisma.passwordResetToken.create;
+  const originalSend = emailService.sendPasswordResetEmail;
+
+  t.after(() => {
+    prisma.adminUser.findFirst = originalFindFirst;
+    prisma.activityLog.create = originalActivityCreate;
+    prisma.passwordResetToken.create = originalTokenCreate;
+    emailService.sendPasswordResetEmail = originalSend;
+  });
+
+  prisma.adminUser.findFirst = async () => ({
+    id: "demo-admin-id",
+    roles: [{ role: { slug: "demo-read-only" } }],
+  });
+  prisma.activityLog.create = async ({ data }) => activityLogs.push(data);
+  prisma.passwordResetToken.create = async () => {
+    throw new Error("Demo accounts must not receive reset tokens.");
+  };
+  emailService.sendPasswordResetEmail = async () => {
+    throw new Error("Demo accounts must not receive reset emails.");
+  };
+
+  assert.deepEqual(
+    await adminAuthService.requestPasswordReset("demo@example.invalid", { get: () => null }),
+    { accepted: true }
+  );
+  assert.equal(activityLogs.length, 1);
+  assert.equal(activityLogs[0].entityId, "demo-admin-id");
+});
+
+test("demo viewer cannot use an old password reset token", async (t) => {
+  const originalTransaction = prisma.$transaction;
+  t.after(() => {
+    prisma.$transaction = originalTransaction;
+  });
+
+  prisma.$transaction = async (callback) => callback({
+    passwordResetToken: {
+      findUnique: async () => ({
+        id: "reset-token-id",
+        userId: "demo-admin-id",
+        usedAt: null,
+        expiresAt: new Date(Date.now() + 60_000),
+        user: {
+          status: "ACTIVE",
+          deletedAt: null,
+          roles: [{ role: { slug: "demo-read-only" } }],
+        },
+      }),
+      updateMany: async () => {
+        throw new Error("A demo reset token must not be claimed.");
+      },
+    },
+  });
+
+  await assert.rejects(
+    adminAuthService.resetPassword({
+      token: "a".repeat(64),
+      password: "A-new-demo-password-123",
+    }),
+    (error) => error.errorCode === "RESET_TOKEN_INVALID"
+  );
+});
+
 test("email service refuses development delivery in production", async () => {
   const productionEmailService = createEmailService({ isProduction: true, smtpHost: "" });
   await assert.rejects(

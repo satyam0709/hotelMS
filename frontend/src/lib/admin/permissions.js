@@ -2,6 +2,10 @@ export function isSuperAdmin(admin) {
   return admin?.roles?.some((role) => role.slug === "super-admin");
 }
 
+export function isReadOnlyDemo(admin) {
+  return admin?.roles?.some((role) => role.slug === "demo-read-only") || false;
+}
+
 export function hasPermission(admin, permissionKey) {
   if (!admin) return false;
   if (isSuperAdmin(admin)) return true;

@@ -4,9 +4,11 @@ import { LogOut } from "lucide-react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import Button from "@/components/ui/Button";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
+import { isReadOnlyDemo } from "@/lib/admin/permissions";
 
 export default function AdminShell({ children }) {
   const { admin, logout } = useAdminAuth();
+  const isDemoViewer = isReadOnlyDemo(admin);
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f7f5ef] md:h-screen md:flex-row md:overflow-hidden print:block print:bg-white">
@@ -19,6 +21,11 @@ export default function AdminShell({ children }) {
             <p className="truncate text-sm font-medium text-ink">{admin?.name}</p>
           </div>
           <div className="ml-auto flex items-center gap-2">
+            {isDemoViewer ? (
+              <span className="rounded-full bg-amber-100 px-3 py-1.5 text-xs font-semibold text-amber-900">
+                Demo · view only
+              </span>
+            ) : null}
             <Button
               href="/"
               target="_blank"

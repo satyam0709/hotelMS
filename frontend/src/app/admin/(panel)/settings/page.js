@@ -1,5 +1,6 @@
 import AdminChangePasswordForm from "@/components/admin/AdminChangePasswordForm";
 import AdminProfileForm from "@/components/admin/AdminProfileForm";
+import AdminAccountSettingsForms from "@/components/admin/AdminAccountSettingsForms";
 import AdminSettingsForm from "@/components/admin/AdminSettingsForm";
 
 export const metadata = { title: "Settings" };
@@ -14,8 +15,10 @@ export default function AdminSettingsPage() {
         </p>
       </div>
       <AdminSettingsForm />
-      <AdminProfileForm />
-      <AdminChangePasswordForm />
+      <AdminAccountSettingsForms
+        profileForm={<AdminProfileForm />}
+        passwordForm={<AdminChangePasswordForm />}
+      />
     </div>
   );
 }

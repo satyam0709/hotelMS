@@ -3,6 +3,16 @@ const AppError = require("../utils/appError");
 const { verifyAccessToken } = require("../utils/jwt");
 const env = require("../config/env");
 
+function isReadOnlyDemoAdmin(admin) {
+  return admin?.roles?.some((entry) => (entry.role || entry)?.slug === "demo-read-only") || false;
+}
+
+function isReadOnlyDemoWrite(req, admin) {
+  if (!isReadOnlyDemoAdmin(admin)) return false;
+  if (["GET", "HEAD", "OPTIONS"].includes(req.method)) return false;
+  return !(req.baseUrl === "/api/admin/auth" && req.path === "/logout");
+}
+
 const adminAccessSelection = {
   id: true,
   name: true,
@@ -78,8 +88,18 @@ async function requireAdminAuth(req, res, next) {
   });
   if (!admin) return next(new AppError(401, "Authentication required.", "AUTH_INVALID"));
 
+  if (isReadOnlyDemoWrite(req, admin)) {
+    return next(new AppError(403, "The demo account is read-only.", "DEMO_READ_ONLY"));
+  }
+
   req.admin = serializeAdmin(admin);
   return next();
 }
 
-module.exports = { adminAccessSelection, requireAdminAuth, serializeAdmin };
+module.exports = {
+  adminAccessSelection,
+  isReadOnlyDemoAdmin,
+  isReadOnlyDemoWrite,
+  requireAdminAuth,
+  serializeAdmin,
+};
