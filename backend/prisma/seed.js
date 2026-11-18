@@ -126,8 +126,8 @@ const staffPermissions = [
 ];
 
 async function main() {
-  if (!defaultAdmin.email || !defaultAdmin.username || defaultAdmin.password.length < 16) {
-    throw new Error("Set DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_USERNAME, and a unique DEFAULT_ADMIN_PASSWORD of at least 16 characters before seeding.");
+  if (Boolean(defaultAdmin.email) !== Boolean(defaultAdmin.username)) {
+    throw new Error("Set both DEFAULT_ADMIN_EMAIL and DEFAULT_ADMIN_USERNAME, or leave both unset for an existing installation.");
   }
 
   const permissionRecords = [];
@@ -203,19 +203,49 @@ async function main() {
     }
   }
 
-  const superAdminRole = roleRecords["super-admin"];
+  await ensureDefaultAdmin(roleRecords["super-admin"]);
+
+  await seedDemoViewer(roleRecords["demo-read-only"]);
+
+  const { ensureDefaultTemplates } = require("../src/services/notification.service");
+  await ensureDefaultTemplates();
+  console.log("Seeded roles, permissions, email templates, and default admin bootstrap.");
+
+  await seedCoreContent();
+  console.log("Seeded core website content (settings, rooms, CMS samples).");
+}
+
+async function ensureDefaultAdmin(superAdminRole) {
+  const where = defaultAdmin.email
+    ? {
+        OR: [
+          { email: defaultAdmin.email },
+          { username: defaultAdmin.username },
+        ],
+        deletedAt: null,
+      }
+    : {
+        status: "ACTIVE",
+        deletedAt: null,
+        roles: { some: { role: { slug: "super-admin" } } },
+      };
   const existingAdmin = await prisma.adminUser.findFirst({
-    where: {
-      OR: [
-        { email: defaultAdmin.email },
-        { username: defaultAdmin.username },
-      ],
-      deletedAt: null,
-    },
+    where,
     select: { id: true },
   });
 
+  if (!defaultAdmin.email) {
+    if (!existingAdmin) {
+      throw new Error("No active admin exists. Set DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_USERNAME, and a unique DEFAULT_ADMIN_PASSWORD of at least 16 characters to create one.");
+    }
+    console.log("Existing Super Admin detected; skipped bootstrap because DEFAULT_ADMIN_EMAIL and DEFAULT_ADMIN_USERNAME are unset.");
+    return;
+  }
+
   if (!existingAdmin) {
+    if (defaultAdmin.password.length < 16) {
+      throw new Error("Set a unique DEFAULT_ADMIN_PASSWORD of at least 16 characters before creating the first admin.");
+    }
     const passwordHash = await hashPassword(defaultAdmin.password);
     await prisma.adminUser.create({
       data: {
@@ -228,35 +258,30 @@ async function main() {
       },
     });
     console.log(`Created default super admin: ${defaultAdmin.email}`);
-  } else {
-    const updateData = {
-      name: defaultAdmin.name,
-      email: defaultAdmin.email,
-      username: defaultAdmin.username,
-      status: "ACTIVE",
-      roles: {
-        deleteMany: {},
-        create: { roleId: superAdminRole.id },
-      },
-    };
-    if (process.env.DEFAULT_ADMIN_UPDATE_PASSWORD === "true") {
-      updateData.passwordHash = await hashPassword(defaultAdmin.password);
-    }
-    await prisma.adminUser.update({
-      where: { id: existingAdmin.id },
-      data: updateData,
-    });
-    console.log(`Ensured default super admin role: ${defaultAdmin.email}`);
+    return;
   }
 
-  await seedDemoViewer(roleRecords["demo-read-only"]);
-
-  const { ensureDefaultTemplates } = require("../src/services/notification.service");
-  await ensureDefaultTemplates();
-  console.log("Seeded roles, permissions, email templates, and default admin bootstrap.");
-
-  await seedCoreContent();
-  console.log("Seeded core website content (settings, rooms, CMS samples).");
+  const updateData = {
+    name: defaultAdmin.name,
+    email: defaultAdmin.email,
+    username: defaultAdmin.username,
+    status: "ACTIVE",
+    roles: {
+      deleteMany: {},
+      create: { roleId: superAdminRole.id },
+    },
+  };
+  if (process.env.DEFAULT_ADMIN_UPDATE_PASSWORD === "true") {
+    if (defaultAdmin.password.length < 16) {
+      throw new Error("Set a unique DEFAULT_ADMIN_PASSWORD of at least 16 characters before updating the admin password.");
+    }
+    updateData.passwordHash = await hashPassword(defaultAdmin.password);
+  }
+  await prisma.adminUser.update({
+    where: { id: existingAdmin.id },
+    data: updateData,
+  });
+  console.log(`Ensured default super admin role: ${defaultAdmin.email}`);
 }
 
 async function seedDemoViewer(demoRole) {

@@ -42,7 +42,7 @@ npm start
 
 ### Bootstrap admin (once)
 
-Set `DEFAULT_ADMIN_EMAIL`, `DEFAULT_ADMIN_USERNAME`, and `DEFAULT_ADMIN_PASSWORD` in the backend environment before running the seed. Use a unique password of at least 16 characters. The seed will not create an administrator with built-in credentials.
+For a fresh database with no active admin, set `DEFAULT_ADMIN_EMAIL`, `DEFAULT_ADMIN_USERNAME`, and `DEFAULT_ADMIN_PASSWORD` before running the seed. Use a unique password of at least 16 characters; the seed will not create an administrator with built-in credentials. For an existing installation with an active admin, leave the email and username unset to preserve the existing admin and credentials while seeding other data.
 
 ```bash
 npx prisma db seed
