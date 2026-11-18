@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "description": "HotelLMS Express backend",
   "main": "src/server.js",
+  "engines": {
+    "node": ">=20.13.0"
+  },
   "scripts": {
     "build": "prisma generate",
     "postinstall": "prisma generate",
-    "dev": "nodemon src/server.js",
+    "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "test": "node --test",
     "prisma:validate": "prisma validate",
@@ -42,7 +45,6 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14",
     "prisma": "6.17.1"
   },
   "prisma": {
@@ -51,9 +53,6 @@
   "overrides": {
     "uuid": "^11.1.1",
     "deepmerge-ts": "^8.0.0",
-    "effect": "^3.20.0",
-    "nodemon": {
-      "minimatch": "^11.0.1"
-    }
+    "effect": "^3.20.0"
   }
 }

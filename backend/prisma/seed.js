@@ -4,6 +4,7 @@ const { PrismaClient } = require("@prisma/client");
 const { hashPassword } = require("../src/utils/password");
 
 const prisma = new PrismaClient();
+const DEMO_READ_ONLY_MIN_PASSWORD_LENGTH = 8;
 
 const defaultAdmin = {
   name: process.env.DEFAULT_ADMIN_NAME || "ExoStay Super Admin",
@@ -306,8 +307,8 @@ async function seedDemoViewer(demoRole) {
   const username = (process.env.DEMO_READ_ONLY_USERNAME || "").trim();
   const password = process.env.DEMO_READ_ONLY_PASSWORD || "";
   const name = (process.env.DEMO_READ_ONLY_NAME || "HotelMS Demo Viewer").trim();
-  if (!email || !username || password.length < 16) {
-    throw new Error("Set DEMO_READ_ONLY_EMAIL, DEMO_READ_ONLY_USERNAME, and a DEMO_READ_ONLY_PASSWORD of at least 16 characters.");
+  if (!email || !username || password.length < DEMO_READ_ONLY_MIN_PASSWORD_LENGTH) {
+    throw new Error(`Set DEMO_READ_ONLY_EMAIL, DEMO_READ_ONLY_USERNAME, and a DEMO_READ_ONLY_PASSWORD of at least ${DEMO_READ_ONLY_MIN_PASSWORD_LENGTH} characters.`);
   }
   if (email === defaultAdmin.email || username === defaultAdmin.username) {
     throw new Error("The read-only demo account must not share the super admin email or username.");

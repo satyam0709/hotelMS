@@ -50,7 +50,7 @@ npx prisma db seed
 
 ### Optional CodeCanyon demo viewer
 
-For a public product demo only, set `DEMO_READ_ONLY_ENABLED=true`, `DEMO_READ_ONLY_EMAIL`, `DEMO_READ_ONLY_USERNAME`, and a unique `DEMO_READ_ONLY_PASSWORD` (at least 16 characters) in the backend environment, then run `npx prisma db seed`. Keep these values in the hosting provider's environment settings, not in the repository. The account receives read-only access and cannot change admin data, profile details, or its password. Normal property administrators continue to use their separate Super Admin account. Use only synthetic guest and booking data on any publicly accessible demo instance.
+For a public product demo only, set `DEMO_READ_ONLY_ENABLED=true`, `DEMO_READ_ONLY_EMAIL`, `DEMO_READ_ONLY_USERNAME`, and a `DEMO_READ_ONLY_PASSWORD` of at least 8 characters in the backend environment, then run `npx prisma db seed`. Keep these values in the hosting provider's environment settings, not in the repository. The account receives read-only access and cannot change admin data, profile details, or its password. Normal property administrators continue to use their separate Super Admin account. Use only synthetic guest and booking data on any publicly accessible demo instance.
 
 To rotate an existing demo password intentionally, set `DEMO_READ_ONLY_UPDATE_PASSWORD=true` for the seed run. To stop provisioning the demo account, set `DEMO_READ_ONLY_ENABLED=false` and seed again; the configured demo account will be disabled.
 
