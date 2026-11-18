@@ -336,17 +336,23 @@ async function seedDemoViewer(demoRole) {
     username,
     status: "ACTIVE",
     deletedAt: null,
-    roles: {
-      deleteMany: {},
-      create: { roleId: demoRole.id },
-    },
   };
 
   if (existing) {
+    data.roles = {
+      deleteMany: {},
+      create: { roleId: demoRole.id },
+    };
     if (updatePassword) data.passwordHash = await hashPassword(password);
     await prisma.adminUser.update({ where: { id: existing.id }, data });
   } else {
-    await prisma.adminUser.create({ data: { ...data, passwordHash: await hashPassword(password) } });
+    await prisma.adminUser.create({
+      data: {
+        ...data,
+        passwordHash: await hashPassword(password),
+        roles: { create: { roleId: demoRole.id } },
+      },
+    });
   }
   console.log(`Ensured read-only demo account: ${email}`);
 }
